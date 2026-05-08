@@ -1,0 +1,220 @@
+// ╔═══════════════════════════════════════════════════════════════════════════╗
+// ║  Prime Capital Ledger — Prisma Schema                                    ║
+// ║  PostgreSQL Database Schema for Fintech Portfolio Management             ║
+// ║                                                                          ║
+// ║  Models:                                                                 ║
+// ║    1. User            — Identity & authentication                        ║
+// ║    2. Asset           — Master security/ticker reference data            ║
+// ║    3. Transaction     — Immutable buy/sell ledger entries                ║
+// ║    4. DailyValuation  — Time-series portfolio snapshots                  ║
+// ╚═══════════════════════════════════════════════════════════════════════════╝
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 1. USER — Identity Management
+// ═══════════════════════════════════════════════════════════════════════════════
+// Central identity model for all authenticated users of the platform.
+// Designed to be compatible with NextAuth.js / Auth.js adapters.
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  emailVerified  DateTime?
+  name           String?
+  passwordHash   String?
+  image          String?
+  role           UserRole  @default(USER)
+
+  // Profile & preferences
+  baseCurrency   String    @default("IDR")   // User's reporting currency
+  timezone       String    @default("Asia/Jakarta")
+
+  // Timestamps
+  lastLoginAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // ─── Relations ───────────────────────────────────────────────────────
+  transactions    Transaction[]
+  dailyValuations DailyValuation[]
+
+  @@map("users")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 2. ASSET — Master Data
+// ═══════════════════════════════════════════════════════════════════════════════
+// Canonical reference for every security traded on the platform.
+// Decouples ticker metadata from transactions — a single source of truth
+// for names, exchanges, and market data.
+
+model Asset {
+  id           String      @id @default(cuid())
+  ticker       String      @unique          // e.g., "BBCA.JK", "TLKM.JK"
+  name         String                       // e.g., "Bank Central Asia Tbk"
+  exchange     String      @default("IDX")  // Exchange code
+  assetType    AssetType   @default(STOCK)
+  currency     String      @default("IDR")  // Denomination currency
+  sector       String?                      // e.g., "Financials", "Telecom"
+  industry     String?                      // e.g., "Regional Banks"
+  logoUrl      String?                      // CDN path for ticker logo
+
+  // Market data cache (populated by yahoo-finance2 jobs)
+  lastPrice    Decimal?    @db.Decimal(18, 4)
+  lastPriceAt  DateTime?                    // When lastPrice was fetched
+  marketCap    Decimal?    @db.Decimal(22, 2)
+
+  // Lifecycle
+  isActive     Boolean     @default(true)   // Soft-delete / delist flag
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // ─── Relations ───────────────────────────────────────────────────────
+  transactions Transaction[]
+
+  @@index([exchange])
+  @@index([assetType])
+  @@index([sector])
+  @@map("assets")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 3. TRANSACTION — The Immutable Ledger
+// ═══════════════════════════════════════════════════════════════════════════════
+// Every buy/sell is an append-only ledger entry. Transactions are never
+// modified — corrections are posted as new reversal entries.
+// Supports both manual entry and automated PDF ingestion (Ajaib, etc.).
+
+model Transaction {
+  id              String          @id @default(cuid())
+  userId          String
+  assetId         String
+
+  // ─── Core Ledger Fields ──────────────────────────────────────────────
+  type            TransactionType
+  quantity        Int                             // Number of shares/lots
+  lotSize         Int             @default(100)   // Shares per lot (IDX = 100)
+  pricePerShare   Decimal         @db.Decimal(18, 4)
+  grossValue      Decimal         @db.Decimal(18, 4)  // quantity × lotSize × price
+
+  // ─── Fees & Net Calculation ──────────────────────────────────────────
+  brokerFee       Decimal         @default(0) @db.Decimal(18, 4)
+  levy            Decimal         @default(0) @db.Decimal(18, 4) // Exchange levy
+  tax             Decimal         @default(0) @db.Decimal(18, 4) // WHT / PPh
+  totalFees       Decimal         @default(0) @db.Decimal(18, 4) // Sum of all fees
+  netValue        Decimal         @db.Decimal(18, 4)  // grossValue ± totalFees
+  currency        String          @default("IDR")
+
+  // ─── Execution Context ───────────────────────────────────────────────
+  executedAt      DateTime                        // Trade execution timestamp
+  settledAt       DateTime?                       // T+2 settlement date
+  orderRef        String?                         // Broker order reference ID
+
+  // ─── Provenance & Audit Trail ────────────────────────────────────────
+  source          TransactionSource @default(MANUAL)
+  sourceFile      String?                         // Original filename if PDF
+  rawData         Json?                           // Verbatim parsed payload
+  notes           String?
+
+  // ─── Timestamps ──────────────────────────────────────────────────────
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  // ─── Relations ───────────────────────────────────────────────────────
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  asset Asset @relation(fields: [assetId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([assetId])
+  @@index([executedAt])
+  @@index([userId, assetId])          // Portfolio queries
+  @@index([userId, executedAt])       // Timeline queries
+  @@index([source])
+  @@map("transactions")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 4. DAILY VALUATION — Time-Series Analytics
+// ═══════════════════════════════════════════════════════════════════════════════
+// End-of-day portfolio snapshots. One row per user per calendar date.
+// Powers the equity curve, drawdown analysis, and performance charts.
+// Computed by a nightly job or on-demand recalculation.
+
+model DailyValuation {
+  id              String   @id @default(cuid())
+  userId          String
+
+  // ─── Date Anchor ─────────────────────────────────────────────────────
+  date            DateTime @db.Date              // Calendar date (no time)
+
+  // ─── Portfolio Aggregates ────────────────────────────────────────────
+  totalMarketValue  Decimal  @db.Decimal(18, 4)  // Σ (holdings × closing price)
+  totalCostBasis    Decimal  @db.Decimal(18, 4)  // Σ (avg cost × quantity held)
+  cashBalance       Decimal  @default(0) @db.Decimal(18, 4) // Uninvested cash
+
+  // ─── P&L Metrics ────────────────────────────────────────────────────
+  unrealizedPnL     Decimal  @db.Decimal(18, 4)  // Market value − cost basis
+  realizedPnL       Decimal  @default(0) @db.Decimal(18, 4)  // Cumulative closed P&L
+  dailyReturn       Decimal  @default(0) @db.Decimal(10, 6)  // Day-over-day % return
+  totalReturnPct    Decimal  @default(0) @db.Decimal(10, 6)  // Inception-to-date %
+
+  // ─── Risk Metrics ───────────────────────────────────────────────────
+  drawdownPct       Decimal  @default(0) @db.Decimal(10, 6)  // Current drawdown from peak
+  peakValue         Decimal  @default(0) @db.Decimal(18, 4)  // All-time high watermark
+
+  // ─── Breakdown ──────────────────────────────────────────────────────
+  holdingsCount     Int      @default(0)          // Number of distinct positions
+  portfolioSnapshot Json?                         // Per-asset detail breakdown
+
+  // ─── Timestamps ──────────────────────────────────────────────────────
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // ─── Relations ───────────────────────────────────────────────────────
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])            // One snapshot per user per day
+  @@index([userId])
+  @@index([date])
+  @@index([userId, date(sort: Desc)]) // Latest-first queries
+  @@map("daily_valuations")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ENUMS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum AssetType {
+  STOCK
+  ETF
+  BOND
+  MUTUAL_FUND
+  CRYPTO
+}
+
+enum TransactionType {
+  BUY
+  SELL
+}
+
+enum TransactionSource {
+  MANUAL           // User-entered via form
+  AJAIB_PDF        // Parsed from Ajaib brokerage PDF
+  STOCKBIT_PDF     // Parsed from Stockbit PDF
+  CSV_IMPORT       // Bulk CSV upload
+  API_SYNC         // Future: broker API integration
+}
