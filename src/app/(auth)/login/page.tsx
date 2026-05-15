@@ -76,14 +76,9 @@ export default function LoginPage() {
 
         {/* Password */}
         <div className="auth-field-group" style={{ marginBottom: 8 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <label className="auth-field-label" style={{ marginBottom: 0 }}>
-              Password<span className="auth-required">*</span>
-            </label>
-            <Link href="#" className="auth-forgot-link">
-              Forgot password?
-            </Link>
-          </div>
+          <label className="auth-field-label">
+            Password<span className="auth-required">*</span>
+          </label>
           <div className="auth-field-wrapper" style={{ marginTop: 6 }}>
             <input
               id="login-password"
