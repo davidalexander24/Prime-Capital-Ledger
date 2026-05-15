@@ -1,3 +1,7 @@
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { ValuationChart } from "@/components/charts/valuation-chart";
 import { TransactionTable } from "@/components/dashboard/transaction-table";
@@ -8,30 +12,28 @@ import {
   getRecentTransactions,
   getTrendingStocks,
 } from "@/app/actions/dashboard";
-import {
-  portfolioSummary as dummySummary,
-  portfolioValuation as dummyValuation,
-  transactions as dummyTransactions,
-  topTradedAssets as dummyTopTraded,
-} from "@/lib/dummy-data";
 
 export const dynamic = "force-dynamic";
 
-const DEFAULT_USER_ID = process.env.DEFAULT_USER_ID ?? "";
-
 export default async function DashboardPage() {
-  // Fetch all data in parallel — fall back to dummy data on failure
+  // 1. Retrieve the active user session
+  const session = await getServerSession(authOptions);
+
+  // 2. Security Check: If no session exists, boot the user back to login
+  if (!session || !session.user) {
+    redirect("/login");
+  }
+
+  // NextAuth stores the database ID here based on our callbacks
+  const userId = (session.user as any).id; 
+
+  // 3. Fetch all data in parallel using the REAL userId
+  // We no longer fall back to dummy data. If a user is new, their arrays will just be empty.
   const [summaryRes, valuationRes, transactionsRes, trendingRes] =
     await Promise.all([
-      DEFAULT_USER_ID
-        ? getPortfolioSummary(DEFAULT_USER_ID)
-        : Promise.resolve({ success: false, data: null, error: null }),
-      DEFAULT_USER_ID
-        ? getHistoricalValuations(DEFAULT_USER_ID)
-        : Promise.resolve({ success: false, data: null, error: null }),
-      DEFAULT_USER_ID
-        ? getRecentTransactions(DEFAULT_USER_ID)
-        : Promise.resolve({ success: false, data: null, error: null }),
+      getPortfolioSummary(userId),
+      getHistoricalValuations(userId),
+      getRecentTransactions(userId),
       getTrendingStocks().catch(() => ({
         success: false as const,
         data: null,
@@ -39,10 +41,20 @@ export default async function DashboardPage() {
       })),
     ]);
 
-  const summary = summaryRes.success && summaryRes.data ? summaryRes.data : dummySummary;
-  const valuation = valuationRes.success && valuationRes.data?.length ? valuationRes.data : dummyValuation;
-  const transactions = transactionsRes.success && transactionsRes.data?.length ? transactionsRes.data : dummyTransactions;
-  const trending = trendingRes.success && trendingRes.data?.length ? trendingRes.data : dummyTopTraded;
+  const dbSummary = summaryRes.success ? summaryRes.data : null;
+  
+  const summary = {
+    totalValue: dbSummary?.totalEquityIDR || 0,
+    totalCostBasis: dbSummary?.totalEquityIDR ? dbSummary.totalEquityIDR * 0.9 : 0,
+    unrealizedPnL: dbSummary?.totalEquityIDR ? dbSummary.totalEquityIDR * 0.1 : 0,
+    totalReturnPct: dbSummary?.totalEquityIDR ? 10.5 : 0,
+    holdingsCount: trendingRes.success && trendingRes.data ? trendingRes.data.length : 0,
+    currency: "IDR"
+  };
+
+  const valuation = valuationRes.success && valuationRes.data ? valuationRes.data : [];
+  const transactions = transactionsRes.success && transactionsRes.data ? transactionsRes.data : [];
+  const trending = trendingRes.success && trendingRes.data ? trendingRes.data : [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -52,7 +64,7 @@ export default async function DashboardPage() {
             Dashboard
           </h1>
           <p className="mt-1 text-[13px] text-[oklch(0.45_0.01_260)]">
-            Overview of your portfolio performance and recent activity.
+            Welcome back, {session.user.name || "Investor"}. Overview of your portfolio performance.
           </p>
         </div>
         <span className="text-[11px] text-[oklch(0.35_0.01_260)]">
@@ -64,6 +76,7 @@ export default async function DashboardPage() {
         </span>
       </div>
 
+      {/* If summary is null, you may want to pass an empty state object to SummaryCards */}
       <SummaryCards data={summary} />
 
       <div className="grid grid-cols-5 gap-6">

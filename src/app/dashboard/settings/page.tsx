@@ -1,12 +1,16 @@
-import { User, Shield, Bell, Palette, Database, Globe } from "lucide-react";
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+
+import { User, Shield, Bell, Database } from "lucide-react";
 
 const settingSections = [
   {
     title: "Profile",
     icon: User,
     settings: [
-      { label: "Display Name", value: "Nicholas", type: "text" },
-      { label: "Email", value: "nicholas@example.com", type: "text" },
+      { label: "Display Name", value: "Unknown", type: "text" },
+      { label: "Email", value: "Unknown", type: "text" },
       { label: "Base Currency", value: "IDR", type: "select" },
       { label: "Timezone", value: "Asia/Jakarta (GMT+7)", type: "select" },
     ],
@@ -32,14 +36,24 @@ const settingSections = [
     title: "Data & Storage",
     icon: Database,
     settings: [
-      { label: "Total Transactions", value: "247 entries", type: "info" },
-      { label: "Imported Files", value: "12 files", type: "info" },
-      { label: "Last Backup", value: "09 May 2026", type: "info" },
+      { label: "Total Transactions", value: "0 entries", type: "info" },
+      { label: "Imported Files", value: "0 files", type: "info" },
+      { label: "Last Backup", value: "None", type: "info" },
     ],
   },
 ];
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) {
+    redirect("/login");
+  }
+
+  // Update profile section dynamically with user info
+  const sections = [...settingSections];
+  sections[0].settings[0].value = session.user.name || "Unknown";
+  sections[0].settings[1].value = session.user.email || "Unknown";
+
   return (
     <div className="flex flex-col gap-6">
       <div>

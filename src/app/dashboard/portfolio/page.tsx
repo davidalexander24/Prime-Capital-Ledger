@@ -1,115 +1,9 @@
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+
 import { Briefcase, TrendingUp, TrendingDown } from "lucide-react";
 import { getPortfolioHoldings } from "@/app/actions/portfolio";
-import type { HoldingRow } from "@/app/actions/portfolio";
-
-const DEFAULT_USER_ID = process.env.DEFAULT_USER_ID ?? "";
-
-const dummyHoldings: HoldingRow[] = [
-  {
-    ticker: "BBCA",
-    name: "Bank Central Asia Tbk",
-    sector: "Financials",
-    lots: 85,
-    avgPrice: 9_840,
-    lastPrice: 10_225,
-    marketValue: 86_912_500,
-    costBasis: 83_640_000,
-    pnl: 3_272_500,
-    pnlPct: 3.91,
-    weight: 10.25,
-  },
-  {
-    ticker: "BBRI",
-    name: "Bank Rakyat Indonesia Tbk",
-    sector: "Financials",
-    lots: 120,
-    avgPrice: 4_650,
-    lastPrice: 4_870,
-    marketValue: 58_440_000,
-    costBasis: 55_800_000,
-    pnl: 2_640_000,
-    pnlPct: 4.73,
-    weight: 6.89,
-  },
-  {
-    ticker: "TLKM",
-    name: "Telkom Indonesia Tbk",
-    sector: "Telecom",
-    lots: 150,
-    avgPrice: 3_720,
-    lastPrice: 3_890,
-    marketValue: 58_350_000,
-    costBasis: 55_800_000,
-    pnl: 2_550_000,
-    pnlPct: 4.57,
-    weight: 6.88,
-  },
-  {
-    ticker: "BMRI",
-    name: "Bank Mandiri Tbk",
-    sector: "Financials",
-    lots: 60,
-    avgPrice: 6_580,
-    lastPrice: 6_750,
-    marketValue: 40_500_000,
-    costBasis: 39_480_000,
-    pnl: 1_020_000,
-    pnlPct: 2.58,
-    weight: 4.78,
-  },
-  {
-    ticker: "ASII",
-    name: "Astra International Tbk",
-    sector: "Industrials",
-    lots: 70,
-    avgPrice: 5_280,
-    lastPrice: 5_425,
-    marketValue: 37_975_000,
-    costBasis: 36_960_000,
-    pnl: 1_015_000,
-    pnlPct: 2.75,
-    weight: 4.48,
-  },
-  {
-    ticker: "ICBP",
-    name: "Indofood CBP Sukses Makmur",
-    sector: "Consumer Staples",
-    lots: 25,
-    avgPrice: 11_600,
-    lastPrice: 11_850,
-    marketValue: 29_625_000,
-    costBasis: 29_000_000,
-    pnl: 625_000,
-    pnlPct: 2.16,
-    weight: 3.50,
-  },
-  {
-    ticker: "UNVR",
-    name: "Unilever Indonesia Tbk",
-    sector: "Consumer Staples",
-    lots: 40,
-    avgPrice: 3_350,
-    lastPrice: 3_210,
-    marketValue: 12_840_000,
-    costBasis: 13_400_000,
-    pnl: -560_000,
-    pnlPct: -4.18,
-    weight: 1.51,
-  },
-  {
-    ticker: "GOTO",
-    name: "GoTo Gojek Tokopedia Tbk",
-    sector: "Technology",
-    lots: 500,
-    avgPrice: 68,
-    lastPrice: 74,
-    marketValue: 3_700_000,
-    costBasis: 3_400_000,
-    pnl: 300_000,
-    pnlPct: 8.82,
-    weight: 0.44,
-  },
-];
 
 function formatIDR(value: number): string {
   if (Math.abs(value) >= 1_000_000_000) return `Rp ${(value / 1_000_000_000).toFixed(2)}B`;
@@ -118,22 +12,19 @@ function formatIDR(value: number): string {
 }
 
 export default async function PortfolioPage() {
-  let holdings = dummyHoldings;
-  let totalMarketValue = holdings.reduce((s, h) => s + h.marketValue, 0);
-  let totalCost = holdings.reduce((s, h) => s + h.costBasis, 0);
-  let totalPnl = totalMarketValue - totalCost;
-  let totalPnlPct = (totalPnl / totalCost) * 100;
-
-  if (DEFAULT_USER_ID) {
-    const res = await getPortfolioHoldings(DEFAULT_USER_ID);
-    if (res.success && res.data && res.data.holdings.length > 0) {
-      holdings = res.data.holdings;
-      totalMarketValue = res.data.totalMarketValue;
-      totalCost = res.data.totalCostBasis;
-      totalPnl = res.data.totalPnl;
-      totalPnlPct = res.data.totalPnlPct;
-    }
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) {
+    redirect("/login");
   }
+  const userId = (session.user as any).id;
+
+  const res = await getPortfolioHoldings(userId);
+  const holdings = res.success && res.data?.holdings ? res.data.holdings : [];
+  
+  const totalMarketValue = res.success && res.data ? res.data.totalMarketValue : 0;
+  const totalCost = res.success && res.data ? res.data.totalCostBasis : 0;
+  const totalPnl = res.success && res.data ? res.data.totalPnl : 0;
+  const totalPnlPct = res.success && res.data ? res.data.totalPnlPct : 0;
 
   return (
     <div className="flex flex-col gap-6">

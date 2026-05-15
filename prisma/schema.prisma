@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum TransactionType {
@@ -15,60 +16,101 @@ enum TransactionType {
 }
 
 model User {
-  id             String           @id @default(uuid())
-  email          String           @unique
-  name           String
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  id            String    @id @default(uuid())
+  name          String?
+  email         String?   @unique
+  password      String?
+  emailVerified DateTime? 
+  image         String?   
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  transactions   Transaction[]
-  valuations     DailyValuation[]
+  accounts      Account[]
+  sessions      Session[]
+
+  transactions  Transaction[]
+  valuations    DailyValuation[]
+}
+
+model Account {
+  id                 String  @id @default(uuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
 
 model Asset {
-  id             String           @id @default(uuid())
-  ticker         String           @unique
-  companyName    String
-  currency       String           // e.g., "USD", "IDR"
+  id           String        @id @default(uuid())
+  ticker       String        @unique
+  companyName  String
+  currency     String
 
-  transactions   Transaction[]
+  transactions Transaction[]
 }
 
 model Transaction {
-  id             String           @id @default(uuid())
+  id             String          @id @default(uuid())
   userId         String
-  assetId        String?          // Nullable for DEPOSIT/WITHDRAW fiat movements
+  assetId        String?
   type           TransactionType
-  quantity       Decimal          @db.Decimal(19, 8) // Allows fractional shares
-  executionPrice Decimal          @db.Decimal(19, 4) // Price per share at execution
-  fee            Decimal          @db.Decimal(19, 4) @default(0) // Absolute fee value
-  date           DateTime         @db.Date           // Trade execution date
-  createdAt      DateTime         @default(now())    // System audit timestamp
+  quantity       Decimal         @db.Decimal(19, 8) 
+  executionPrice Decimal         @db.Decimal(19, 4) 
+  fee            Decimal         @db.Decimal(19, 4) @default(0) 
+  date           DateTime        @db.Date           
+  createdAt      DateTime        @default(now())    
 
-  user           User             @relation(fields: [userId], references: [id])
-  asset          Asset?           @relation(fields: [assetId], references: [id])
+  user           User            @relation(fields: [userId], references: [id])
+  asset          Asset?          @relation(fields: [assetId], references: [id])
 
-  // Indexes to prevent table-scans during daily Cron calculations
   @@index([userId])
   @@index([assetId])
   @@index([userId, date])
 }
 
 model DailyValuation {
-  id             String           @id @default(uuid())
+  id             String   @id @default(uuid())
   userId         String
-  date           DateTime         @db.Date
+  date           DateTime @db.Date
   
-  // Equity
-  cashBalanceUSD Decimal          @db.Decimal(19, 4)
-  marketValueUSD Decimal          @db.Decimal(19, 4)
-  totalEquityUSD Decimal          @db.Decimal(19, 4)
+  cashBalanceUSD Decimal  @db.Decimal(19, 4)
+  marketValueUSD Decimal  @db.Decimal(19, 4)
+  totalEquityUSD Decimal  @db.Decimal(19, 4)
   
-  // Converted Valuations
-  totalEquityIDR Decimal          @db.Decimal(19, 2)
-  exchangeRate   Decimal          @db.Decimal(19, 4) // USD to IDR rate at snapshot
+  totalEquityIDR Decimal  @db.Decimal(19, 2)
+  exchangeRate   Decimal  @db.Decimal(19, 4) 
 
-  user           User             @relation(fields: [userId], references: [id])
+  user           User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, date])
   @@index([userId])

@@ -1,9 +1,62 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
+    try {
+      // 1. Call your custom registration API route
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Something went wrong during registration");
+        setIsLoading(false);
+        return;
+      }
+
+      // 2. Automatically log the user in after successful registration
+      const signInRes = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (signInRes?.error) {
+        setError("Account created, but failed to log in automatically.");
+      } else if (signInRes?.ok) {
+        router.push("/dashboard");
+        router.refresh();
+      }
+    } catch (err) {
+      setError("An unexpected error occurred");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col items-center gap-2 text-center">
@@ -15,7 +68,13 @@ export default function RegisterPage() {
         </p>
       </div>
 
-      <form className="flex flex-col gap-4">
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+        {error && (
+          <div className="text-red-500 text-sm text-center font-medium bg-red-500/10 p-2 rounded-md">
+            {error}
+          </div>
+        )}
+        
         <div className="flex flex-col gap-2">
           <Label htmlFor="name" className="text-[13px] text-[oklch(0.70_0.005_260)]">Full Name</Label>
           <Input
@@ -24,6 +83,8 @@ export default function RegisterPage() {
             placeholder="John Doe"
             required
             className="h-10 text-[14px]"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
           />
         </div>
         <div className="flex flex-col gap-2">
@@ -34,6 +95,8 @@ export default function RegisterPage() {
             placeholder="name@example.com"
             required
             className="h-10 text-[14px]"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
         </div>
         <div className="flex flex-col gap-2">
@@ -44,11 +107,13 @@ export default function RegisterPage() {
             placeholder="••••••••"
             required
             className="h-10 text-[14px]"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
           />
         </div>
         
-        <Button className="mt-2 h-10 w-full text-[14px]" type="submit" variant="default" asChild>
-          <Link href="/dashboard" className="w-full">Create Account</Link>
+        <Button className="mt-2 h-10 w-full text-[14px]" type="submit" variant="default" disabled={isLoading}>
+          {isLoading ? "Creating Account..." : "Create Account"}
         </Button>
       </form>
 

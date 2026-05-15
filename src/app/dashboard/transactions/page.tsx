@@ -1,23 +1,24 @@
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+
 import { TransactionTable } from "@/components/dashboard/transaction-table";
 import { getTransactions } from "@/app/actions/transactions";
-import { transactions as dummyTransactions } from "@/lib/dummy-data";
 import { ArrowLeftRight, Filter, Download } from "lucide-react";
 
-const DEFAULT_USER_ID = process.env.DEFAULT_USER_ID ?? "";
-
 export default async function TransactionsPage() {
-  let transactions = dummyTransactions;
-
-  if (DEFAULT_USER_ID) {
-    const res = await getTransactions(DEFAULT_USER_ID);
-    if (res.success && res.data?.length) {
-      transactions = res.data;
-    }
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) {
+    redirect("/login");
   }
+  const userId = (session.user as any).id;
 
-  const buyCount = transactions.filter((t) => t.type === "BUY").length;
-  const sellCount = transactions.filter((t) => t.type === "SELL").length;
-  const totalVolume = transactions.reduce((s, t) => s + t.netValue, 0);
+  const res = await getTransactions(userId);
+  const transactions = res.success && res.data ? res.data : [];
+
+  const buyCount = transactions.filter((t: any) => t.type === "BUY").length;
+  const sellCount = transactions.filter((t: any) => t.type === "SELL").length;
+  const totalVolume = transactions.reduce((s: number, t: any) => s + Number(t.netValue || 0), 0);
 
   return (
     <div className="flex flex-col gap-6">

@@ -1,10 +1,11 @@
-import { Upload, FileText, FileSpreadsheet, Globe, CheckCircle2 } from "lucide-react";
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
-const importHistory = [
-  { id: 1, filename: "ajaib_jul_2025.pdf", source: "Ajaib PDF", date: "17 Jul 2025", transactions: 8, status: "success" },
-  { id: 2, filename: "stockbit_jun_2025.pdf", source: "Stockbit PDF", date: "28 Jun 2025", transactions: 12, status: "success" },
-  { id: 3, filename: "portfolio_may.csv", source: "CSV Import", date: "01 Jun 2025", transactions: 24, status: "success" },
-];
+import { FileText, FileSpreadsheet, Globe, CheckCircle2 } from "lucide-react";
+import { FileUploader } from "@/components/dashboard/file-uploader";
+
+const importHistory: any[] = [];
 
 const importSources = [
   { id: "ajaib", name: "Ajaib", desc: "Import from Ajaib brokerage PDF statements", icon: FileText, formats: "PDF" },
@@ -13,7 +14,11 @@ const importSources = [
   { id: "api", name: "Broker API", desc: "Automatic sync via broker API", icon: Globe, formats: "API", comingSoon: true },
 ];
 
-export default function ImportPage() {
+export default async function ImportPage() {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) {
+    redirect("/login");
+  }
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -21,14 +26,7 @@ export default function ImportPage() {
         <p className="mt-1 text-[13px] text-[oklch(0.45_0.01_260)]">Import transactions from brokerage statements and CSV files.</p>
       </div>
 
-      <div className="rounded-xl border-2 border-dashed border-[oklch(0.18_0.005_260)] bg-[oklch(0.04_0.005_260)] p-10 text-center transition-colors hover:border-[oklch(0.25_0.01_230)]">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[oklch(0.10_0.01_230)]">
-          <Upload className="h-6 w-6 text-[oklch(0.70_0.08_230)]" strokeWidth={1.75} />
-        </div>
-        <p className="mt-4 text-[14px] font-medium text-[oklch(0.80_0.005_260)]">Drag and drop your files here</p>
-        <p className="mt-1 text-[12px] text-[oklch(0.40_0.01_260)]">Supports Ajaib PDF, Stockbit PDF, and CSV formats</p>
-        <button className="mt-5 inline-flex h-9 items-center rounded-lg bg-[oklch(0.70_0.08_230)] px-5 text-[12px] font-semibold text-[oklch(0.03_0.005_260)] transition-colors hover:bg-[oklch(0.65_0.08_230)]">Browse Files</button>
-      </div>
+      <FileUploader />
 
       <div>
         <h2 className="mb-4 text-sm font-semibold text-[oklch(0.88_0.005_260)]">Import Sources</h2>
