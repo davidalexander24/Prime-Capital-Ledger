@@ -2,13 +2,8 @@ import { TrendingUp, TrendingDown, Wallet, BarChart3, Layers } from "lucide-reac
 import type { PortfolioSummary } from "@/lib/types";
 
 function formatIDR(value: number): string {
-  if (value >= 1_000_000_000) {
-    return `Rp ${(value / 1_000_000_000).toFixed(2)}B`;
-  }
-  if (value >= 1_000_000) {
-    return `Rp ${(value / 1_000_000).toFixed(1)}M`;
-  }
-  return `Rp ${value.toLocaleString("id-ID")}`;
+  const rounded = Math.round(Math.abs(value));
+  return `Rp${rounded.toLocaleString("id-ID")}`;
 }
 
 interface SummaryCardsProps {

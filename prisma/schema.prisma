@@ -84,7 +84,7 @@ model Transaction {
   userId         String
   assetId        String?
   type           TransactionType
-  quantity       Decimal         @db.Decimal(19, 8) 
+  quantity       Decimal         @db.Decimal(19, 9) 
   executionPrice Decimal         @db.Decimal(19, 4) 
   fee            Decimal         @db.Decimal(19, 4) @default(0) 
   date           DateTime        @db.Date           

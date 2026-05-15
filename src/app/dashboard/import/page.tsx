@@ -48,27 +48,33 @@ export default async function ImportPage() {
         <div className="border-b border-[oklch(0.12_0.005_260)] px-6 py-4">
           <h2 className="text-sm font-semibold text-[oklch(0.88_0.005_260)]">Import History</h2>
         </div>
-        <div className="divide-y divide-[oklch(0.10_0.005_260)]">
-          {importHistory.map((item) => (
-            <div key={item.id} className="flex items-center justify-between px-6 py-3.5 hover:bg-[oklch(0.07_0.005_260)]">
-              <div className="flex items-center gap-3">
-                <FileText className="h-4 w-4 text-[oklch(0.35_0.01_260)]" strokeWidth={1.75} />
-                <div>
-                  <span className="text-[12px] font-medium text-[oklch(0.85_0.005_260)]">{item.filename}</span>
-                  <span className="ml-2 text-[10px] text-[oklch(0.40_0.01_260)]">{item.source}</span>
+        {importHistory.length === 0 ? (
+          <div className="px-6 py-10 text-center">
+            <p className="text-[12px] text-[oklch(0.45_0.01_260)]">No imports yet. Upload a statement above to get started.</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-[oklch(0.10_0.005_260)]">
+            {importHistory.map((item) => (
+              <div key={item.id} className="flex items-center justify-between px-6 py-3.5 hover:bg-[oklch(0.07_0.005_260)]">
+                <div className="flex items-center gap-3">
+                  <FileText className="h-4 w-4 text-[oklch(0.35_0.01_260)]" strokeWidth={1.75} />
+                  <div>
+                    <span className="text-[12px] font-medium text-[oklch(0.85_0.005_260)]">{item.filename}</span>
+                    <span className="ml-2 text-[10px] text-[oklch(0.40_0.01_260)]">{item.source}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-6">
+                  <span className="text-[11px] text-[oklch(0.40_0.01_260)]">{item.transactions} txns</span>
+                  <span className="text-[11px] text-[oklch(0.35_0.01_260)]">{item.date}</span>
+                  <div className="flex items-center gap-1 text-[11px] font-medium text-[oklch(0.65_0.15_155)]">
+                    <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={2} />
+                    Done
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-6">
-                <span className="text-[11px] text-[oklch(0.40_0.01_260)]">{item.transactions} txns</span>
-                <span className="text-[11px] text-[oklch(0.35_0.01_260)]">{item.date}</span>
-                <div className="flex items-center gap-1 text-[11px] font-medium text-[oklch(0.65_0.15_155)]">
-                  <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={2} />
-                  Done
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

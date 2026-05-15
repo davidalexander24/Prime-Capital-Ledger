@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import logoPrimeCapital from "@/assets/logoprimecaptial.png";
 import {
   LayoutDashboard,
@@ -24,6 +25,19 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+
+  const displayName =
+    session?.user?.name ||
+    session?.user?.email?.split("@")[0] ||
+    "Investor";
+
+  const initials = displayName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "IN";
 
   return (
     <aside className="fixed left-0 top-0 z-40 flex h-screen w-[220px] flex-col border-r border-[oklch(0.14_0.005_260)] bg-[oklch(0.04_0.005_260)]">
@@ -71,11 +85,11 @@ export function Sidebar() {
       <div className="border-t border-[oklch(0.14_0.005_260)] px-4 py-4">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[oklch(0.14_0.005_260)] text-[11px] font-semibold text-[oklch(0.60_0.005_260)]">
-            NC
+            {initials}
           </div>
           <div className="flex flex-col">
             <span className="text-[12px] font-medium text-[oklch(0.80_0.005_260)]">
-              Nicholas
+              {displayName}
             </span>
             <span className="text-[10px] text-[oklch(0.40_0.01_260)]">
               Personal

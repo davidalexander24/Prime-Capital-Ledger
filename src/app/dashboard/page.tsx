@@ -7,54 +7,67 @@ import { ValuationChart } from "@/components/charts/valuation-chart";
 import { TransactionTable } from "@/components/dashboard/transaction-table";
 import { TopTraded } from "@/components/dashboard/top-traded";
 import {
-  getPortfolioSummary,
   getHistoricalValuations,
   getRecentTransactions,
-  getTrendingStocks,
+  getHoldingsDailyChange,
 } from "@/app/actions/dashboard";
+import { getPortfolioHoldings } from "@/app/actions/portfolio";
+import { getUsdIdrRate } from "@/lib/marketData";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  // 1. Retrieve the active user session
   const session = await getServerSession(authOptions);
 
-  // 2. Security Check: If no session exists, boot the user back to login
   if (!session || !session.user) {
     redirect("/login");
   }
 
-  // NextAuth stores the database ID here based on our callbacks
-  const userId = (session.user as any).id; 
+  const userId = (session.user as any).id;
 
-  // 3. Fetch all data in parallel using the REAL userId
-  // We no longer fall back to dummy data. If a user is new, their arrays will just be empty.
-  const [summaryRes, valuationRes, transactionsRes, trendingRes] =
+  const [valuationRes, transactionsRes, moversRes, holdingsRes, fxRate] =
     await Promise.all([
-      getPortfolioSummary(userId),
       getHistoricalValuations(userId),
       getRecentTransactions(userId),
-      getTrendingStocks().catch(() => ({
+      getHoldingsDailyChange(userId).catch(() => ({
         success: false as const,
         data: null,
         error: null,
       })),
+      getPortfolioHoldings(userId),
+      getUsdIdrRate(),
     ]);
-
-  const dbSummary = summaryRes.success ? summaryRes.data : null;
-  
-  const summary = {
-    totalValue: dbSummary?.totalEquityIDR || 0,
-    totalCostBasis: dbSummary?.totalEquityIDR ? dbSummary.totalEquityIDR * 0.9 : 0,
-    unrealizedPnL: dbSummary?.totalEquityIDR ? dbSummary.totalEquityIDR * 0.1 : 0,
-    totalReturnPct: dbSummary?.totalEquityIDR ? 10.5 : 0,
-    holdingsCount: trendingRes.success && trendingRes.data ? trendingRes.data.length : 0,
-    currency: "IDR"
-  };
 
   const valuation = valuationRes.success && valuationRes.data ? valuationRes.data : [];
   const transactions = transactionsRes.success && transactionsRes.data ? transactionsRes.data : [];
-  const trending = trendingRes.success && trendingRes.data ? trendingRes.data : [];
+  const movers = moversRes.success && moversRes.data ? moversRes.data : [];
+  const holdings = holdingsRes.success && holdingsRes.data ? holdingsRes.data.holdings : [];
+  const rate = fxRate ?? 16000;
+
+  // Compute totals in IDR, converting USD positions via FX
+  let totalMarketValueIDR = 0;
+  let totalCostBasisIDR = 0;
+  for (const h of holdings) {
+    if (h.currency === "IDR") {
+      totalMarketValueIDR += h.marketValue;
+      totalCostBasisIDR += h.costBasis;
+    } else {
+      totalMarketValueIDR += h.marketValue * rate;
+      totalCostBasisIDR += h.costBasis * rate;
+    }
+  }
+  const unrealizedPnLIDR = totalMarketValueIDR - totalCostBasisIDR;
+  const totalReturnPct =
+    totalCostBasisIDR > 0 ? (unrealizedPnLIDR / totalCostBasisIDR) * 100 : 0;
+
+  const summary = {
+    totalValue: totalMarketValueIDR,
+    totalCostBasis: totalCostBasisIDR,
+    unrealizedPnL: unrealizedPnLIDR,
+    totalReturnPct,
+    holdingsCount: holdings.length,
+    currency: "IDR",
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -76,7 +89,6 @@ export default async function DashboardPage() {
         </span>
       </div>
 
-      {/* If summary is null, you may want to pass an empty state object to SummaryCards */}
       <SummaryCards data={summary} />
 
       <div className="grid grid-cols-5 gap-6">
@@ -84,7 +96,7 @@ export default async function DashboardPage() {
           <ValuationChart data={valuation} />
         </div>
         <div className="col-span-2">
-          <TopTraded data={trending} />
+          <TopTraded data={movers} />
         </div>
       </div>
 

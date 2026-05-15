@@ -1,4 +1,4 @@
-export type TransactionType = "BUY" | "SELL";
+export type TransactionType = "BUY" | "SELL" | "DEPOSIT" | "WITHDRAW";
 
 export type TransactionSource =
   | "MANUAL"
@@ -24,7 +24,6 @@ export interface TransactionRecord {
   assetName: string;
   type: TransactionType;
   quantity: number;
-  lotSize: number;
   pricePerShare: number;
   grossValue: number;
   totalFees: number;
