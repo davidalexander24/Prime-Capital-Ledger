@@ -68,6 +68,13 @@ function CustomTooltip({
 }
 
 export function ValuationChart({ data }: ValuationChartProps) {
+  const hasData = data.length > 0;
+  const initialValue = data[0]?.totalMarketValue ?? 0;
+  const yDomain = hasData
+    ? [(dataMin: number) => Math.min(dataMin, initialValue), "dataMax"]
+    : ["auto", "auto"];
+  const baseValue = hasData ? initialValue : 0;
+
   return (
     <div className="overflow-hidden rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)]">
       <div className="flex items-center justify-between border-b border-[oklch(0.12_0.005_260)] px-6 py-4">
@@ -119,6 +126,7 @@ export function ValuationChart({ data }: ValuationChartProps) {
               tickLine={false}
               tick={{ fontSize: 11, fill: "oklch(0.40 0.01 260)" }}
               width={52}
+              domain={yDomain}
             />
             <Tooltip
               content={<CustomTooltip />}
@@ -136,6 +144,7 @@ export function ValuationChart({ data }: ValuationChartProps) {
               fill="none"
               dot={false}
               activeDot={false}
+              baseValue={baseValue}
             />
             <Area
               type="monotone"
@@ -150,6 +159,7 @@ export function ValuationChart({ data }: ValuationChartProps) {
                 stroke: "oklch(0.05 0.005 260)",
                 strokeWidth: 2,
               }}
+              baseValue={baseValue}
             />
           </AreaChart>
         </ResponsiveContainer>

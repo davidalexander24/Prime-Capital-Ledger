@@ -31,7 +31,23 @@ function formatTime(dateStr: string): string {
 }
 
 function formatIDR(value: number): string {
-  return `Rp ${value.toLocaleString("id-ID")}`;
+  const rounded = Math.round(Math.abs(value));
+  return `Rp${rounded.toLocaleString("id-ID")}`;
+}
+
+function formatUSD(value: number): string {
+  const abs = Math.abs(value);
+  const formatted = abs.toLocaleString("id-ID", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return `$${formatted}`;
+}
+
+function formatCurrency(value: number, currency?: string, withSign = false): string {
+  const sign = value < 0 ? "-" : "";
+  const formatted = currency === "USD" ? formatUSD(Math.abs(value)) : formatIDR(Math.abs(value));
+  return withSign ? `${sign}${formatted}` : formatted;
 }
 
 export function TransactionTable({ data }: TransactionTableProps) {
@@ -123,12 +139,12 @@ export function TransactionTable({ data }: TransactionTableProps) {
               </TableCell>
               <TableCell className="text-right">
                 <span className="text-[12px] font-medium text-[oklch(0.80_0.005_260)]">
-                  {formatIDR(tx.pricePerShare)}
+                  {formatCurrency(tx.pricePerShare, tx.currency)}
                 </span>
               </TableCell>
               <TableCell className="pr-6 text-right">
                 <span className="text-[12px] font-semibold text-[oklch(0.88_0.005_260)]">
-                  {formatIDR(tx.netValue)}
+                  {formatCurrency(tx.netValue, tx.currency, true)}
                 </span>
               </TableCell>
             </TableRow>

@@ -1,27 +1,50 @@
 import { PrismaClient, Prisma } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 import 'dotenv/config';
 
 const prisma = new PrismaClient();
 
+const DEV_EMAIL = process.env.DEV_SEED_EMAIL ?? 'admin@gmail.com';
+const DEV_PASSWORD = process.env.DEV_SEED_PASSWORD ?? 'admin123';
+const DEV_NAME = process.env.DEV_SEED_NAME ?? 'Admin';
+
 async function main() {
-    console.log('Clearing existing data...');
+    if (process.env.NODE_ENV === 'production') {
+        throw new Error('Refusing to run seed in production.');
+    }
 
-    console.log('Seeding Database...');
+    console.log('Seeding development data...');
 
-    const user = await prisma.user.create({
-        data: {
-            email: 'dafa@primecapital.com',
-            name: 'Tubagus Dafa Izza Fariz',
+    const passwordHash = await bcrypt.hash(DEV_PASSWORD, 10);
+
+    const user = await prisma.user.upsert({
+        where: { email: DEV_EMAIL },
+        update: {
+            name: DEV_NAME,
+            password: passwordHash,
+        },
+        create: {
+            email: DEV_EMAIL,
+            name: DEV_NAME,
+            password: passwordHash,
         },
     });
 
+    // Reset only the dev user's data for deterministic seeds.
+    await prisma.dailyValuation.deleteMany({ where: { userId: user.id } });
+    await prisma.transaction.deleteMany({ where: { userId: user.id } });
+
     // Assets
-    const msft = await prisma.asset.create({
-        data: { ticker: 'MSFT', companyName: 'Microsoft Corporation', currency: 'USD' },
+    const msft = await prisma.asset.upsert({
+        where: { ticker: 'MSFT' },
+        update: { companyName: 'Microsoft Corporation', currency: 'USD' },
+        create: { ticker: 'MSFT', companyName: 'Microsoft Corporation', currency: 'USD' },
     });
 
-    const aapl = await prisma.asset.create({
-        data: { ticker: 'AAPL', companyName: 'Apple Inc.', currency: 'USD' },
+    const aapl = await prisma.asset.upsert({
+        where: { ticker: 'AAPL' },
+        update: { companyName: 'Apple Inc.', currency: 'USD' },
+        create: { ticker: 'AAPL', companyName: 'Apple Inc.', currency: 'USD' },
     });
 
     // Initial Deposit + Stock Purchases
@@ -33,7 +56,7 @@ async function main() {
                 quantity: new Prisma.Decimal(1),
                 executionPrice: new Prisma.Decimal(10000), // $10,000 deposit
                 fee: new Prisma.Decimal(0),
-                date: new Date('2026-04-01T10:00:00Z'),
+                date: new Date('2026-04-01T00:00:00Z'),
             },
             {
                 userId: user.id,
@@ -42,7 +65,7 @@ async function main() {
                 quantity: new Prisma.Decimal(5),
                 executionPrice: new Prisma.Decimal(400), // 5 * 400 = $2000
                 fee: new Prisma.Decimal(3), // 0.15% fee
-                date: new Date('2026-04-02T14:30:00Z'),
+                date: new Date('2026-04-02T00:00:00Z'),
             },
             {
                 userId: user.id,
@@ -51,7 +74,7 @@ async function main() {
                 quantity: new Prisma.Decimal(10),
                 executionPrice: new Prisma.Decimal(170), // 10 * 170 = $1700
                 fee: new Prisma.Decimal(2.55), // 0.15% fee
-                date: new Date('2026-04-03T15:00:00Z'),
+                date: new Date('2026-04-03T00:00:00Z'),
             }
         ]
     });
@@ -81,6 +104,7 @@ async function main() {
     });
 
     console.log('Seeding complete.');
+    console.log(`Dev login: ${DEV_EMAIL} / ${DEV_PASSWORD}`);
 }
 
 main()

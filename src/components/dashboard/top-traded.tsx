@@ -11,6 +11,24 @@ function formatVolume(volume: number): string {
   return volume.toString();
 }
 
+function formatIDR(value: number): string {
+  const rounded = Math.round(Math.abs(value));
+  return `Rp${rounded.toLocaleString("id-ID")}`;
+}
+
+function formatUSD(value: number): string {
+  const abs = Math.abs(value);
+  const formatted = abs.toLocaleString("id-ID", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return `$${formatted}`;
+}
+
+function formatCurrency(value: number, currency?: string): string {
+  return currency === "USD" ? formatUSD(value) : formatIDR(value);
+}
+
 export function TopTraded({ data }: TopTradedProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)]">
@@ -53,7 +71,7 @@ export function TopTraded({ data }: TopTradedProps) {
               <div className="flex flex-col items-end gap-0.5">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[12px] font-semibold text-[oklch(0.88_0.005_260)]">
-                    Rp {asset.lastPrice.toLocaleString("id-ID")}
+                    {formatCurrency(asset.lastPrice, asset.currency)}
                   </span>
                   <div
                     className={`flex items-center gap-0.5 text-[11px] font-medium ${

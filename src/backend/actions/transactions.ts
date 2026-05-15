@@ -20,14 +20,21 @@ export async function getTransactionsByUserId(userId: string): Promise<Transacti
       const price = Number(t.executionPrice);
       const fee = Number(t.fee);
       const grossValue = qty * price;
-      const netValue = t.type === "BUY" ? grossValue + fee : grossValue - fee;
+      let netValue = grossValue;
+      if (t.type === "BUY") {
+        netValue = grossValue + fee;
+      } else if (t.type === "SELL") {
+        netValue = grossValue - fee;
+      } else if (t.type === "WITHDRAW") {
+        netValue = -grossValue;
+      }
 
       return {
         id: t.id,
         executedAt: t.date.toISOString(),
         ticker: t.asset?.ticker ?? t.type,
         assetName: t.asset?.companyName ?? t.type,
-        type: t.type as "BUY" | "SELL",
+        type: t.type as TransactionRecord["type"],
         quantity: qty,
         lotSize: 100,
         pricePerShare: price,

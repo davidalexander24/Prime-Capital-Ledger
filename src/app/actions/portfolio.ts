@@ -13,6 +13,7 @@ export interface HoldingRow {
   ticker: string;
   name: string;
   sector: string;
+  currency: string;
   lots: number;
   avgPrice: number;
   lastPrice: number;
@@ -47,6 +48,7 @@ export async function getPortfolioHoldings(
       {
         ticker: string;
         companyName: string;
+        currency: string;
         shares: number;
         totalCost: number;
       }
@@ -63,6 +65,7 @@ export async function getPortfolioHoldings(
         holdingsMap[t.assetId] = {
           ticker: t.asset.ticker,
           companyName: t.asset.companyName,
+          currency: t.asset.currency ?? "USD",
           shares: 0,
           totalCost: 0,
         };
@@ -105,6 +108,7 @@ export async function getPortfolioHoldings(
       rows.push({
         ticker: h.ticker,
         name: h.companyName,
+        currency: h.currency,
         sector: "",
         lots: h.shares,
         avgPrice: Math.round(avgPrice * 100) / 100,

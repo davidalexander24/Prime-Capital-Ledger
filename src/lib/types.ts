@@ -1,4 +1,4 @@
-export type TransactionType = "BUY" | "SELL";
+export type TransactionType = "BUY" | "SELL" | "DEPOSIT" | "WITHDRAW";
 
 export type TransactionSource =
   | "MANUAL"
