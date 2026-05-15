@@ -4,14 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -46,64 +45,84 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight text-[oklch(0.93_0.005_260)]">
-          Welcome back
-        </h1>
-        <p className="text-[13px] text-[oklch(0.50_0.01_260)]">
-          Enter your email and password to access your dashboard
+    <div>
+      {/* Heading */}
+      <div style={{ textAlign: "center", marginBottom: 24 }}>
+        <h1 className="auth-heading">Welcome back</h1>
+        <p className="auth-subheading">
+          Sign in to access your investment dashboard
         </p>
       </div>
 
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-        {error && (
-          <div className="text-red-500 text-sm text-center font-medium bg-red-500/10 p-2 rounded-md">
-            {error}
-          </div>
-        )}
-        
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="email" className="text-[13px] text-[oklch(0.70_0.005_260)]">Email</Label>
-          <Input
-            id="email"
+      {/* Form */}
+      <form onSubmit={handleSubmit}>
+        {error && <div className="auth-error-box">{error}</div>}
+
+        {/* Email */}
+        <div className="auth-field-group" style={{ marginBottom: 16 }}>
+          <label className="auth-field-label">
+            Email address<span className="auth-required">*</span>
+          </label>
+          <input
+            id="login-email"
             type="email"
-            placeholder="name@example.com"
+            className="auth-input"
+            placeholder="Enter your email"
             required
-            className="h-10 text-[14px]"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="password" className="text-[13px] text-[oklch(0.70_0.005_260)]">Password</Label>
-            <Link href="#" className="text-[12px] font-medium text-[oklch(0.70_0.08_230)] hover:underline">
+
+        {/* Password */}
+        <div className="auth-field-group" style={{ marginBottom: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <label className="auth-field-label" style={{ marginBottom: 0 }}>
+              Password<span className="auth-required">*</span>
+            </label>
+            <Link href="#" className="auth-forgot-link">
               Forgot password?
             </Link>
           </div>
-          <Input
-            id="password"
-            type="password"
-            placeholder="••••••••"
-            required
-            className="h-10 text-[14px]"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <div className="auth-field-wrapper" style={{ marginTop: 6 }}>
+            <input
+              id="login-password"
+              type={showPassword ? "text" : "password"}
+              className="auth-input"
+              placeholder="••••••••"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={{ paddingRight: 44 }}
+            />
+            <button
+              type="button"
+              className="auth-password-toggle"
+              onClick={() => setShowPassword(!showPassword)}
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
         </div>
-        
-        <Button className="mt-2 h-10 w-full text-[14px]" type="submit" variant="default" disabled={isLoading}>
+
+        {/* Submit */}
+        <button
+          id="login-submit"
+          type="submit"
+          className="auth-submit-btn"
+          disabled={isLoading}
+          style={{ marginTop: 20 }}
+        >
           {isLoading ? "Signing in..." : "Sign In"}
-        </Button>
+        </button>
       </form>
 
-      <div className="text-center text-[13px] text-[oklch(0.50_0.01_260)]">
+      {/* Switch to register */}
+      <p className="auth-switch-text">
         Don&apos;t have an account?{" "}
-        <Link href="/register" className="font-medium text-[oklch(0.70_0.08_230)] hover:underline">
-          Sign up
-        </Link>
-      </div>
+        <Link href="/register">Sign up</Link>
+      </p>
     </div>
   );
 }
