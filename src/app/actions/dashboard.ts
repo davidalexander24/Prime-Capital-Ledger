@@ -2,6 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import {
+  getLatestPrice,
   getUsdIdrRate,
   getMarketQuote,
   getHistoricalPrices,
@@ -107,12 +108,14 @@ export async function getHistoricalValuations(
       }
     });
 
-    const fxByDate = new Map<string, number>();
-    for (const point of fxHistory || []) {
-      fxByDate.set(point.date, point.close);
-    }
-
-    const fallbackFx = (await getUsdIdrRate()) ?? 16000;
+    // Use the live FX rate across the whole series. Two reasons:
+    //  - Cost basis is in USD between BUYs; multiplying by a single rate keeps
+    //    the IDR cost basis flat instead of wobbling with daily FX.
+    //  - Summary card also uses the live rate, so end-of-series matches.
+    const fxRate =
+      (await getUsdIdrRate()) ??
+      fxHistory?.[fxHistory.length - 1]?.close ??
+      16000;
 
     const txByDate = new Map<string, typeof transactions>();
     for (const tx of transactions) {
@@ -132,12 +135,22 @@ export async function getHistoricalValuations(
       totalCost: number;
     }>();
 
-    let cashUSD = 0;
-    let contributionsUSD = 0;
-    let lastFx = fxHistory?.[0]?.close ?? fallbackFx;
     let previousMarketValue = 0;
 
     const valuationSeries: PortfolioValuationPoint[] = [];
+
+    // Synthetic zero-day before the first transaction so ALL-view start has
+    // unrealizedPnL == 0 (otherwise day 1 already includes a small mismatch
+    // between execution price and that day's close).
+    const seedDate = new Date(startDate);
+    seedDate.setUTCDate(seedDate.getUTCDate() - 1);
+    valuationSeries.push({
+      date: seedDate.toISOString().split('T')[0],
+      totalMarketValue: 0,
+      totalCostBasis: 0,
+      unrealizedPnL: 0,
+      dailyReturn: 0,
+    });
 
     for (
       let cursor = new Date(startDate);
@@ -148,31 +161,16 @@ export async function getHistoricalValuations(
       const dayTransactions = txByDate.get(dateKey) ?? [];
 
       for (const tx of dayTransactions) {
+        if (tx.type === "DEPOSIT" || tx.type === "WITHDRAW") continue;
+        if (!tx.assetId || !tx.asset) continue;
+
+        const meta = assetMeta.get(tx.assetId);
+        if (!meta) continue;
+
         const qty = Number(tx.quantity);
         const price = Number(tx.executionPrice);
         const fee = Number(tx.fee);
         const grossValue = qty * price;
-
-        if (tx.type === "DEPOSIT") {
-          cashUSD += grossValue;
-          contributionsUSD += grossValue;
-          continue;
-        }
-
-        if (tx.type === "WITHDRAW") {
-          cashUSD -= grossValue;
-          contributionsUSD -= grossValue;
-          continue;
-        }
-
-        if (!tx.assetId || !tx.asset) {
-          continue;
-        }
-
-        const meta = assetMeta.get(tx.assetId);
-        if (!meta) {
-          continue;
-        }
 
         const holding = holdings.get(tx.assetId) ?? {
           ticker: meta.ticker,
@@ -182,27 +180,21 @@ export async function getHistoricalValuations(
         };
 
         if (tx.type === "BUY") {
-          const cost = grossValue + fee;
           holding.shares += qty;
-          holding.totalCost += cost;
-          cashUSD -= cost;
+          holding.totalCost += grossValue + fee;
         } else if (tx.type === "SELL") {
-          const proceeds = grossValue - fee;
           const avgCost = holding.shares > 0 ? holding.totalCost / holding.shares : 0;
           holding.shares -= qty;
           holding.totalCost -= avgCost * qty;
-          cashUSD += proceeds;
         }
 
         holdings.set(tx.assetId, holding);
       }
 
-      if (fxByDate.has(dateKey)) {
-        lastFx = fxByDate.get(dateKey) ?? lastFx;
-      }
-
       let marketValueUSD = 0;
       let marketValueIDR = 0;
+      let costBasisUSD = 0;
+      let costBasisIDR = 0;
 
       for (const holding of holdings.values()) {
         if (holding.shares <= 0) continue;
@@ -218,13 +210,15 @@ export async function getHistoricalValuations(
 
         if (holding.currency === "IDR") {
           marketValueIDR += positionValue;
+          costBasisIDR += holding.totalCost;
         } else {
           marketValueUSD += positionValue;
+          costBasisUSD += holding.totalCost;
         }
       }
 
-      const totalMarketValue = (marketValueUSD + cashUSD) * lastFx + marketValueIDR;
-      const totalCostBasis = contributionsUSD * lastFx;
+      const totalMarketValue = marketValueUSD * fxRate + marketValueIDR;
+      const totalCostBasis = costBasisUSD * fxRate + costBasisIDR;
       const unrealizedPnL = totalMarketValue - totalCostBasis;
       const dailyReturn =
         previousMarketValue === 0
@@ -240,6 +234,39 @@ export async function getHistoricalValuations(
         unrealizedPnL,
         dailyReturn,
       });
+    }
+
+    // Override the final point with live prices so the chart's "today" value
+    // matches the summary card (which also uses getLatestPrice).
+    const lastPoint = valuationSeries[valuationSeries.length - 1];
+    if (lastPoint && holdings.size > 0) {
+      const liveTickers = Array.from(holdings.values())
+        .filter((h) => h.shares > 0)
+        .map((h) => h.ticker);
+      const livePrices = await Promise.all(
+        liveTickers.map((t) => getLatestPrice(t))
+      );
+      const liveByTicker = new Map<string, number>();
+      liveTickers.forEach((t, i) => {
+        const p = livePrices[i];
+        if (p != null) liveByTicker.set(t, p);
+      });
+
+      let liveMvUSD = 0;
+      let liveMvIDR = 0;
+      for (const holding of holdings.values()) {
+        if (holding.shares <= 0) continue;
+        const price =
+          liveByTicker.get(holding.ticker) ??
+          lastPriceByTicker.get(holding.ticker) ??
+          0;
+        const positionValue = holding.shares * price;
+        if (holding.currency === "IDR") liveMvIDR += positionValue;
+        else liveMvUSD += positionValue;
+      }
+      const liveTotalMarketValue = liveMvUSD * fxRate + liveMvIDR;
+      lastPoint.totalMarketValue = liveTotalMarketValue;
+      lastPoint.unrealizedPnL = liveTotalMarketValue - lastPoint.totalCostBasis;
     }
 
     return { success: true, data: valuationSeries, error: null };
@@ -287,7 +314,6 @@ export async function getRecentTransactions(
         assetName: t.asset?.companyName ?? t.type,
         type: t.type as TransactionRecord["type"],
         quantity: qty,
-        lotSize: 100,
         pricePerShare: price,
         grossValue,
         totalFees: fee,
@@ -301,6 +327,86 @@ export async function getRecentTransactions(
   } catch (error) {
     console.error("Error fetching recent transactions:", error);
     return { success: false, data: null, error: "Failed to retrieve transaction history." };
+  }
+}
+
+// Daily price change for the stocks the user actually owns.
+// Sorted by largest absolute % move first (biggest movers today).
+export async function getHoldingsDailyChange(
+  userId: string
+): Promise<ActionResponse<any>> {
+  try {
+    const transactions = await prisma.transaction.findMany({
+      where: { userId },
+      include: { asset: true },
+      orderBy: { date: "asc" },
+    });
+
+    const holdings = new Map<
+      string,
+      {
+        ticker: string;
+        name: string;
+        currency: string;
+        shares: number;
+        tradeCount: number;
+      }
+    >();
+
+    for (const t of transactions) {
+      if (!t.asset || !t.assetId) continue;
+      if (t.type !== "BUY" && t.type !== "SELL") continue;
+
+      const qty = Number(t.quantity);
+      const holding = holdings.get(t.assetId) ?? {
+        ticker: t.asset.ticker,
+        name: t.asset.companyName,
+        currency: t.asset.currency ?? "USD",
+        shares: 0,
+        tradeCount: 0,
+      };
+
+      if (t.type === "BUY") holding.shares += qty;
+      else holding.shares -= qty;
+      holding.tradeCount += 1;
+
+      holdings.set(t.assetId, holding);
+    }
+
+    const positions = Array.from(holdings.values()).filter(
+      (h) => h.shares > 0
+    );
+
+    const quotes = await Promise.all(
+      positions.map((p) => getMarketQuote(p.ticker))
+    );
+
+    const rows = positions.map((p, i) => {
+      const q = quotes[i];
+      return {
+        ticker: p.ticker,
+        name: p.name,
+        sector: "",
+        totalVolume: p.shares,
+        tradeCount: p.tradeCount,
+        lastPrice: q?.price ?? 0,
+        changePercent: q?.changePercent ?? 0,
+        currency: p.currency,
+      };
+    });
+
+    rows.sort(
+      (a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent)
+    );
+
+    return { success: true, data: rows.slice(0, 5), error: null };
+  } catch (error) {
+    console.error("Error fetching holdings daily change:", error);
+    return {
+      success: false,
+      data: null,
+      error: "Failed to retrieve holdings daily change.",
+    };
   }
 }
 
@@ -332,17 +438,15 @@ export async function getTrendingStocks(): Promise<ActionResponse<any>> {
       where: { id: { in: assetIds } },
     });
 
-    // Use Promise.all to map over the array and fetch live prices concurrently
     const trendingData = await Promise.all(topTraded.map(async (trade) => {
       const assetDetails = assets.find(a => a.id === trade.assetId);
       const ticker = assetDetails?.ticker || "Unknown";
       const currency = assetDetails?.currency ?? "USD";
-      
+
       let lastPrice = 0;
       let changePercent = 0;
 
       if (ticker !== "Unknown") {
-        // Use our new UI-specific quote fetcher
         const quote = await getMarketQuote(ticker);
         if (quote) {
           lastPrice = quote.price;
@@ -353,7 +457,7 @@ export async function getTrendingStocks(): Promise<ActionResponse<any>> {
       return {
         ticker,
         name: assetDetails?.companyName || "Unknown",
-        sector: "TECH", // Fallback sector
+        sector: "",
         totalVolume: Number(trade._sum.quantity) || 0,
         tradeCount: trade._count.assetId,
         lastPrice,

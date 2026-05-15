@@ -132,24 +132,17 @@ export async function getHistoricalPrices(
       interval: "1d",
     });
 
-    const timestamps = (result as any)?.timestamp ?? (result as any)?.timestamps ?? [];
-    const quote = (result as any)?.indicators?.quote?.[0];
-    const adjclose = (result as any)?.indicators?.adjclose?.[0]?.adjclose;
-    const closes = adjclose ?? quote?.close ?? [];
-
-    const length = Math.min(timestamps.length, closes.length);
+    const quotes = result?.quotes ?? [];
     const cleaned: HistoricalPricePoint[] = [];
 
-    for (let i = 0; i < length; i += 1) {
-      const ts = timestamps[i];
-      const close = closes[i];
-
-      if (!ts || close == null || Number.isNaN(Number(close))) {
+    for (const q of quotes) {
+      const close = q.adjclose ?? q.close;
+      if (!q.date || close == null || Number.isNaN(Number(close))) {
         continue;
       }
 
       cleaned.push({
-        date: new Date(ts * 1000).toISOString().split("T")[0],
+        date: new Date(q.date).toISOString().split("T")[0],
         close: Number(close),
       });
     }

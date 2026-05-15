@@ -46,7 +46,6 @@ export async function getTransactions(
         assetName: t.asset?.companyName ?? t.type,
         type: t.type as TransactionRecord["type"],
         quantity: qty,
-        lotSize: 100,
         pricePerShare: price,
         grossValue,
         totalFees: fee,

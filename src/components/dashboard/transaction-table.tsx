@@ -1,3 +1,9 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import * as Dialog from "@radix-ui/react-dialog";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import {
   Table,
   TableBody,
@@ -6,8 +12,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  Loader2,
+  AlertTriangle,
+} from "lucide-react";
 import type { TransactionRecord } from "@/lib/types";
+import {
+  LogTransactionDialog,
+  type EditTransactionData,
+} from "./log-transaction-dialog";
+import { deleteTransaction } from "@/app/actions/logTransaction";
 
 interface TransactionTableProps {
   data: TransactionRecord[];
@@ -50,7 +69,50 @@ function formatCurrency(value: number, currency?: string, withSign = false): str
   return withSign ? `${sign}${formatted}` : formatted;
 }
 
+function toEditData(tx: TransactionRecord): EditTransactionData {
+  return {
+    id: tx.id,
+    ticker: tx.ticker,
+    companyName: tx.assetName,
+    type: tx.type as "BUY" | "SELL",
+    quantity: tx.quantity,
+    pricePerShare: tx.pricePerShare,
+    totalFees: tx.totalFees,
+    executedAt: tx.executedAt,
+    currency: tx.currency,
+  };
+}
+
 export function TransactionTable({ data }: TransactionTableProps) {
+  const router = useRouter();
+  const [editTarget, setEditTarget] = useState<EditTransactionData | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<TransactionRecord | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  function handleEdit(tx: TransactionRecord) {
+    setEditTarget(toEditData(tx));
+  }
+
+  function handleDelete(tx: TransactionRecord) {
+    setDeleteError(null);
+    setDeleteTarget(tx);
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteError(null);
+    const res = await deleteTransaction(deleteTarget.id);
+    setDeleting(false);
+    if (res.success) {
+      setDeleteTarget(null);
+      router.refresh();
+    } else {
+      setDeleteError(res.message);
+    }
+  }
+
   return (
     <div className="overflow-hidden rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)]">
       <div className="flex items-center justify-between border-b border-[oklch(0.12_0.005_260)] px-6 py-4">
@@ -85,16 +147,17 @@ export function TransactionTable({ data }: TransactionTableProps) {
             <TableHead className="h-10 text-right text-[10px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.40_0.01_260)]">
               Price
             </TableHead>
-            <TableHead className="h-10 pr-6 text-right text-[10px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.40_0.01_260)]">
+            <TableHead className="h-10 text-right text-[10px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.40_0.01_260)]">
               Net Value
             </TableHead>
+            <TableHead className="h-10 w-10 pr-6" />
           </TableRow>
         </TableHeader>
         <TableBody>
           {data.map((tx) => (
             <TableRow
               key={tx.id}
-              className="border-b border-[oklch(0.10_0.005_260)] transition-colors hover:bg-[oklch(0.07_0.005_260)]"
+              className="group border-b border-[oklch(0.10_0.005_260)] transition-colors hover:bg-[oklch(0.07_0.005_260)]"
             >
               <TableCell className="pl-6">
                 <div className="flex flex-col">
@@ -142,15 +205,126 @@ export function TransactionTable({ data }: TransactionTableProps) {
                   {formatCurrency(tx.pricePerShare, tx.currency)}
                 </span>
               </TableCell>
-              <TableCell className="pr-6 text-right">
+              <TableCell className="text-right">
                 <span className="text-[12px] font-semibold text-[oklch(0.88_0.005_260)]">
                   {formatCurrency(tx.netValue, tx.currency, true)}
                 </span>
+              </TableCell>
+              <TableCell className="pr-6 text-right">
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger asChild>
+                    <button
+                      type="button"
+                      aria-label="Row actions"
+                      className="flex h-7 w-7 items-center justify-center rounded-md text-[oklch(0.45_0.01_260)] opacity-0 transition-all hover:bg-[oklch(0.10_0.005_260)] hover:text-[oklch(0.80_0.005_260)] focus:opacity-100 group-hover:opacity-100 data-[state=open]:bg-[oklch(0.10_0.005_260)] data-[state=open]:text-[oklch(0.80_0.005_260)] data-[state=open]:opacity-100"
+                    >
+                      <MoreHorizontal className="h-3.5 w-3.5" />
+                    </button>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content
+                      align="end"
+                      sideOffset={4}
+                      collisionPadding={8}
+                      className="z-50 w-36 overflow-hidden rounded-lg border border-[oklch(0.18_0.005_260)] bg-[oklch(0.06_0.005_260)] shadow-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95"
+                    >
+                      <DropdownMenu.Item
+                        onSelect={() => handleEdit(tx)}
+                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-[12px] font-medium text-[oklch(0.80_0.005_260)] outline-none transition-colors data-[highlighted]:bg-[oklch(0.10_0.005_260)]"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                        Edit
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item
+                        onSelect={() => handleDelete(tx)}
+                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-[12px] font-medium text-[oklch(0.70_0.15_25)] outline-none transition-colors data-[highlighted]:bg-[oklch(0.15_0.04_25)]"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete
+                      </DropdownMenu.Item>
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+
+      {/* Edit dialog (controlled) */}
+      <LogTransactionDialog
+        open={!!editTarget}
+        onOpenChange={(o) => {
+          if (!o) setEditTarget(null);
+        }}
+        editData={editTarget}
+      />
+
+      {/* Delete confirmation dialog */}
+      <Dialog.Root
+        open={!!deleteTarget}
+        onOpenChange={(o) => {
+          if (!o && !deleting) {
+            setDeleteTarget(null);
+            setDeleteError(null);
+          }
+        }}
+      >
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0" />
+          <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)] shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95">
+            <div className="flex items-start gap-3 border-b border-[oklch(0.12_0.005_260)] px-6 py-4">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[oklch(0.15_0.04_25)]">
+                <AlertTriangle className="h-4 w-4 text-[oklch(0.70_0.15_25)]" />
+              </div>
+              <div>
+                <Dialog.Title className="text-sm font-semibold text-[oklch(0.90_0.005_260)]">
+                  Delete transaction?
+                </Dialog.Title>
+                <Dialog.Description className="mt-1 text-[12px] leading-relaxed text-[oklch(0.50_0.01_260)]">
+                  This will permanently remove the{" "}
+                  <span className="font-semibold text-[oklch(0.75_0.005_260)]">
+                    {deleteTarget?.type}
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-semibold text-[oklch(0.75_0.005_260)]">
+                    {deleteTarget?.quantity} × {deleteTarget?.ticker.replace(".JK", "")}
+                  </span>
+                  . This action can&apos;t be undone.
+                </Dialog.Description>
+              </div>
+            </div>
+
+            {deleteError && (
+              <div className="mx-6 mt-4 rounded-lg bg-[oklch(0.15_0.05_25)] px-3 py-2 text-[11px] text-[oklch(0.70_0.12_25)]">
+                {deleteError}
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-2 px-6 py-4">
+              <Dialog.Close
+                disabled={deleting}
+                className="flex h-9 items-center rounded-lg border border-[oklch(0.14_0.005_260)] px-4 text-[12px] font-medium text-[oklch(0.60_0.005_260)] transition-colors hover:bg-[oklch(0.08_0.005_260)] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Cancel
+              </Dialog.Close>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="flex h-9 items-center gap-2 rounded-lg bg-[oklch(0.40_0.12_25)] px-5 text-[12px] font-semibold text-[oklch(0.95_0.01_25)] transition-colors hover:bg-[oklch(0.45_0.13_25)] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {deleting ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Trash2 className="h-3.5 w-3.5" />
+                )}
+                Delete
+              </button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   );
 }

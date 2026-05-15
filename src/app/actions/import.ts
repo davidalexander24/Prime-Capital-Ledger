@@ -121,8 +121,7 @@ export async function processPdfImport(formData: FormData) {
           create: {
             ticker: t.ticker,
             companyName: `${t.ticker} Inc`,
-            assetType: "STOCK",
-            currency: "USD", // explicitly requested in prompt
+            currency: "USD",
           }
         });
 

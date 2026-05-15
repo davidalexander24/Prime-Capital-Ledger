@@ -44,7 +44,7 @@ export function FileUploader() {
 
       if (res.success) {
         setUploadStatus("success");
-        setUploadMessage(res.message);
+        setUploadMessage(res.message ?? "");
       } else {
         setUploadStatus("error");
         setUploadMessage(res.error || "Unknown error occurred.");

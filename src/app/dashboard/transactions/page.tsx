@@ -3,8 +3,20 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 import { TransactionTable } from "@/components/dashboard/transaction-table";
+import { LogTransactionDialog } from "@/components/dashboard/log-transaction-dialog";
 import { getTransactions } from "@/app/actions/transactions";
+import { getUsdIdrRate } from "@/lib/marketData";
 import { ArrowLeftRight, Filter, Download } from "lucide-react";
+
+export const dynamic = "force-dynamic";
+
+function formatVolumeIDR(value: number): string {
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000_000) return `Rp ${(value / 1_000_000_000).toFixed(2)}B`;
+  if (abs >= 1_000_000) return `Rp ${(value / 1_000_000).toFixed(1)}M`;
+  if (abs >= 1_000) return `Rp ${(value / 1_000).toFixed(1)}K`;
+  return `Rp ${Math.round(value).toLocaleString("id-ID")}`;
+}
 
 export default async function TransactionsPage() {
   const session = await getServerSession(authOptions);
@@ -13,12 +25,19 @@ export default async function TransactionsPage() {
   }
   const userId = (session.user as any).id;
 
-  const res = await getTransactions(userId);
+  const [res, fxRate] = await Promise.all([
+    getTransactions(userId),
+    getUsdIdrRate(),
+  ]);
   const transactions = res.success && res.data ? res.data : [];
+  const rate = fxRate ?? 16000;
 
-  const buyCount = transactions.filter((t: any) => t.type === "BUY").length;
-  const sellCount = transactions.filter((t: any) => t.type === "SELL").length;
-  const totalVolume = transactions.reduce((s: number, t: any) => s + Number(t.netValue || 0), 0);
+  const buyCount = transactions.filter((t) => t.type === "BUY").length;
+  const sellCount = transactions.filter((t) => t.type === "SELL").length;
+  const totalVolumeIDR = transactions.reduce((sum, t) => {
+    const value = Math.abs(Number(t.netValue || 0));
+    return sum + (t.currency === "IDR" ? value : value * rate);
+  }, 0);
 
   return (
     <div className="flex flex-col gap-6">
@@ -32,6 +51,7 @@ export default async function TransactionsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <LogTransactionDialog />
           <button className="flex h-9 items-center gap-2 rounded-lg border border-[oklch(0.14_0.005_260)] bg-transparent px-4 text-[12px] font-medium text-[oklch(0.60_0.005_260)] transition-colors hover:bg-[oklch(0.08_0.005_260)]">
             <Filter className="h-3.5 w-3.5" strokeWidth={1.75} />
             Filter
@@ -75,7 +95,7 @@ export default async function TransactionsPage() {
               Total Volume
             </span>
             <p className="mt-0.5 text-lg font-semibold text-[oklch(0.93_0.005_260)]">
-              Rp {(totalVolume / 1_000_000).toFixed(1)}M
+              {formatVolumeIDR(totalVolumeIDR)}
             </p>
           </div>
         </div>

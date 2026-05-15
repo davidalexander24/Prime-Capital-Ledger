@@ -24,7 +24,6 @@ export interface TransactionRecord {
   assetName: string;
   type: TransactionType;
   quantity: number;
-  lotSize: number;
   pricePerShare: number;
   grossValue: number;
   totalFees: number;
