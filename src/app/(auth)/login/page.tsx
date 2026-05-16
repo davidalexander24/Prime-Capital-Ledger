@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Eye, EyeOff } from "lucide-react";
+import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -53,6 +54,8 @@ export default function LoginPage() {
           Sign in to access your investment dashboard
         </p>
       </div>
+
+      <GoogleSignInButton label="Sign in with Google" />
 
       {/* Form */}
       <form onSubmit={handleSubmit}>
