@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -37,6 +38,16 @@ export default async function TransactionsPage() {
     const value = Math.abs(Number(t.netValue || 0));
     return sum + (t.currency === "IDR" ? value : value * rate);
   }, 0);
+=======
+import { TransactionTable } from "@/components/dashboard/transaction-table";
+import { transactions } from "@/lib/dummy-data";
+import { ArrowLeftRight, Filter, Download } from "lucide-react";
+
+export default function TransactionsPage() {
+  const buyCount = transactions.filter((t) => t.type === "BUY").length;
+  const sellCount = transactions.filter((t) => t.type === "SELL").length;
+  const totalVolume = transactions.reduce((s, t) => s + t.netValue, 0);
+>>>>>>> origin/nico
 
   return (
     <div className="flex flex-col gap-6">
@@ -50,7 +61,10 @@ export default async function TransactionsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+<<<<<<< HEAD
           <LogTransactionDialog />
+=======
+>>>>>>> origin/nico
           <button className="flex h-9 items-center gap-2 rounded-lg border border-[oklch(0.14_0.005_260)] bg-transparent px-4 text-[12px] font-medium text-[oklch(0.60_0.005_260)] transition-colors hover:bg-[oklch(0.08_0.005_260)]">
             <Filter className="h-3.5 w-3.5" strokeWidth={1.75} />
             Filter
@@ -94,7 +108,11 @@ export default async function TransactionsPage() {
               Total Volume
             </span>
             <p className="mt-0.5 text-lg font-semibold text-[oklch(0.93_0.005_260)]">
+<<<<<<< HEAD
               {formatVolumeIDR(totalVolumeIDR)}
+=======
+              Rp {(totalVolume / 1_000_000).toFixed(1)}M
+>>>>>>> origin/nico
             </p>
           </div>
         </div>

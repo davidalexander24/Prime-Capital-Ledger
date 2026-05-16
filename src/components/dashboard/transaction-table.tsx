@@ -1,9 +1,12 @@
+<<<<<<< HEAD
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+=======
+>>>>>>> origin/nico
 import {
   Table,
   TableBody,
@@ -12,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+<<<<<<< HEAD
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -28,6 +32,10 @@ import {
 } from "./log-transaction-dialog";
 import { deleteTransaction } from "@/app/actions/logTransaction";
 import { StockLogo } from "@/components/ui/stock-logo";
+=======
+import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
+import type { TransactionRecord } from "@/lib/types";
+>>>>>>> origin/nico
 
 interface TransactionTableProps {
   data: TransactionRecord[];
@@ -51,6 +59,7 @@ function formatTime(dateStr: string): string {
 }
 
 function formatIDR(value: number): string {
+<<<<<<< HEAD
   const rounded = Math.round(Math.abs(value));
   return `Rp${rounded.toLocaleString("id-ID")}`;
 }
@@ -114,6 +123,12 @@ export function TransactionTable({ data }: TransactionTableProps) {
     }
   }
 
+=======
+  return `Rp ${value.toLocaleString("id-ID")}`;
+}
+
+export function TransactionTable({ data }: TransactionTableProps) {
+>>>>>>> origin/nico
   return (
     <div className="overflow-hidden rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)]">
       <div className="flex items-center justify-between border-b border-[oklch(0.12_0.005_260)] px-6 py-4">
@@ -133,6 +148,7 @@ export function TransactionTable({ data }: TransactionTableProps) {
       <Table>
         <TableHeader>
           <TableRow className="border-b border-[oklch(0.12_0.005_260)] hover:bg-transparent">
+<<<<<<< HEAD
             <TableHead className="h-10 pl-6 text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
               Date
             </TableHead>
@@ -152,13 +168,37 @@ export function TransactionTable({ data }: TransactionTableProps) {
               Net Value
             </TableHead>
             <TableHead className="h-10 w-10 pr-6" />
+=======
+            <TableHead className="h-10 pl-6 text-[10px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.40_0.01_260)]">
+              Date
+            </TableHead>
+            <TableHead className="h-10 text-[10px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.40_0.01_260)]">
+              Asset
+            </TableHead>
+            <TableHead className="h-10 text-[10px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.40_0.01_260)]">
+              Type
+            </TableHead>
+            <TableHead className="h-10 text-right text-[10px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.40_0.01_260)]">
+              Qty (Lots)
+            </TableHead>
+            <TableHead className="h-10 text-right text-[10px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.40_0.01_260)]">
+              Price
+            </TableHead>
+            <TableHead className="h-10 pr-6 text-right text-[10px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.40_0.01_260)]">
+              Net Value
+            </TableHead>
+>>>>>>> origin/nico
           </TableRow>
         </TableHeader>
         <TableBody>
           {data.map((tx) => (
             <TableRow
               key={tx.id}
+<<<<<<< HEAD
               className="group border-b border-[oklch(0.10_0.005_260)] transition-colors hover:bg-[oklch(0.07_0.005_260)]"
+=======
+              className="border-b border-[oklch(0.10_0.005_260)] transition-colors hover:bg-[oklch(0.07_0.005_260)]"
+>>>>>>> origin/nico
             >
               <TableCell className="pl-6">
                 <div className="flex flex-col">
@@ -171,6 +211,7 @@ export function TransactionTable({ data }: TransactionTableProps) {
                 </div>
               </TableCell>
               <TableCell>
+<<<<<<< HEAD
                 <div className="flex items-center gap-3">
                   {/* Smaller 24px Logo */}
                   <StockLogo ticker={tx.ticker} size={24} />
@@ -182,6 +223,15 @@ export function TransactionTable({ data }: TransactionTableProps) {
                       {tx.assetName}
                     </span>
                   </div>
+=======
+                <div className="flex flex-col">
+                  <span className="text-[12px] font-semibold text-[oklch(0.88_0.005_260)]">
+                    {tx.ticker.replace(".JK", "")}
+                  </span>
+                  <span className="text-[10px] text-[oklch(0.40_0.01_260)]">
+                    {tx.assetName}
+                  </span>
+>>>>>>> origin/nico
                 </div>
               </TableCell>
               <TableCell>
@@ -207,6 +257,7 @@ export function TransactionTable({ data }: TransactionTableProps) {
               </TableCell>
               <TableCell className="text-right">
                 <span className="text-[12px] font-medium text-[oklch(0.80_0.005_260)]">
+<<<<<<< HEAD
                   {formatCurrency(tx.pricePerShare, tx.currency)}
                 </span>
               </TableCell>
@@ -250,11 +301,21 @@ export function TransactionTable({ data }: TransactionTableProps) {
                     </DropdownMenu.Content>
                   </DropdownMenu.Portal>
                 </DropdownMenu.Root>
+=======
+                  {formatIDR(tx.pricePerShare)}
+                </span>
+              </TableCell>
+              <TableCell className="pr-6 text-right">
+                <span className="text-[12px] font-semibold text-[oklch(0.88_0.005_260)]">
+                  {formatIDR(tx.netValue)}
+                </span>
+>>>>>>> origin/nico
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+<<<<<<< HEAD
 
       {/* Edit dialog (controlled) */}
       <LogTransactionDialog
@@ -333,3 +394,8 @@ export function TransactionTable({ data }: TransactionTableProps) {
     </div>
   );
 }
+=======
+    </div>
+  );
+}
+>>>>>>> origin/nico

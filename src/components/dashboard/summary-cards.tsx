@@ -2,6 +2,7 @@ import { TrendingUp, TrendingDown, Wallet, BarChart3, Layers } from "lucide-reac
 import type { PortfolioSummary } from "@/lib/types";
 
 function formatIDR(value: number): string {
+<<<<<<< HEAD
   const rounded = Math.round(Math.abs(value));
   return `Rp${rounded.toLocaleString("id-ID")}`;
 }
@@ -11,6 +12,15 @@ function formatCurrency(value: number, currency: string): string {
     return `$${Math.abs(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
   return formatIDR(value);
+=======
+  if (value >= 1_000_000_000) {
+    return `Rp ${(value / 1_000_000_000).toFixed(2)}B`;
+  }
+  if (value >= 1_000_000) {
+    return `Rp ${(value / 1_000_000).toFixed(1)}M`;
+  }
+  return `Rp ${value.toLocaleString("id-ID")}`;
+>>>>>>> origin/nico
 }
 
 interface SummaryCardsProps {
@@ -20,6 +30,7 @@ interface SummaryCardsProps {
 export function SummaryCards({ data }: SummaryCardsProps) {
   const isPositive = data.unrealizedPnL >= 0;
 
+<<<<<<< HEAD
   const cards: Array<{
     label: string;
     value: string;
@@ -39,6 +50,18 @@ export function SummaryCards({ data }: SummaryCardsProps) {
     {
       label: "Unrealized P&L",
       value: formatCurrency(Math.abs(data.unrealizedPnL), data.currency),
+=======
+  const cards = [
+    {
+      label: "Portfolio Value",
+      value: formatIDR(data.totalValue),
+      icon: Wallet,
+      detail: `Cost basis: ${formatIDR(data.totalCostBasis)}`,
+    },
+    {
+      label: "Unrealized P&L",
+      value: formatIDR(Math.abs(data.unrealizedPnL)),
+>>>>>>> origin/nico
       prefix: isPositive ? "+" : "-",
       icon: isPositive ? TrendingUp : TrendingDown,
       accent: isPositive,
@@ -99,11 +122,14 @@ export function SummaryCards({ data }: SummaryCardsProps) {
           <p className="mt-1.5 text-[11px] text-[oklch(0.40_0.01_260)]">
             {card.detail}
           </p>
+<<<<<<< HEAD
           {card.extra && (
             <p className="mt-0.5 text-[10px] italic text-[oklch(0.45_0.01_260)]">
               {card.extra}
             </p>
           )}
+=======
+>>>>>>> origin/nico
           <div className="absolute -bottom-8 -right-8 h-24 w-24 rounded-full bg-[oklch(0.08_0.005_260)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
         </div>
       ))}

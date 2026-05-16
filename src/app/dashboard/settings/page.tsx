@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -84,6 +85,50 @@ export default async function SettingsPage() {
     },
   ];
 
+=======
+import { User, Shield, Bell, Palette, Database, Globe } from "lucide-react";
+
+const settingSections = [
+  {
+    title: "Profile",
+    icon: User,
+    settings: [
+      { label: "Display Name", value: "Nicholas", type: "text" },
+      { label: "Email", value: "nicholas@example.com", type: "text" },
+      { label: "Base Currency", value: "IDR", type: "select" },
+      { label: "Timezone", value: "Asia/Jakarta (GMT+7)", type: "select" },
+    ],
+  },
+  {
+    title: "Security",
+    icon: Shield,
+    settings: [
+      { label: "Password", value: "••••••••••••", type: "password" },
+      { label: "Two-Factor Auth", value: "Disabled", type: "toggle" },
+    ],
+  },
+  {
+    title: "Notifications",
+    icon: Bell,
+    settings: [
+      { label: "Trade Confirmations", value: "Enabled", type: "toggle" },
+      { label: "Daily Summary", value: "Enabled", type: "toggle" },
+      { label: "Price Alerts", value: "Disabled", type: "toggle" },
+    ],
+  },
+  {
+    title: "Data & Storage",
+    icon: Database,
+    settings: [
+      { label: "Total Transactions", value: "247 entries", type: "info" },
+      { label: "Imported Files", value: "12 files", type: "info" },
+      { label: "Last Backup", value: "09 May 2026", type: "info" },
+    ],
+  },
+];
+
+export default function SettingsPage() {
+>>>>>>> origin/nico
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -111,8 +156,11 @@ export default async function SettingsPage() {
                       <span className="text-[13px] tracking-wider text-[oklch(0.50_0.01_260)]">{setting.value}</span>
                       <button className="text-[11px] font-medium text-[oklch(0.70_0.08_230)] hover:underline">Change</button>
                     </div>
+<<<<<<< HEAD
                   ) : setting.type === "currency-select" ? (
                     <BaseCurrencySelect initialValue={setting.value} />
+=======
+>>>>>>> origin/nico
                   ) : (
                     <span className="text-[13px] font-medium text-[oklch(0.80_0.005_260)]">{setting.value}</span>
                   )}
@@ -123,6 +171,7 @@ export default async function SettingsPage() {
         ))}
       </div>
 
+<<<<<<< HEAD
       <div className="overflow-hidden rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)]">
         <div className="flex items-center gap-2 border-b border-[oklch(0.12_0.005_260)] px-6 py-4">
           <LogOut className="h-4 w-4 text-[oklch(0.45_0.01_260)]" strokeWidth={1.75} />
@@ -136,6 +185,8 @@ export default async function SettingsPage() {
         </div>
       </div>
 
+=======
+>>>>>>> origin/nico
       <div className="flex items-center justify-between rounded-xl border border-[oklch(0.15_0.02_25)] bg-[oklch(0.06_0.01_25)] p-5">
         <div>
           <h3 className="text-[13px] font-semibold text-[oklch(0.70_0.15_25)]">Danger Zone</h3>

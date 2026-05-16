@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 export type TransactionType = "BUY" | "SELL" | "DEPOSIT" | "WITHDRAW";
+=======
+export type TransactionType = "BUY" | "SELL";
+>>>>>>> origin/nico
 
 export type TransactionSource =
   | "MANUAL"
@@ -24,6 +28,10 @@ export interface TransactionRecord {
   assetName: string;
   type: TransactionType;
   quantity: number;
+<<<<<<< HEAD
+=======
+  lotSize: number;
+>>>>>>> origin/nico
   pricePerShare: number;
   grossValue: number;
   totalFees: number;
@@ -50,5 +58,8 @@ export interface PortfolioSummary {
   totalReturnPct: number;
   holdingsCount: number;
   currency: string;
+<<<<<<< HEAD
   exchangeRate?: number;
+=======
+>>>>>>> origin/nico
 }

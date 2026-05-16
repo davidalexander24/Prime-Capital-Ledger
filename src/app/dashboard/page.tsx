@@ -1,13 +1,17 @@
+<<<<<<< HEAD
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/prisma";
 
+=======
+>>>>>>> origin/nico
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { ValuationChart } from "@/components/charts/valuation-chart";
 import { TransactionTable } from "@/components/dashboard/transaction-table";
 import { TopTraded } from "@/components/dashboard/top-traded";
 import {
+<<<<<<< HEAD
   getHistoricalValuations,
   getRecentTransactions,
   getHoldingsDailyChange,
@@ -73,6 +77,15 @@ export default async function DashboardPage() {
     exchangeRate: baseCurrency === "USD" ? undefined : rate,
   };
 
+=======
+  portfolioSummary,
+  portfolioValuation,
+  transactions,
+  topTradedAssets,
+} from "@/lib/dummy-data";
+
+export default function DashboardPage() {
+>>>>>>> origin/nico
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-end justify-between">
@@ -81,7 +94,11 @@ export default async function DashboardPage() {
             Dashboard
           </h1>
           <p className="mt-1 text-[13px] text-[oklch(0.45_0.01_260)]">
+<<<<<<< HEAD
             Welcome back, {session.user.name || "Investor"}. Overview of your portfolio performance.
+=======
+            Overview of your portfolio performance and recent activity.
+>>>>>>> origin/nico
           </p>
         </div>
         <span className="text-[11px] text-[oklch(0.35_0.01_260)]">
@@ -93,6 +110,7 @@ export default async function DashboardPage() {
         </span>
       </div>
 
+<<<<<<< HEAD
       <SummaryCards data={summary} />
 
       <div className="grid grid-cols-5 gap-6">
@@ -101,10 +119,24 @@ export default async function DashboardPage() {
         </div>
         <div className="col-span-2">
           <TopTraded data={movers} />
+=======
+      <SummaryCards data={portfolioSummary} />
+
+      <div className="grid grid-cols-5 gap-6">
+        <div className="col-span-3">
+          <ValuationChart data={portfolioValuation} />
+        </div>
+        <div className="col-span-2">
+          <TopTraded data={topTradedAssets} />
+>>>>>>> origin/nico
         </div>
       </div>
 
       <TransactionTable data={transactions} />
     </div>
   );
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/nico

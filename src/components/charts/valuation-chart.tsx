@@ -1,6 +1,9 @@
 "use client";
 
+<<<<<<< HEAD
 import { useMemo, useState } from "react";
+=======
+>>>>>>> origin/nico
 import {
   ResponsiveContainer,
   AreaChart,
@@ -12,6 +15,7 @@ import {
 } from "recharts";
 import type { PortfolioValuationPoint } from "@/lib/types";
 
+<<<<<<< HEAD
 type PeriodId = "1W" | "1M" | "3M" | "YTD" | "1Y" | "ALL";
 
 const PERIODS: Array<{ id: PeriodId; label: string; longLabel: string }> = [
@@ -23,6 +27,8 @@ const PERIODS: Array<{ id: PeriodId; label: string; longLabel: string }> = [
   { id: "ALL", label: "ALL", longLabel: "All time" },
 ];
 
+=======
+>>>>>>> origin/nico
 interface ValuationChartProps {
   data: PortfolioValuationPoint[];
 }
@@ -32,6 +38,7 @@ function formatDateShort(dateStr: string): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+<<<<<<< HEAD
 function formatTooltipDate(dateStr: string): string {
   const d = new Date(dateStr);
   return d.toLocaleDateString("en-GB", {
@@ -95,6 +102,14 @@ function sliceByPeriod(
   return data.filter((p) => p.date >= cutoffKey);
 }
 
+=======
+function formatValueAxis(value: number): string {
+  if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`;
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(0)}M`;
+  return value.toLocaleString();
+}
+
+>>>>>>> origin/nico
 function CustomTooltip({
   active,
   payload,
@@ -112,23 +127,39 @@ function CustomTooltip({
   return (
     <div className="rounded-lg border border-[oklch(0.18_0.005_260)] bg-[oklch(0.06_0.005_260)] px-4 py-3 shadow-xl">
       <p className="mb-2 text-[11px] font-medium text-[oklch(0.50_0.01_260)]">
+<<<<<<< HEAD
         {label ? formatTooltipDate(label) : ""}
+=======
+        {label ? formatDateShort(label) : ""}
+>>>>>>> origin/nico
       </p>
       {marketValue && (
         <p className="flex items-center gap-2 text-[12px]">
           <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.70_0.08_230)]" />
           <span className="text-[oklch(0.50_0.01_260)]">Market Value</span>
           <span className="ml-auto font-medium text-[oklch(0.90_0.005_260)]">
+<<<<<<< HEAD
             {formatIDR(marketValue.value)}
+=======
+            Rp {(marketValue.value / 1_000_000).toFixed(1)}M
+>>>>>>> origin/nico
           </span>
         </p>
       )}
       {costBasis && (
+<<<<<<< HEAD
         <p className="mt-1 flex items-center gap-2 text-[12px]">
           <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.40_0.01_260)]" />
           <span className="text-[oklch(0.50_0.01_260)]">Cost Basis</span>
           <span className="ml-auto font-medium text-[oklch(0.70_0.005_260)]">
             {formatIDR(costBasis.value)}
+=======
+        <p className="flex items-center gap-2 text-[12px]">
+          <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.40_0.01_260)]" />
+          <span className="text-[oklch(0.50_0.01_260)]">Cost Basis</span>
+          <span className="ml-auto font-medium text-[oklch(0.70_0.005_260)]">
+            Rp {(costBasis.value / 1_000_000).toFixed(1)}M
+>>>>>>> origin/nico
           </span>
         </p>
       )}
@@ -137,6 +168,7 @@ function CustomTooltip({
 }
 
 export function ValuationChart({ data }: ValuationChartProps) {
+<<<<<<< HEAD
   const [period, setPeriod] = useState<PeriodId>("ALL");
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
@@ -186,10 +218,16 @@ export function ValuationChart({ data }: ValuationChartProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)]">
       <div className="flex items-start justify-between border-b border-[oklch(0.12_0.005_260)] px-6 py-4">
+=======
+  return (
+    <div className="overflow-hidden rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)]">
+      <div className="flex items-center justify-between border-b border-[oklch(0.12_0.005_260)] px-6 py-4">
+>>>>>>> origin/nico
         <div>
           <h2 className="text-sm font-semibold text-[oklch(0.88_0.005_260)]">
             Portfolio Valuation
           </h2>
+<<<<<<< HEAD
           <div className="mt-1 flex items-baseline gap-3">
             <span className="text-xl font-semibold tracking-tight text-[oklch(0.93_0.005_260)] tabular-nums">
               {formatIDR(activeValue)}
@@ -206,6 +244,13 @@ export function ValuationChart({ data }: ValuationChartProps) {
           </div>
         </div>
         <div className="flex items-center gap-4 pt-1">
+=======
+          <p className="mt-0.5 text-[11px] text-[oklch(0.40_0.01_260)]">
+            Market value vs. cost basis over time
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+>>>>>>> origin/nico
           <div className="flex items-center gap-1.5">
             <span className="h-1.5 w-6 rounded-full bg-[oklch(0.70_0.08_230)]" />
             <span className="text-[10px] text-[oklch(0.45_0.01_260)]">Market Value</span>
@@ -216,6 +261,7 @@ export function ValuationChart({ data }: ValuationChartProps) {
           </div>
         </div>
       </div>
+<<<<<<< HEAD
 
       <div className="px-2 py-4">
         {hasData ? (
@@ -326,6 +372,71 @@ export function ValuationChart({ data }: ValuationChartProps) {
             </button>
           );
         })}
+=======
+      <div className="px-2 py-4">
+        <ResponsiveContainer width="100%" height={320}>
+          <AreaChart data={data} margin={{ top: 8, right: 16, left: 8, bottom: 0 }}>
+            <defs>
+              <linearGradient id="gradientMarket" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="oklch(0.70 0.08 230)" stopOpacity={0.2} />
+                <stop offset="100%" stopColor="oklch(0.70 0.08 230)" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+              stroke="oklch(0.12 0.005 260)"
+            />
+            <XAxis
+              dataKey="date"
+              tickFormatter={formatDateShort}
+              axisLine={false}
+              tickLine={false}
+              tick={{ fontSize: 11, fill: "oklch(0.40 0.01 260)" }}
+              interval="preserveStartEnd"
+              minTickGap={60}
+            />
+            <YAxis
+              tickFormatter={formatValueAxis}
+              axisLine={false}
+              tickLine={false}
+              tick={{ fontSize: 11, fill: "oklch(0.40 0.01 260)" }}
+              width={52}
+            />
+            <Tooltip
+              content={<CustomTooltip />}
+              cursor={{
+                stroke: "oklch(0.25 0.005 260)",
+                strokeWidth: 1,
+                strokeDasharray: "4 4",
+              }}
+            />
+            <Area
+              type="monotone"
+              dataKey="totalCostBasis"
+              stroke="oklch(0.30 0.005 260)"
+              strokeWidth={1.5}
+              fill="none"
+              dot={false}
+              activeDot={false}
+            />
+            <Area
+              type="monotone"
+              dataKey="totalMarketValue"
+              stroke="oklch(0.70 0.08 230)"
+              strokeWidth={2}
+              fill="url(#gradientMarket)"
+              dot={false}
+              activeDot={{
+                r: 4,
+                fill: "oklch(0.70 0.08 230)",
+                stroke: "oklch(0.05 0.005 260)",
+                strokeWidth: 2,
+              }}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+>>>>>>> origin/nico
       </div>
     </div>
   );

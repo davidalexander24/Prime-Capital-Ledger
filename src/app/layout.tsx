@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
+<<<<<<< HEAD
 import { Providers } from "./providers";
+=======
+>>>>>>> origin/nico
 
 export const metadata: Metadata = {
   title: "Prime Capital Ledger",
@@ -21,9 +24,13 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
+<<<<<<< HEAD
       <body>
         <Providers>{children}</Providers>
       </body>
+=======
+      <body>{children}</body>
+>>>>>>> origin/nico
     </html>
   );
 }
