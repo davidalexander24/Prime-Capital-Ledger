@@ -70,9 +70,9 @@ export function ImportPreviewDialog({
           </div>
 
           <div className="flex flex-col gap-3 px-6 py-5">
-            <div className="overflow-hidden rounded-lg border border-[oklch(0.12_0.005_260)]">
+            <div className="max-h-[300px] overflow-y-auto rounded-lg border border-[oklch(0.12_0.005_260)]">
               <table className="w-full text-left text-[11px]">
-                <thead className="bg-[oklch(0.06_0.005_260)] text-[9px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
+                <thead className="sticky top-0 bg-[oklch(0.06_0.005_260)] text-[9px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
                   <tr>
                     <th className="px-3 py-2">Type</th>
                     <th className="px-3 py-2">Asset</th>
@@ -82,7 +82,7 @@ export function ImportPreviewDialog({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[oklch(0.10_0.005_260)]">
-                  {rows.map((r, i) => {
+                  {rows.slice(0, 50).map((r, i) => {
                     const isBuy = r.type === "BUY";
                     const quantityDisplay =
                       r.quantityRaw ?? r.quantity.toFixed(6);
@@ -93,11 +93,10 @@ export function ImportPreviewDialog({
                       <tr key={`${r.ticker}-${i}`} className="bg-[oklch(0.03_0.005_260)]">
                         <td className="px-3 py-2">
                           <span
-                            className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-semibold ${
-                              isBuy
+                            className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-semibold ${isBuy
                                 ? "bg-[oklch(0.18_0.06_155)] text-[oklch(0.75_0.14_155)]"
                                 : "bg-[oklch(0.18_0.06_25)] text-[oklch(0.75_0.12_25)]"
-                            }`}
+                              }`}
                           >
                             {isBuy ? (
                               <ArrowDownLeft className="h-2.5 w-2.5" strokeWidth={2.5} />
@@ -119,16 +118,21 @@ export function ImportPreviewDialog({
                           {quantityDisplay}
                         </td>
                         <td className="px-3 py-2 text-right font-mono text-[oklch(0.80_0.005_260)]">
-                          ${priceDisplay}
+                          {r.currency === "IDR" ? "Rp " : "$"}{priceDisplay}
                         </td>
                         <td className="px-3 py-2 text-right font-mono text-[oklch(0.60_0.005_260)]">
-                          ${feeDisplay}
+                          {r.currency === "IDR" ? "Rp " : "$"}{feeDisplay}
                         </td>
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
+              {rows.length > 50 && (
+                <div className="bg-[oklch(0.04_0.005_260)] py-3 text-center text-[11px] font-medium text-[oklch(0.50_0.01_260)]">
+                  + {rows.length - 50} more transactions ready to import
+                </div>
+              )}
             </div>
 
             <p className="text-[10px] text-[oklch(0.40_0.01_260)]">
@@ -160,11 +164,10 @@ export function ImportPreviewDialog({
               type="button"
               onClick={onConfirm}
               disabled={isLoading || isSuccess || rows.length === 0}
-              className={`flex h-9 items-center gap-2 rounded-lg px-5 text-[12px] font-semibold transition-all ${
-                isLoading || isSuccess || rows.length === 0
+              className={`flex h-9 items-center gap-2 rounded-lg px-5 text-[12px] font-semibold transition-all ${isLoading || isSuccess || rows.length === 0
                   ? "cursor-not-allowed bg-[oklch(0.12_0.005_260)] text-[oklch(0.30_0.005_260)]"
                   : "bg-[oklch(0.70_0.08_230)] text-[oklch(0.05_0.005_260)] hover:bg-[oklch(0.75_0.09_230)]"
-              }`}
+                }`}
             >
               {isLoading ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -174,8 +177,8 @@ export function ImportPreviewDialog({
               {isSuccess
                 ? "Done"
                 : isLoading
-                ? "Importing..."
-                : `Import all (${rows.length})`}
+                  ? "Importing..."
+                  : `Import all (${rows.length})`}
             </button>
           </div>
         </Dialog.Content>

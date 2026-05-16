@@ -32,12 +32,7 @@ export function Sidebar() {
     session?.user?.email?.split("@")[0] ||
     "Investor";
 
-  const initials = displayName
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("") || "IN";
+  const initials = displayName ? displayName.charAt(0).toUpperCase() : "I";
 
   return (
     <aside className="fixed left-0 top-0 z-40 flex h-screen w-[220px] flex-col border-r border-[oklch(0.14_0.005_260)] bg-[oklch(0.04_0.005_260)]">

@@ -14,7 +14,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // 1. Check for existing user to prevent duplicate records
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
@@ -26,10 +25,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2. Cryptographically hash the password
+    // hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 3. Store the new user in Neon
+    // store new user
     const newUser = await prisma.user.create({
       data: {
         email,

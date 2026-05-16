@@ -1,20 +1,25 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import prisma from "@/lib/prisma";
 
 import { Briefcase, TrendingUp, TrendingDown } from "lucide-react";
 import { getPortfolioHoldings } from "@/app/actions/portfolio";
 import { getUsdIdrRate } from "@/lib/marketData";
 import { StockLogo } from "@/components/ui/stock-logo";
+import { SplitAction } from "@/components/dashboard/split-dialog";
 
-function formatIDR(value: number): string {
+function formatCurrency(value: number, currency: string): string {
+  if (currency === "USD") {
+    return `$${Math.abs(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
   const rounded = Math.round(Math.abs(value));
   return `Rp${rounded.toLocaleString("id-ID")}`;
 }
 
-function formatIDRSigned(value: number): string {
+function formatCurrencySigned(value: number, currency: string): string {
   const sign = value < 0 ? "-" : "+";
-  return `${sign}${formatIDR(Math.abs(value))}`;
+  return `${sign}${formatCurrency(Math.abs(value), currency)}`;
 }
 
 function formatUSD(value: number): string {
@@ -38,21 +43,30 @@ export default async function PortfolioPage() {
   }
   const userId = session.user.id;
 
-  const [res, fxRate] = await Promise.all([
+  const [res, fxRate, userRecord] = await Promise.all([
     getPortfolioHoldings(userId),
     getUsdIdrRate(),
+    prisma.user.findUnique({ where: { id: userId }, select: { baseCurrency: true } }),
   ]);
   const holdings = res.success && res.data?.holdings ? res.data.holdings : [];
+  const baseCurrency = userRecord?.baseCurrency || "IDR";
   
-  const totalMarketValue = res.success && res.data ? res.data.totalMarketValue : 0;
-  const totalCost = res.success && res.data ? res.data.totalCostBasis : 0;
-  const totalPnl = res.success && res.data ? res.data.totalPnl : 0;
-  const totalPnlPct = res.success && res.data ? res.data.totalPnlPct : 0;
+
   const rate = fxRate ?? 16000;
 
-  const totalMarketValueIDR = totalMarketValue * rate;
-  const totalCostIDR = totalCost * rate;
-  const totalPnlIDR = totalPnl * rate;
+  let totalMarketValueConverted = 0;
+  let totalCostConverted = 0;
+  for (const h of holdings) {
+    if (baseCurrency === "USD") {
+      totalMarketValueConverted += h.currency === "IDR" ? h.marketValue / rate : h.marketValue;
+      totalCostConverted += h.currency === "IDR" ? h.costBasis / rate : h.costBasis;
+    } else {
+      totalMarketValueConverted += h.currency === "USD" ? h.marketValue * rate : h.marketValue;
+      totalCostConverted += h.currency === "USD" ? h.costBasis * rate : h.costBasis;
+    }
+  }
+  const totalPnlConverted = totalMarketValueConverted - totalCostConverted;
+  const totalPnlPct = totalCostConverted > 0 ? (totalPnlConverted / totalCostConverted) * 100 : 0;
 
   return (
     <div className="flex flex-col gap-6">
@@ -71,15 +85,20 @@ export default async function PortfolioPage() {
             Total Market Value
           </span>
           <p className="mt-2 text-xl font-semibold text-[oklch(0.93_0.005_260)]">
-            {formatIDR(totalMarketValueIDR)}
+            {formatCurrency(totalMarketValueConverted, baseCurrency)}
           </p>
+          {baseCurrency === "IDR" && (
+            <p className="mt-1 text-[10px] italic text-[oklch(0.45_0.01_260)]">
+              Converted at 1 USD = Rp{rate.toLocaleString("id-ID")}
+            </p>
+          )}
         </div>
         <div className="rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)] p-5">
           <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-[oklch(0.45_0.01_260)]">
             Total Cost Basis
           </span>
           <p className="mt-2 text-xl font-semibold text-[oklch(0.93_0.005_260)]">
-            {formatIDR(totalCostIDR)}
+            {formatCurrency(totalCostConverted, baseCurrency)}
           </p>
         </div>
         <div className="rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)] p-5">
@@ -87,10 +106,10 @@ export default async function PortfolioPage() {
             Unrealized P&L
           </span>
           <div className="mt-2 flex items-baseline gap-2">
-            <p className={`text-xl font-semibold ${totalPnl >= 0 ? "text-[oklch(0.65_0.15_155)]" : "text-[oklch(0.65_0.15_25)]"}`}>
-              {formatIDRSigned(totalPnlIDR)}
+            <p className={`text-xl font-semibold ${totalPnlConverted >= 0 ? "text-[oklch(0.65_0.15_155)]" : "text-[oklch(0.65_0.15_25)]"}`}>
+              {formatCurrencySigned(totalPnlConverted, baseCurrency)}
             </p>
-            <span className={`text-sm font-medium ${totalPnl >= 0 ? "text-[oklch(0.65_0.15_155)]" : "text-[oklch(0.65_0.15_25)]"}`}>
+            <span className={`text-sm font-medium ${totalPnlConverted >= 0 ? "text-[oklch(0.65_0.15_155)]" : "text-[oklch(0.65_0.15_25)]"}`}>
               ({totalPnlPct >= 0 ? "+" : ""}{totalPnlPct.toFixed(2)}%)
             </span>
           </div>
@@ -142,9 +161,17 @@ export default async function PortfolioPage() {
                       {/* Smaller 24px Logo */}
                       <StockLogo ticker={h.ticker} size={24} />
                       <div className="flex flex-col">
-                        <span className="text-[13px] font-semibold text-[oklch(0.90_0.005_260)]">
-                          {h.ticker.replace(".JK", "")}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[13px] font-semibold text-[oklch(0.90_0.005_260)]">
+                            {h.ticker.replace(".JK", "")}
+                          </span>
+                          <SplitAction ticker={h.ticker} />
+                          {h.hasMissingBuy && (
+                            <span className="rounded-md bg-[oklch(0.15_0.04_25)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-[oklch(0.70_0.15_25)]">
+                              Missing Buy
+                            </span>
+                          )}
+                        </div>
                         <span className="text-[10px] text-[oklch(0.40_0.01_260)]">{h.name}</span>
                       </div>
                     </div>

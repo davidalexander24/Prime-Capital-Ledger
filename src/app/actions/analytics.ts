@@ -48,15 +48,22 @@ export async function getAnalyticsData(
   userId: string
 ): Promise<ActionResponse<AnalyticsData>> {
   try {
-    const transactions = await prisma.transaction.findMany({
-      where: { userId },
-      include: {
-        asset: {
-          select: { id: true, ticker: true, companyName: true, currency: true },
+    const [transactions, userRecord] = await Promise.all([
+      prisma.transaction.findMany({
+        where: { userId },
+        include: {
+          asset: {
+            select: { id: true, ticker: true, companyName: true, currency: true },
+          },
         },
-      },
-      orderBy: { date: "asc" },
-    });
+        orderBy: { date: "asc" },
+      }),
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: { baseCurrency: true },
+      })
+    ]);
+    const baseCurrency = userRecord?.baseCurrency || "IDR";
 
     if (!transactions.length) {
       return {
@@ -75,7 +82,7 @@ export async function getAnalyticsData(
       };
     }
 
-    // ── 1. Compute Monthly Returns ──
+    // Monthly Returns
     const startDate = new Date(
       Date.UTC(
         transactions[0].date.getUTCFullYear(),
@@ -145,11 +152,11 @@ export async function getAnalyticsData(
       { ticker: string; currency: string; shares: number; totalCost: number }
     >();
 
-    // Monthly portfolio values: { monthKey -> { start: number, end: number } }
+    // Monthly values
     const monthlyValues = new Map<string, { start: number; end: number; firstDay: boolean }>();
     let prevDayMarketValue = 0;
 
-    // Daily returns for Sharpe calculation
+    // daily returns
     const dailyReturns: number[] = [];
     let peakValue = 0;
     let maxDrawdown = 0;
@@ -185,15 +192,17 @@ export async function getAnalyticsData(
           holding.shares += qty;
           holding.totalCost += grossValue + fee;
         } else if (tx.type === "SELL") {
-          const avgCost = holding.shares > 0 ? holding.totalCost / holding.shares : 0;
+          const avgCost = holding.shares !== 0 ? holding.totalCost / holding.shares : 0;
           holding.shares -= qty;
+          if (holding.shares < 0) holding.shares = 0;
           holding.totalCost -= avgCost * qty;
+          if (holding.shares === 0) holding.totalCost = 0;
         }
 
         holdings.set(tx.assetId, holding);
       }
 
-      // Calculate today's market value
+      // market value
       let marketValueUSD = 0;
       let marketValueIDR = 0;
 
@@ -210,7 +219,9 @@ export async function getAnalyticsData(
         else marketValueUSD += positionValue;
       }
 
-      const totalMarketValue = marketValueUSD * fxRate + marketValueIDR;
+      const totalMarketValue = baseCurrency === "USD"
+        ? marketValueUSD + (marketValueIDR / fxRate)
+        : marketValueUSD * fxRate + marketValueIDR;
 
       // Track daily returns
       if (prevDayMarketValue > 0 && totalMarketValue > 0) {
@@ -255,8 +266,8 @@ export async function getAnalyticsData(
       });
     }
 
-    // ── 2. Sector / Asset Allocation ──
-    // Since we don't have sector data, use per-ticker allocation by market value
+    // Sector / Asset Allocation
+    // use per-ticker allocation by market value
     const allocationMap = new Map<string, { name: string; marketValue: number }>();
     let totalPortfolioValue = 0;
 
@@ -264,13 +275,15 @@ export async function getAnalyticsData(
       if (holding.shares <= 0) continue;
       const lastPrice = lastPriceByTicker.get(holding.ticker) ?? 0;
       const positionValue = holding.shares * lastPrice;
-      const valueInIDR = holding.currency === "IDR" ? positionValue : positionValue * fxRate;
+      const valueInBase = baseCurrency === "USD"
+        ? (holding.currency === "IDR" ? positionValue / fxRate : positionValue)
+        : (holding.currency === "USD" ? positionValue * fxRate : positionValue);
 
       allocationMap.set(holding.ticker, {
         name: holding.ticker,
-        marketValue: valueInIDR,
+        marketValue: valueInBase,
       });
-      totalPortfolioValue += valueInIDR;
+      totalPortfolioValue += valueInBase;
     }
 
     const sectorAllocation: SectorAllocation[] = Array.from(allocationMap.values())
@@ -283,7 +296,7 @@ export async function getAnalyticsData(
         color: SECTOR_COLORS[index % SECTOR_COLORS.length],
       }));
 
-    // ── 3. Performance Metrics ──
+    // Performance Metrics
     // Sharpe Ratio (annualized, assuming ~252 trading days, risk-free = 0)
     const avgDailyReturn = dailyReturns.length > 0
       ? dailyReturns.reduce((s, r) => s + r, 0) / dailyReturns.length
@@ -298,8 +311,7 @@ export async function getAnalyticsData(
       ? (avgDailyReturn / stdDailyReturn) * Math.sqrt(252)
       : 0;
 
-    // Win Rate: % of BUY→SELL trades that were profitable
-    // Simplified: % of months with positive returns
+    // Win Rate
     const positiveMonths = monthlyReturns.filter(
       (m, i) => i > 0 && m.return > monthlyReturns[i - 1].return
     ).length;

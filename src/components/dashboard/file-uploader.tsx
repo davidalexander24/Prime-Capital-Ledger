@@ -59,7 +59,6 @@ export function FileUploader() {
     }
   };
 
-  // ── Drag & Drop Handlers ──
   const dragCounter = useRef(0);
 
   const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
@@ -136,7 +135,8 @@ export function FileUploader() {
     setCommitMessage("");
 
     try {
-      const res = await commitParsedTransactions(previewRows);
+      const filename = selectedFile?.name || "Unknown_File.pdf";
+      const res = await commitParsedTransactions(previewRows, filename);
       if (res.success) {
         setCommitStatus("success");
         setCommitMessage(res.message);

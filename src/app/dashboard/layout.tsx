@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Sidebar } from "@/components/layout/sidebar";
-import { Header } from "@/components/layout/header";
 
 export const metadata: Metadata = {
   title: "Dashboard — Prime Capital Ledger",
@@ -17,7 +16,6 @@ export default function DashboardLayout({
     <div className="flex min-h-screen">
       <Sidebar />
       <div className="flex flex-1 flex-col pl-[220px]">
-        <Header />
         <main className="flex-1 px-8 py-6">{children}</main>
       </div>
     </div>

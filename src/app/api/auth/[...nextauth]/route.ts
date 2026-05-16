@@ -24,7 +24,6 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials");
         }
 
-        // 1. Locate the user in Neon
         const user = await prisma.user.findUnique({
           where: { email: credentials.email }
         });
@@ -33,14 +32,12 @@ export const authOptions: NextAuthOptions = {
           throw new Error("User not found");
         }
 
-        // 2. Verify the password against the stored hash
         const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
 
         if (!isPasswordValid) {
           throw new Error("Invalid password");
         }
 
-        // 3. Return user object to encode into the JWT session token
         return {
           id: user.id,
           email: user.email,
@@ -50,10 +47,9 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   session: {
-    strategy: "jwt", // Required for Credentials provider
+    strategy: "jwt",
   },
   callbacks: {
-    // Inject the exact Database User ID into the session token
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;

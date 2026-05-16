@@ -10,12 +10,11 @@ import { ArrowLeftRight, Filter, Download } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
-function formatVolumeIDR(value: number): string {
-  const abs = Math.abs(value);
-  if (abs >= 1_000_000_000) return `Rp ${(value / 1_000_000_000).toFixed(2)}B`;
-  if (abs >= 1_000_000) return `Rp ${(value / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1_000) return `Rp ${(value / 1_000).toFixed(1)}K`;
-  return `Rp ${Math.round(value).toLocaleString("id-ID")}`;
+export function formatVolumeIDR(value: number): string {
+  return `Rp ${value.toLocaleString("id-ID", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })}`;
 }
 
 export default async function TransactionsPage() {

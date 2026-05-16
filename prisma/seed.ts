@@ -30,7 +30,6 @@ async function main() {
         },
     });
 
-    // Reset only the dev user's data for deterministic seeds.
     await prisma.dailyValuation.deleteMany({ where: { userId: user.id } });
     await prisma.transaction.deleteMany({ where: { userId: user.id } });
 
@@ -47,7 +46,7 @@ async function main() {
         create: { ticker: 'AAPL', companyName: 'Apple Inc.', currency: 'USD' },
     });
 
-    // Initial Deposit + Stock Purchases
+    // Deposit + Stock Purchases
     await prisma.transaction.createMany({
         data: [
             {

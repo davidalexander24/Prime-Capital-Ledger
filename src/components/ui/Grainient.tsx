@@ -162,7 +162,6 @@ const Grainient = ({
 }: GrainientProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Effect 1: build WebGL context once, pause when offscreen / tab hidden
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -281,9 +280,8 @@ const Grainient = ({
       ctxMap.delete(container);
       try { container.removeChild(canvas); } catch { /* ignore */ }
     };
-  }, []); // renderer created once
+  }, []);
 
-  // Effect 2: sync props to uniforms — zero GPU cost, no teardown
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;

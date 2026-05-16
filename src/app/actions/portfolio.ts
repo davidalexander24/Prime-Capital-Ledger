@@ -2,6 +2,8 @@
 
 import prisma from "@/lib/prisma";
 import { getLatestPrice } from "@/lib/marketData";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 type ActionResponse<T> = {
   success: boolean;
@@ -22,6 +24,7 @@ export interface HoldingRow {
   pnl: number;
   pnlPct: number;
   weight: number;
+  hasMissingBuy?: boolean;
 }
 
 export interface PortfolioData {
@@ -51,6 +54,7 @@ export async function getPortfolioHoldings(
         currency: string;
         shares: number;
         totalCost: number;
+        hasMissingBuy: boolean;
       }
     > = {};
 
@@ -68,26 +72,32 @@ export async function getPortfolioHoldings(
           currency: t.asset.currency ?? "USD",
           shares: 0,
           totalCost: 0,
+          hasMissingBuy: false,
         };
       }
 
       if (t.type === "BUY") {
-        holdingsMap[t.assetId].shares += qty;
+        holdingsMap[t.assetId].shares = Math.round((holdingsMap[t.assetId].shares + qty) * 1e8) / 1e8;
         holdingsMap[t.assetId].totalCost += qty * price + fee;
       }
 
       if (t.type === "SELL") {
         // Proportionally reduce cost basis
         const h = holdingsMap[t.assetId];
-        const avgCostPerShare = h.shares > 0 ? h.totalCost / h.shares : 0;
-        h.shares -= qty;
+        const avgCostPerShare = h.shares !== 0 ? h.totalCost / h.shares : 0;
+        h.shares = Math.round((h.shares - qty) * 1e8) / 1e8;
+        if (h.shares < 0) {
+          h.shares = 0;
+          h.hasMissingBuy = true;
+        }
         h.totalCost -= avgCostPerShare * qty;
+        if (h.shares === 0) h.totalCost = 0;
       }
     }
 
     // Fetch live prices and build holding rows
     const holdingEntries = Object.values(holdingsMap).filter(
-      (h) => h.shares > 0
+      (h) => h.shares > 0 || h.hasMissingBuy
     );
     const rows: HoldingRow[] = [];
     let grandTotalMarket = 0;
@@ -118,6 +128,7 @@ export async function getPortfolioHoldings(
         pnl,
         pnlPct,
         weight: 0, // calculated after totals
+        hasMissingBuy: h.hasMissingBuy,
       });
     }
 
@@ -152,5 +163,54 @@ export async function getPortfolioHoldings(
       data: null,
       error: "Failed to retrieve portfolio holdings.",
     };
+  }
+}
+
+export async function applyStockSplit(
+  ticker: string,
+  splitRatio: number,
+  effectiveDateStr: string
+): Promise<ActionResponse<void>> {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return { success: false, data: null, error: "Unauthorized" };
+    }
+    const userId = session.user.id;
+    
+    const asset = await prisma.asset.findUnique({
+      where: { ticker }
+    });
+    if (!asset) return { success: false, data: null, error: "Asset not found" };
+
+    const effectiveDate = new Date(effectiveDateStr);
+
+    const transactions = await prisma.transaction.findMany({
+      where: {
+        userId,
+        assetId: asset.id,
+        date: { lt: effectiveDate },
+      }
+    });
+
+    await prisma.$transaction(async (tx) => {
+      for (const t of transactions) {
+        const newQty = Number(t.quantity) * splitRatio;
+        const newPrice = Number(t.executionPrice) / splitRatio;
+        
+        await tx.transaction.update({
+          where: { id: t.id },
+          data: {
+            quantity: newQty,
+            executionPrice: newPrice,
+          }
+        });
+      }
+    });
+
+    return { success: true, data: null, error: null };
+  } catch (error) {
+    console.error("Error applying stock split:", error);
+    return { success: false, data: null, error: "Failed to apply stock split." };
   }
 }

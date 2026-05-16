@@ -67,7 +67,6 @@ export function LogTransactionDialog({
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [statusMsg, setStatusMsg] = useState("");
 
-  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (open) {
       if (editData) {
@@ -94,7 +93,6 @@ export function LogTransactionDialog({
       setStatusMsg("");
     }
   }, [open, editData]);
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   const parsedAmount = parseFloat(amount) || 0;
   const parsedPrice = parseFloat(pricePerShare) || 0;

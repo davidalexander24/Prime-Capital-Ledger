@@ -37,7 +37,7 @@ export default function RegisterPage() {
     }
 
     try {
-      // 1. Call your custom registration API route
+      // custom registration API route
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -52,7 +52,6 @@ export default function RegisterPage() {
         return;
       }
 
-      // 2. Automatically log the user in after successful registration
       const signInRes = await signIn("credentials", {
         email,
         password,
