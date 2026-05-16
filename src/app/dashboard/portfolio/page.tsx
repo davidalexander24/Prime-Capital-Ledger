@@ -5,6 +5,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { Briefcase, TrendingUp, TrendingDown } from "lucide-react";
 import { getPortfolioHoldings } from "@/app/actions/portfolio";
 import { getUsdIdrRate } from "@/lib/marketData";
+import { StockLogo } from "@/components/ui/stock-logo";
 
 function formatIDR(value: number): string {
   const rounded = Math.round(Math.abs(value));
@@ -137,11 +138,15 @@ export default async function PortfolioPage() {
                   className="border-b border-[oklch(0.10_0.005_260)] transition-colors hover:bg-[oklch(0.07_0.005_260)]"
                 >
                   <td className="px-6 py-3">
-                    <div className="flex flex-col">
-                      <span className="text-[13px] font-semibold text-[oklch(0.90_0.005_260)]">
-                        {h.ticker}
-                      </span>
-                      <span className="text-[10px] text-[oklch(0.40_0.01_260)]">{h.name}</span>
+                    <div className="flex items-center gap-3">
+                      {/* Smaller 24px Logo */}
+                      <StockLogo ticker={h.ticker} size={24} />
+                      <div className="flex flex-col">
+                        <span className="text-[13px] font-semibold text-[oklch(0.90_0.005_260)]">
+                          {h.ticker.replace(".JK", "")}
+                        </span>
+                        <span className="text-[10px] text-[oklch(0.40_0.01_260)]">{h.name}</span>
+                      </div>
                     </div>
                   </td>
                   <td className="px-6 py-3">

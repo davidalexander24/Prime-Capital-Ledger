@@ -27,6 +27,7 @@ import {
   type EditTransactionData,
 } from "./log-transaction-dialog";
 import { deleteTransaction } from "@/app/actions/logTransaction";
+import { StockLogo } from "@/components/ui/stock-logo";
 
 interface TransactionTableProps {
   data: TransactionRecord[];
@@ -170,13 +171,17 @@ export function TransactionTable({ data }: TransactionTableProps) {
                 </div>
               </TableCell>
               <TableCell>
-                <div className="flex flex-col">
-                  <span className="text-[12px] font-semibold text-[oklch(0.88_0.005_260)]">
-                    {tx.ticker.replace(".JK", "")}
-                  </span>
-                  <span className="text-[10px] text-[oklch(0.40_0.01_260)]">
-                    {tx.assetName}
-                  </span>
+                <div className="flex items-center gap-3">
+                  {/* Smaller 24px Logo */}
+                  <StockLogo ticker={tx.ticker} size={24} />
+                  <div className="flex flex-col">
+                    <span className="text-[12px] font-semibold text-[oklch(0.88_0.005_260)]">
+                      {tx.ticker.replace(".JK", "")}
+                    </span>
+                    <span className="text-[10px] text-[oklch(0.40_0.01_260)]">
+                      {tx.assetName}
+                    </span>
+                  </div>
                 </div>
               </TableCell>
               <TableCell>

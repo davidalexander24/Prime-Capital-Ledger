@@ -1,5 +1,6 @@
 import { TrendingUp, TrendingDown } from "lucide-react";
 import type { TopTradedAsset } from "@/lib/types";
+import { StockLogo } from "@/components/ui/stock-logo";
 
 interface TopTradedProps {
   data: TopTradedAsset[];
@@ -61,7 +62,10 @@ export function TopTraded({ data }: TopTradedProps) {
                   {index + 1}
                 </div>
 
-                <div className="flex min-w-0 flex-1 flex-col">
+                {/* Smaller 24px Logo */}
+                <StockLogo ticker={asset.ticker} size={24} />
+
+                <div className="flex min-w-0 flex-1 flex-col ml-1">
                   <span className="text-[13px] font-semibold text-[oklch(0.90_0.005_260)]">
                     {asset.ticker.replace(".JK", "")}
                   </span>
