@@ -1,23 +1,102 @@
 # Prime Capital Ledger
 
-Professional portfolio management and financial analytics platform for Indonesian equity markets.
+![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=nextdotjs)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?style=for-the-badge&logo=prisma&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-Upstash-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+
+Professional portfolio management and financial analytics platform for global equity markets.
+
+**Live demo:** _coming soon_
+
+![Dashboard](docs/screenshots/dashboard.png)
 
 ---
 
-## Table of Contents
+## About
 
-- [Getting Started](#getting-started)
-- [Prerequisites](#prerequisites)
-- [Environment Setup](#environment-setup)
-- [Running the Project](#running-the-project)
-- [Project Structure](#project-structure)
-- [Tech Stack](#tech-stack)
-- [Database](#database)
-- [Development Workflow](#development-workflow)
-- [Code Conventions](#code-conventions)
-- [Adding UI Components](#adding-ui-components)
-- [Common Commands](#common-commands)
-- [Troubleshooting](#troubleshooting)
+A full-stack Next.js app that lets investors track holdings across brokerages, ingest transactions directly from PDF account statements, value their portfolio against live market data, and review performance, all from a single dashboard.
+
+### Technical Highlights
+
+- **`Decimal(19,4)` precision** for every monetary value, never `Float`, no rounding errors on financial math.
+- **Immutable transaction ledger** with `daily_valuations` snapshots, full audit trail, append-only design.
+- **Upstash Redis caching layer** for Yahoo Finance prices and USD↔IDR FX, stays under API rate limits, sub-100ms reads.
+- **PDF parsing pipeline** for Ajaib and Stockbit broker statements, with deduplication on commit.
+- **End-to-end type safety** from Prisma schema through Server Actions to React 19 components.
+
+---
+
+## Features
+
+**Authentication**
+- Google OAuth sign-in
+- Email + password with bcrypt hashing
+- NextAuth JWT sessions, protected dashboard routes
+
+**Dashboard**
+- Summary cards: total value, cost basis, unrealized P&L, period return
+- Portfolio valuation chart over time (USD and IDR)
+- Top-traded / movers widget
+- Recent transactions table
+
+**Portfolio**
+- Aggregated holdings table: lots, average cost, last price, market value, P&L ($), P&L (%), portfolio weight
+- Multi-currency display (USD / IDR) with live FX conversion
+
+**Transactions**
+- Immutable ledger covering `BUY`, `SELL`, `DEPOSIT`, `WITHDRAW`
+- Manual entry dialog with ticker search and validation
+- Source tagging for every record (manual vs. imported)
+
+**Imports**
+- PDF parsing for Ajaib and Stockbit brokerage statements
+- CSV bulk import with preview before commit
+- Import history view
+
+**Analytics**
+- Monthly returns chart
+- Sector allocation breakdown
+- Headline metrics: Sharpe ratio, max drawdown, win rate, average return
+
+**Market data**
+- Live prices via Yahoo Finance
+- USD ↔ IDR exchange rates
+- Upstash Redis caching to stay under API limits
+
+**Settings**
+- Profile (display name, email, base currency, timezone)
+- Transaction stats and last-entry timestamp
+- Logout
+
+---
+
+## Tech Stack
+
+| Category | Tool |
+|---|---|
+| Framework | Next.js 16 (App Router) |
+| Language | TypeScript 5 (strict) |
+| UI | React 19, Tailwind CSS v4, shadcn/ui, Radix primitives, lucide-react |
+| Forms | react-hook-form + Zod |
+| Charts | Recharts 3 |
+| ORM | Prisma 6 |
+| Database | PostgreSQL (Neon serverless) |
+| Auth | NextAuth 4 (Google + Credentials), bcryptjs |
+| Cache | Upstash Redis |
+| Market data | yahoo-finance2 |
+| PDF parsing | pdf-parse, pdf2json |
+| Dates | date-fns |
+
+---
+
+## Screenshots
+
+| | |
+|---|---|
+| ![Portfolio](docs/screenshots/portfolio.png)<br/>**Portfolio** - aggregated holdings with live P&L | ![Transactions](docs/screenshots/transactions.png)<br/>**Transactions** - immutable buy/sell/deposit/withdraw ledger |
+| ![Import](docs/screenshots/import.png)<br/>**Import** - PDF parsing for broker statements | ![Analytics](docs/screenshots/analytics.png)<br/>**Analytics** - returns, allocation, risk metrics |
 
 ---
 
@@ -25,72 +104,81 @@ Professional portfolio management and financial analytics platform for Indonesia
 
 ### Prerequisites
 
-Ensure you have the following installed on your machine:
+| Tool | Version |
+|---|---|
+| Node.js | ≥ 20 |
+| npm | ≥ 10 |
+| PostgreSQL | ≥ 15 (or a Neon project) |
+| Git | ≥ 2 |
 
-| Tool | Version | Check |
-|---|---|---|
-| **Node.js** | ≥ 20.x | `node -v` |
-| **npm** | ≥ 10.x | `npm -v` |
-| **PostgreSQL** | ≥ 15.x | `psql --version` |
-| **Git** | ≥ 2.x | `git --version` |
+### 1. Clone and install
 
-### Environment Setup
+```bash
+git clone https://github.com/davidalexander24/Prime-Capital-Ledger.git
+cd Prime-Capital-Ledger
+npm install
+```
 
-1. **Clone the repository**
+`postinstall` runs `prisma generate` automatically.
 
-   ```bash
-   git clone https://github.com/davidalexander24/Prime-Capital-Ledger.git
-   cd Prime-Capital-Ledger
-   ```
+### 2. Configure environment
 
-2. **Install dependencies**
+Create a `.env` at the repo root:
 
-   ```bash
-   npm install
-   ```
+```env
+# Database (Neon or local Postgres)
+DATABASE_URL="postgresql://user:password@host:5432/prime_capital_ledger?schema=public"
+DIRECT_URL="postgresql://user:password@host:5432/prime_capital_ledger?schema=public"
 
-3. **Configure environment variables**
+# NextAuth
+NEXTAUTH_SECRET="<generate with: openssl rand -base64 32>"
+NEXTAUTH_URL="http://localhost:3000"
 
-   ```bash
-   cp .env.example .env
-   ```
+# Google OAuth - create a Web client at https://console.cloud.google.com/apis/credentials
+# Authorized redirect URI: http://localhost:3000/api/auth/callback/google
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
 
-   Open `.env` and fill in your values:
+# Upstash Redis (market data cache)
+UPSTASH_REDIS_REST_URL=""
+UPSTASH_REDIS_REST_TOKEN=""
 
-   ```env
-   DATABASE_URL="postgresql://user:password@localhost:5432/prime_capital_ledger?schema=public"
-   NEXTAUTH_SECRET="<generate with: openssl rand -base64 32>"
-   NEXTAUTH_URL="http://localhost:3000"
-   ```
+# Scheduled jobs
+CRON_SECRET="local-development-secret"
 
-4. **Set up the database**
+# Optional: seed a dev user when running `npm run db:seed`
+DEV_SEED_EMAIL="admin@example.com"
+DEV_SEED_PASSWORD="admin123"
+DEV_SEED_NAME="Admin"
+```
 
-   ```bash
-   # Create and apply all migrations
-   npx prisma migrate dev
+### 3. Set up the database
 
-   # Generate the Prisma client
-   npx prisma generate
-   ```
+```bash
+npx prisma migrate dev
+npm run db:seed         # optional, creates the DEV_SEED_* user and demo data
+```
 
-5. **Verify everything works**
+### 4. Run
 
-   ```bash
-   npm run dev
-   ```
+```bash
+npm run dev
+```
 
-   Open [http://localhost:3000](http://localhost:3000) — you should see the app running in dark mode with the Slate theme.
+Open http://localhost:3000 and sign in.
 
 ---
 
-## Running the Project
+## Scripts
 
 | Command | Description |
 |---|---|
-| `npm run dev` | Start development server (hot-reload) |
-| `npm run build` | Create production build |
-| `npm run start` | Run production server |
-| `npm run lint` | Run ESLint across the codebase |
+| `npm run dev` | Start the dev server (hot reload) |
+| `npm run dev:seed` | Seed the database, then start the dev server |
+| `npm run build` | Production build |
+| `npm run start` | Run the production server |
+| `npm run db:seed` | Seed development data (`prisma/seed.ts`) |
+| `npm run lint` | Run ESLint |
 
 ---
 
@@ -99,297 +187,112 @@ Ensure you have the following installed on your machine:
 ```
 prime-capital-ledger/
 ├── prisma/
-│   └── schema.prisma             # Database models (User, Asset, Transaction, DailyValuation)
-├── prisma.config.ts
+│   ├── schema.prisma                # Models, enums, relations
+│   ├── seed.ts                      # Dev seed script
+│   └── migrations/                  # Prisma migrations
 ├── src/
-│   ├── app/                      # Next.js App Router (pages & API routes)
-│   │   ├── globals.css           # Slate dark theme + design tokens
-│   │   ├── layout.tsx            # Root layout (dark mode, fonts, metadata)
-│   │   └── page.tsx              # Landing page
+│   ├── app/
+│   │   ├── (auth)/                  # Login & register pages
+│   │   ├── api/auth/                # NextAuth + register endpoint
+│   │   ├── dashboard/               # Protected app
+│   │   │   ├── page.tsx             # Overview
+│   │   │   ├── portfolio/           # Holdings
+│   │   │   ├── transactions/        # Ledger
+│   │   │   ├── import/              # PDF / CSV import
+│   │   │   ├── analytics/           # Performance metrics
+│   │   │   └── settings/            # Account settings
+│   │   ├── actions/                 # Server Actions (data fetching & mutations)
+│   │   ├── globals.css              # Dark theme + design tokens
+│   │   ├── layout.tsx               # Root layout
+│   │   └── providers.tsx            # Session provider
 │   ├── components/
-│   │   ├── charts/               # Recharts-based data visualizations
-│   │   ├── layout/               # Shell components (Sidebar, Header, Footer)
-│   │   └── ui/                   # shadcn/ui primitives (do NOT edit directly)
-│   ├── hooks/                    # Custom React hooks
-│   └── lib/
-│       ├── database/             # Prisma client singleton & query helpers
-│       ├── parsers/              # PDF ingestion logic (Ajaib, Stockbit)
-│       ├── valuation/            # Portfolio math & P&L calculations
-│       └── utils.ts              # Shared utilities (cn, formatters)
-├── public/                       # Static assets
-├── .env.example                  # Environment variable template
-├── components.json               # shadcn/ui configuration
-├── package.json
-└── tsconfig.json
+│   │   ├── auth/                    # Google sign-in button, etc.
+│   │   ├── charts/                  # Recharts wrappers
+│   │   ├── dashboard/               # Feature components (cards, dialogs, tables)
+│   │   ├── layout/                  # Sidebar, header, footer
+│   │   └── ui/                      # shadcn/ui primitives, do not edit manually
+│   ├── lib/
+│   │   ├── prisma.ts                # Prisma client singleton
+│   │   ├── redis.ts                 # Upstash client
+│   │   ├── marketData.ts            # Yahoo Finance + FX, with Redis caching
+│   │   ├── types.ts                 # Shared TypeScript types
+│   │   └── utils.ts                 # `cn`, formatters
+│   └── assets/                      # Static images (logo)
+├── public/                          # Public static assets
+├── components.json                  # shadcn/ui config
+├── next.config.ts
+├── prisma.config.ts
+├── tsconfig.json
+└── package.json
 ```
-
-### Key Directories
-
-| Directory | Purpose | Owner |
-|---|---|---|
-| `src/app/` | Pages & API routes — file-based routing | Full-stack |
-| `src/components/ui/` | shadcn primitives — **do not edit manually** (use `npx shadcn add`) | Design system |
-| `src/components/charts/` | Recharts wrappers for portfolio charts | Frontend |
-| `src/components/layout/` | App shell — sidebar, header, navigation | Frontend |
-| `src/hooks/` | Reusable React hooks | Frontend |
-| `src/lib/database/` | Prisma client, query abstractions | Backend |
-| `src/lib/parsers/` | Brokerage PDF → structured data | Backend |
-| `src/lib/valuation/` | NAV, P&L, drawdown calculations | Backend |
-| `prisma/` | Schema & migrations | Backend |
-
----
-
-## Tech Stack
-
-| Category | Technology | Purpose |
-|---|---|---|
-| **Framework** | Next.js 16 (App Router) | Full-stack React framework |
-| **Language** | TypeScript 5 | Type safety across the stack |
-| **Styling** | Tailwind CSS v4 | Utility-first CSS |
-| **UI Components** | shadcn/ui (Radix Nova preset) | Accessible, composable primitives |
-| **Icons** | lucide-react | Consistent icon library |
-| **ORM** | Prisma | Type-safe database access |
-| **Database** | PostgreSQL | Relational data store |
-| **Charts** | Recharts | Portfolio & performance visualizations |
-| **Market Data** | yahoo-finance2 | Real-time & historical stock prices |
-| **PDF Parsing** | pdf-parse | Brokerage statement ingestion |
-| **Date Handling** | date-fns | Financial date manipulation |
-| **Forms** | react-hook-form + zod | Validated form management |
 
 ---
 
 ## Database
 
-### Schema Overview
-
 ```
-┌──────────┐       ┌──────────────┐       ┌─────────┐
-│   User   │──1:N──│ Transaction  │──N:1──│  Asset   │
-│          │       │              │       │          │
-│          │──1:N──│DailyValuation│       │          │
-└──────────┘       └──────────────┘       └──────────┘
+┌──────┐       ┌─────────────┐       ┌───────┐
+│ User │──1:N──│ Transaction │──N:1──│ Asset │
+│      │       └─────────────┘       └───────┘
+│      │──1:N──│DailyValuation│
+│      │──1:N──│   Account    │      (NextAuth)
+│      │──1:N──│   Session    │      (NextAuth)
+└──────┘
 ```
 
 | Model | Table | Description |
 |---|---|---|
-| `User` | `users` | Identity & authentication, preferences |
-| `Asset` | `assets` | Master security data (ticker, exchange, sector) |
-| `Transaction` | `transactions` | Immutable buy/sell ledger with full fee breakdown |
-| `DailyValuation` | `daily_valuations` | End-of-day portfolio snapshots with risk metrics |
+| `User` | `users` | Identity, profile, preferences |
+| `Account` | `accounts` | NextAuth OAuth provider links |
+| `Session` | `sessions` | NextAuth sessions |
+| `VerificationToken` | `verification_tokens` | NextAuth email verification |
+| `Asset` | `assets` | Master security data (ticker, company, currency) |
+| `Transaction` | `transactions` | Immutable buy/sell/deposit/withdraw ledger |
+| `DailyValuation` | `daily_valuations` | End-of-day portfolio snapshots (USD + IDR) |
 
-### Enums
+**Enum** - `TransactionType`: `BUY`, `SELL`, `DEPOSIT`, `WITHDRAW`.
 
-| Enum | Values |
-|---|---|
-| `UserRole` | `USER`, `ADMIN` |
-| `AssetType` | `STOCK`, `ETF`, `BOND`, `MUTUAL_FUND`, `CRYPTO` |
-| `TransactionType` | `BUY`, `SELL` |
-| `TransactionSource` | `MANUAL`, `AJAIB_PDF`, `STOCKBIT_PDF`, `CSV_IMPORT`, `API_SYNC` |
+**Precision** - prices use `Decimal(19, 4)`, quantities `Decimal(19, 9)`, IDR totals `Decimal(19, 2)`. Dates are stored as `@db.Date`.
 
-### Common Prisma Commands
+### Prisma quick reference
 
 ```bash
-# Open Prisma Studio (visual database browser)
-npx prisma studio
-
-# Create a new migration after schema changes
-npx prisma migrate dev --name <migration_name>
-
-# Reset database (⚠️ destroys all data)
-npx prisma migrate reset
-
-# Generate/regenerate the Prisma client
-npx prisma generate
-
-# Pull schema from existing database
-npx prisma db pull
-```
-
----
-
-## Development Workflow
-
-### Branch Strategy
-
-```
-main              ← production-ready, protected
- └── dev          ← integration branch
-      └── feat/*  ← feature branches
-      └── fix/*   ← bug fix branches
-      └── chore/* ← maintenance / config
-```
-
-**Rules:**
-
-1. **Never push directly to `main`** — always open a Pull Request.
-2. Create feature branches from `dev`:
-   ```bash
-   git checkout dev
-   git pull origin dev
-   git checkout -b feat/portfolio-dashboard
-   ```
-3. Keep commits atomic and descriptive:
-   ```
-   feat(charts): add equity curve line chart component
-   fix(parser): handle Ajaib PDF multi-page statements
-   chore(deps): bump prisma to 6.20
-   ```
-4. Open a PR into `dev` when ready. Request at least **1 review**.
-5. `dev` → `main` merges happen at release milestones.
-
-### Pull Request Checklist
-
-Before requesting a review, ensure:
-
-- [ ] `npm run lint` passes with no errors
-- [ ] `npm run build` succeeds
-- [ ] `npx prisma validate` passes (if schema was changed)
-- [ ] New database changes include a migration (`npx prisma migrate dev --name <name>`)
-- [ ] No `.env` or secrets committed (check with `git diff --cached`)
-- [ ] TypeScript compiles with `npx tsc --noEmit`
-
----
-
-## Code Conventions
-
-### General Rules
-
-- **TypeScript strict mode** — no `any` types without justification.
-- **Functional components** — no class components.
-- **Server Components by default** — only add `"use client"` when you need browser APIs, hooks, or event handlers.
-- **Absolute imports** — always use `@/` path aliases:
-  ```typescript
-  // ✅ Good
-  import { Button } from "@/components/ui/button";
-  import { cn } from "@/lib/utils";
-
-  // ❌ Bad
-  import { Button } from "../../../components/ui/button";
-  ```
-
-### File Naming
-
-| Type | Convention | Example |
-|---|---|---|
-| Components | `PascalCase.tsx` | `EquityCurve.tsx` |
-| Hooks | `camelCase.ts` with `use` prefix | `usePortfolio.ts` |
-| Utilities / Libs | `camelCase.ts` | `calculatePnL.ts` |
-| API Routes | `route.ts` in folder | `app/api/transactions/route.ts` |
-| Types / Interfaces | `PascalCase` exports | `export interface PortfolioSummary` |
-
-### Styling Rules
-
-- Use **Tailwind CSS** utility classes — no raw CSS unless unavoidable.
-- Use the **`cn()` helper** for conditional classes:
-  ```tsx
-  import { cn } from "@/lib/utils";
-
-  <div className={cn("rounded-lg p-4", isActive && "bg-primary")} />
-  ```
-- Reference **design tokens** from `globals.css` — don't hardcode colors:
-  ```tsx
-  // ✅ Use semantic tokens
-  className="text-muted-foreground bg-card"
-
-  // ❌ Don't hardcode
-  className="text-gray-400 bg-slate-800"
-  ```
-
-### Financial Data Rules
-
-- **Always use `Decimal`** for monetary values in Prisma — never `Float`.
-- All prices use **`Decimal(18, 4)`** precision.
-- Percentage fields use **`Decimal(10, 6)`** for precision to 4 decimal places of percentage.
-- Default currency is **IDR** — always store and pass `currency` alongside values.
-- Use **`date-fns`** for all date operations — no raw `Date` manipulation.
-
----
-
-## Adding UI Components
-
-This project uses [shadcn/ui](https://ui.shadcn.com/) — components are copied into your codebase, not imported from a package.
-
-```bash
-# Add a new component
-npx shadcn add <component-name>
-
-# Examples
-npx shadcn add dropdown-menu
-npx shadcn add toast
-npx shadcn add tabs
-```
-
-> **⚠️ Do not manually edit files in `src/components/ui/`.** These are managed by shadcn. If you need to customize a component, create a wrapper in `src/components/` instead.
-
-### Currently Installed Components
-
-`button` · `card` · `dialog` · `form` · `input` · `label` · `table`
-
----
-
-## Common Commands
-
-```bash
-# ─── Development ──────────────────────────
-npm run dev                              # Start dev server
-npm run build                            # Production build
-npm run lint                             # Lint check
-
-# ─── Database ─────────────────────────────
 npx prisma studio                        # Visual DB browser
-npx prisma migrate dev --name <name>     # Create migration
+npx prisma migrate dev --name <name>     # Create + apply a migration
+npx prisma migrate reset                 # Reset DB (destructive)
 npx prisma generate                      # Regenerate client
 npx prisma validate                      # Validate schema
-
-# ─── Type Checking ────────────────────────
-npx tsc --noEmit                         # Full type check
-
-# ─── UI Components ────────────────────────
-npx shadcn add <component>              # Add shadcn component
 ```
 
 ---
 
-## Troubleshooting
+## Development Notes
 
-### `prisma generate` fails
+**Branching.** `feat/*` → `dev` → `main`. Open a PR into `dev`; `dev` → `main` happens at release milestones.
 
-Make sure your `DATABASE_URL` in `.env` is valid. If you haven't created the database yet:
+**Conventions.**
+- TypeScript strict mode; avoid `any`.
+- Server Components by default. Add `"use client"` only when you need browser APIs, hooks, or event handlers.
+- Absolute imports via the `@/` alias.
+- Use `cn()` from `@/lib/utils` for conditional Tailwind classes; reference semantic design tokens from `globals.css` rather than hardcoding colors.
+- All monetary values use Prisma `Decimal`, never `Float`. Always pair a value with its currency. Use `date-fns` for date math.
+
+**Adding a UI component.** This project uses [shadcn/ui](https://ui.shadcn.com/) - components are copied into the codebase, not imported from a package.
 
 ```bash
-createdb prime_capital_ledger
-npx prisma migrate dev
+npx shadcn add <component-name>
 ```
 
-### Port 3000 already in use
+Don't edit files in `src/components/ui/` manually. If you need to customize, wrap the primitive in a component under `src/components/`.
 
-```bash
-# Find and kill the process
-npx kill-port 3000
-npm run dev
-```
+### Troubleshooting
 
-### shadcn component not found
-
-Ensure `components.json` exists at the project root and the aliases are correct:
-
-```json
-{
-  "aliases": {
-    "components": "@/components",
-    "ui": "@/components/ui",
-    "lib": "@/lib",
-    "hooks": "@/hooks"
-  }
-}
-```
-
-### Tailwind classes not applying
-
-This project uses **Tailwind CSS v4** with PostCSS. Ensure `postcss.config.mjs` is present and `@tailwindcss/postcss` is in dev dependencies.
+- **`prisma generate` fails** - verify `DATABASE_URL` and that the database exists. For a fresh local Postgres: `createdb prime_capital_ledger && npx prisma migrate dev`.
+- **Port 3000 in use** - `npx kill-port 3000` then `npm run dev`.
+- **Tailwind classes not applying** - this project uses Tailwind CSS v4 with PostCSS. Ensure `postcss.config.mjs` is present and `@tailwindcss/postcss` is in `devDependencies`.
 
 ---
 
 ## License
 
-Private — All rights reserved.
+Private - All rights reserved.
