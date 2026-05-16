@@ -13,7 +13,7 @@ export default async function SettingsPage() {
     redirect("/login");
   }
 
-  const userId = (session.user as any).id;
+  const userId = session.user.id;
 
   const [transactionCount, lastTransaction] = await Promise.all([
     prisma.transaction.count({ where: { userId } }),

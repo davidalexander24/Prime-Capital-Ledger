@@ -7,15 +7,22 @@ import {
   BarChart3, TrendingUp, Activity, Target
 } from "lucide-react";
 import { StockLogo } from "@/components/ui/stock-logo";
+import type { AnalyticsMetric, MonthlyReturn, SectorAllocation } from "@/app/actions/analytics";
 
-export function AnalyticsCharts({ monthlyReturns, sectorAllocation, metrics }: any) {
+interface AnalyticsChartsProps {
+  monthlyReturns: MonthlyReturn[];
+  sectorAllocation: SectorAllocation[];
+  metrics: AnalyticsMetric[];
+}
+
+export function AnalyticsCharts({ monthlyReturns, sectorAllocation, metrics }: AnalyticsChartsProps) {
   const hasReturns = monthlyReturns?.length > 0;
   const hasSectors = sectorAllocation?.length > 0;
 
   return (
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-4 gap-4">
-        {metrics.map((m: any) => (
+        {metrics.map((m) => (
           <div key={m.label} className="rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)] p-5">
             <div className="flex items-start justify-between">
               <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-[oklch(0.45_0.01_260)]">{m.label}</span>
@@ -54,7 +61,7 @@ export function AnalyticsCharts({ monthlyReturns, sectorAllocation, metrics }: a
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex h-[280px] items-center justify-center px-6 text-center">
+              <div className="flex h-70 items-center justify-center px-6 text-center">
                 <p className="text-[12px] text-[oklch(0.45_0.01_260)]">Not enough history yet — monthly returns will appear once you have transactions across multiple months.</p>
               </div>
             )}
@@ -72,7 +79,7 @@ export function AnalyticsCharts({ monthlyReturns, sectorAllocation, metrics }: a
                 <ResponsiveContainer width="100%" height={200}>
                   <PieChart>
                     <Pie data={sectorAllocation} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={3} dataKey="value" stroke="none">
-                      {sectorAllocation.map((entry: any) => (
+                      {sectorAllocation.map((entry) => (
                         <Cell key={entry.name} fill={entry.color} />
                       ))}
                     </Pie>
@@ -80,7 +87,7 @@ export function AnalyticsCharts({ monthlyReturns, sectorAllocation, metrics }: a
                 </ResponsiveContainer>
               </div>
               <div className="flex w-1/2 flex-col gap-3">
-                {sectorAllocation.map((s: any) => (
+                {sectorAllocation.map((s) => (
                   <div key={s.name} className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
                       {/* We now use StockLogo because s.name is actually the ticker! */}
@@ -93,7 +100,7 @@ export function AnalyticsCharts({ monthlyReturns, sectorAllocation, metrics }: a
               </div>
             </div>
           ) : (
-            <div className="flex h-[200px] items-center justify-center px-6 py-4 text-center">
+            <div className="flex h-50 items-center justify-center px-6 py-4 text-center">
               <p className="text-[12px] text-[oklch(0.45_0.01_260)]">Asset breakdown isn&apos;t available yet.</p>
             </div>
           )}

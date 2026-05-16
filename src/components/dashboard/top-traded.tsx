@@ -58,7 +58,7 @@ export function TopTraded({ data }: TopTradedProps) {
                 key={asset.ticker}
                 className="group flex items-center gap-4 px-6 py-3.5 transition-colors hover:bg-[oklch(0.07_0.005_260)]"
               >
-                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[oklch(0.10_0.005_260)] text-[11px] font-bold text-[oklch(0.55_0.01_260)]">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[oklch(0.10_0.005_260)] text-[11px] font-bold text-[oklch(0.55_0.01_260)]">
                   {index + 1}
                 </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface StockLogoProps {
   ticker: string;
@@ -8,9 +8,13 @@ interface StockLogoProps {
   size?: number;
 }
 
-export function StockLogo({ ticker, className = "", size = 32 }: StockLogoProps) {
+function StockLogoInner({
+  ticker,
+  className = "",
+  size = 32,
+}: StockLogoProps) {
   const [errorCount, setErrorCount] = useState(0);
-  
+
   // Clean the ticker (e.g., BBCA.JK becomes BBCA)
   const cleanTicker = ticker.replace(".JK", "").toUpperCase();
 
@@ -25,18 +29,13 @@ export function StockLogo({ ticker, className = "", size = 32 }: StockLogoProps)
     `https://eodhd.com/img/logos/US/${cleanTicker}.png`
   ];
 
-  // Reset the error count if the ticker changes
-  useEffect(() => {
-    setErrorCount(0);
-  }, [ticker]);
-
   const imgSrc = sources[errorCount];
 
   // If ALL databases fail to find the logo, show the elegant minimalist text fallback
   if (errorCount >= sources.length) {
     return (
       <div
-        className={`flex shrink-0 items-center justify-center rounded-[4px] border border-[oklch(0.12_0.005_260)] bg-transparent text-[oklch(0.50_0.01_260)] font-semibold tracking-wide ${className}`}
+        className={`flex shrink-0 items-center justify-center rounded-lg border border-[oklch(0.12_0.005_260)] bg-transparent text-[oklch(0.50_0.01_260)] font-semibold tracking-wide ${className}`}
         style={{ width: size, height: size, fontSize: size * 0.4 }}
       >
         {cleanTicker.slice(0, 2)}
@@ -64,4 +63,8 @@ export function StockLogo({ ticker, className = "", size = 32 }: StockLogoProps)
       />
     </div>
   );
+}
+
+export function StockLogo(props: StockLogoProps) {
+  return <StockLogoInner key={props.ticker} {...props} />;
 }

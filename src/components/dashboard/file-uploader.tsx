@@ -1,6 +1,6 @@
 "use client";
 
-import { Upload, File, FileUp, X } from "lucide-react";
+import { Upload, File, FileUp } from "lucide-react";
 import { useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -119,10 +119,12 @@ export function FileUploader() {
         setUploadStatus("error");
         setUploadMessage(res.error || "Unknown parse error.");
       }
-    } catch (err: any) {
-      console.error("Parse error:", err);
+    } catch (error: unknown) {
+      console.error("Parse error:", error);
       setUploadStatus("error");
-      setUploadMessage(`Client error: ${err.message || "Failed to parse."}`);
+      setUploadMessage(
+        `Client error: ${error instanceof Error ? error.message : "Failed to parse."}`
+      );
     } finally {
       setIsParsing(false);
     }
@@ -151,10 +153,12 @@ export function FileUploader() {
         setCommitStatus("error");
         setCommitMessage(res.message);
       }
-    } catch (err: any) {
-      console.error("Commit error:", err);
+    } catch (error: unknown) {
+      console.error("Commit error:", error);
       setCommitStatus("error");
-      setCommitMessage(`Client error: ${err.message || "Failed to import."}`);
+      setCommitMessage(
+        `Client error: ${error instanceof Error ? error.message : "Failed to import."}`
+      );
     }
   };
 

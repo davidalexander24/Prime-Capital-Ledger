@@ -36,7 +36,7 @@ export default async function PortfolioPage() {
   if (!session || !session.user) {
     redirect("/login");
   }
-  const userId = (session.user as any).id;
+  const userId = session.user.id;
 
   const [res, fxRate] = await Promise.all([
     getPortfolioHoldings(userId),
@@ -117,7 +117,7 @@ export default async function PortfolioPage() {
                 (h) => (
                   <th
                     key={h}
-                    className={`h-10 px-6 text-[10px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.40_0.01_260)] ${
+                    className={`h-10 px-6 text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)] ${
                       ["Lots", "Avg Price", "Last Price", "Market Value", "P&L", "Weight"].includes(h)
                         ? "text-right"
                         : "text-left"

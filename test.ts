@@ -1,6 +1,5 @@
 import "dotenv/config";
 import { getTrendingStocks } from "./src/app/actions/dashboard";
-import { redis } from "./src/lib/redis";
 
 async function main() {
   try {

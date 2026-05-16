@@ -5,7 +5,15 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { FileText, FileSpreadsheet, Globe, CheckCircle2 } from "lucide-react";
 import { FileUploader } from "@/components/dashboard/file-uploader";
 
-const importHistory: any[] = [];
+interface ImportHistoryItem {
+  id: string;
+  filename: string;
+  source: string;
+  transactions: number;
+  date: string;
+}
+
+const importHistory: ImportHistoryItem[] = [];
 
 const importSources = [
   { id: "ajaib", name: "Ajaib", desc: "Import from Ajaib brokerage PDF statements", icon: FileText, formats: "PDF" },

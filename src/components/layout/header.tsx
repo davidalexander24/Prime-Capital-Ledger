@@ -17,7 +17,7 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="mr-2 rounded-md bg-[oklch(0.10_0.005_260)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.45_0.01_260)]">
+        <span className="mr-2 rounded-md bg-[oklch(0.10_0.005_260)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.45_0.01_260)]">
           IDX Market Open
         </span>
         <button className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-[oklch(0.14_0.005_260)] bg-transparent text-[oklch(0.45_0.01_260)] transition-colors hover:bg-[oklch(0.08_0.005_260)] hover:text-[oklch(0.70_0.005_260)]">
