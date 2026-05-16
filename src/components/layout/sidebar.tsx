@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import logoPrimeCapital from "@/assets/logoprimecaptial.png";
+import { LogoMark } from "@/components/layout/logo-mark";
 import {
   LayoutDashboard,
   ArrowLeftRight,
@@ -41,16 +40,13 @@ export function Sidebar() {
 
   return (
     <aside className="fixed left-0 top-0 z-40 flex h-screen w-[220px] flex-col border-r border-[oklch(0.14_0.005_260)] bg-[oklch(0.04_0.005_260)]">
-      <div className="flex h-16 items-center justify-center border-b border-[oklch(0.14_0.005_260)] overflow-hidden">
-        <Image
-          src={logoPrimeCapital}
-          alt="Prime Capital Logo"
-          width={220}
-          height={220}
-          className="scale-[1.1] translate-y-[1px]"
-          priority
-        />
-      </div>
+      <Link
+        href="/dashboard"
+        className="flex h-16 items-center justify-center border-b border-[oklch(0.14_0.005_260)]"
+        aria-label="Prime Capital — Dashboard"
+      >
+        <LogoMark size={36} />
+      </Link>
 
       <nav className="flex flex-1 flex-col gap-1 px-3 py-4">
         <span className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-[oklch(0.40_0.01_260)]">
