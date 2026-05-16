@@ -27,6 +27,7 @@ import {
   type EditTransactionData,
 } from "./log-transaction-dialog";
 import { deleteTransaction } from "@/app/actions/logTransaction";
+import { StockLogo } from "@/components/ui/stock-logo";
 
 interface TransactionTableProps {
   data: TransactionRecord[];
@@ -132,22 +133,22 @@ export function TransactionTable({ data }: TransactionTableProps) {
       <Table>
         <TableHeader>
           <TableRow className="border-b border-[oklch(0.12_0.005_260)] hover:bg-transparent">
-            <TableHead className="h-10 pl-6 text-[10px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.40_0.01_260)]">
+            <TableHead className="h-10 pl-6 text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
               Date
             </TableHead>
-            <TableHead className="h-10 text-[10px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.40_0.01_260)]">
+            <TableHead className="h-10 text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
               Asset
             </TableHead>
-            <TableHead className="h-10 text-[10px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.40_0.01_260)]">
+            <TableHead className="h-10 text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
               Type
             </TableHead>
-            <TableHead className="h-10 text-right text-[10px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.40_0.01_260)]">
+            <TableHead className="h-10 text-right text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
               Qty (Lots)
             </TableHead>
-            <TableHead className="h-10 text-right text-[10px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.40_0.01_260)]">
+            <TableHead className="h-10 text-right text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
               Price
             </TableHead>
-            <TableHead className="h-10 text-right text-[10px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.40_0.01_260)]">
+            <TableHead className="h-10 text-right text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
               Net Value
             </TableHead>
             <TableHead className="h-10 w-10 pr-6" />
@@ -170,13 +171,17 @@ export function TransactionTable({ data }: TransactionTableProps) {
                 </div>
               </TableCell>
               <TableCell>
-                <div className="flex flex-col">
-                  <span className="text-[12px] font-semibold text-[oklch(0.88_0.005_260)]">
-                    {tx.ticker.replace(".JK", "")}
-                  </span>
-                  <span className="text-[10px] text-[oklch(0.40_0.01_260)]">
-                    {tx.assetName}
-                  </span>
+                <div className="flex items-center gap-3">
+                  {/* Smaller 24px Logo */}
+                  <StockLogo ticker={tx.ticker} size={24} />
+                  <div className="flex flex-col">
+                    <span className="text-[12px] font-semibold text-[oklch(0.88_0.005_260)]">
+                      {tx.ticker.replace(".JK", "")}
+                    </span>
+                    <span className="text-[10px] text-[oklch(0.40_0.01_260)]">
+                      {tx.assetName}
+                    </span>
+                  </div>
                 </div>
               </TableCell>
               <TableCell>
@@ -230,14 +235,14 @@ export function TransactionTable({ data }: TransactionTableProps) {
                     >
                       <DropdownMenu.Item
                         onSelect={() => handleEdit(tx)}
-                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-[12px] font-medium text-[oklch(0.80_0.005_260)] outline-none transition-colors data-[highlighted]:bg-[oklch(0.10_0.005_260)]"
+                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-[12px] font-medium text-[oklch(0.80_0.005_260)] outline-none transition-colors data-highlighted:bg-[oklch(0.10_0.005_260)]"
                       >
                         <Pencil className="h-3.5 w-3.5" />
                         Edit
                       </DropdownMenu.Item>
                       <DropdownMenu.Item
                         onSelect={() => handleDelete(tx)}
-                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-[12px] font-medium text-[oklch(0.70_0.15_25)] outline-none transition-colors data-[highlighted]:bg-[oklch(0.15_0.04_25)]"
+                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-[12px] font-medium text-[oklch(0.70_0.15_25)] outline-none transition-colors data-highlighted:bg-[oklch(0.15_0.04_25)]"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                         Delete

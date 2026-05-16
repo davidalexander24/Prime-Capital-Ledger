@@ -97,7 +97,7 @@ export function TickerSearch({ value, onChange, disabled }: TickerSearchProps) {
   if (value) {
     return (
       <div className="flex flex-col gap-1.5">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.40_0.01_260)]">
+        <span className="text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
           Asset
         </span>
         <div className="flex h-9 items-center gap-2 rounded-lg border border-[oklch(0.14_0.005_260)] bg-[oklch(0.03_0.005_260)] px-3">
@@ -124,7 +124,7 @@ export function TickerSearch({ value, onChange, disabled }: TickerSearchProps) {
   // Search state
   return (
     <div ref={containerRef} className="relative flex flex-col gap-1.5">
-      <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.40_0.01_260)]">
+      <span className="text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
         Search Asset
       </span>
       <div className="relative">

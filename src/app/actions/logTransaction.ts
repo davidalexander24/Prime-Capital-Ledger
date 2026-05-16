@@ -29,7 +29,7 @@ export async function createManualTransaction(
     if (!session || !session.user) {
       return { success: false, message: "Unauthorized" };
     }
-    const userId = (session.user as any).id;
+    const userId = session.user.id;
 
     // Validate inputs
     if (!input.ticker || input.ticker.trim().length === 0) {
@@ -86,11 +86,11 @@ export async function createManualTransaction(
       success: true,
       message: `Successfully logged ${input.type} of ${displayQty} of ${ticker} at $${input.pricePerShare.toFixed(2)}/share.`,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error creating manual transaction:", error);
     return {
       success: false,
-      message: error.message || "Failed to create transaction.",
+      message: error instanceof Error ? error.message : "Failed to create transaction.",
     };
   }
 }
@@ -104,7 +104,7 @@ export async function updateTransaction(
     if (!session || !session.user) {
       return { success: false, message: "Unauthorized" };
     }
-    const userId = (session.user as any).id;
+    const userId = session.user.id;
 
     // Verify ownership
     const existing = await prisma.transaction.findFirst({
@@ -159,11 +159,11 @@ export async function updateTransaction(
       success: true,
       message: `Transaction updated successfully.`,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error updating transaction:", error);
     return {
       success: false,
-      message: error.message || "Failed to update transaction.",
+      message: error instanceof Error ? error.message : "Failed to update transaction.",
     };
   }
 }
@@ -176,7 +176,7 @@ export async function deleteTransaction(
     if (!session || !session.user) {
       return { success: false, message: "Unauthorized" };
     }
-    const userId = (session.user as any).id;
+    const userId = session.user.id;
 
     const existing = await prisma.transaction.findFirst({
       where: { id: transactionId, userId },
@@ -193,11 +193,11 @@ export async function deleteTransaction(
       success: true,
       message: "Transaction deleted successfully.",
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error deleting transaction:", error);
     return {
       success: false,
-      message: error.message || "Failed to delete transaction.",
+      message: error instanceof Error ? error.message : "Failed to delete transaction.",
     };
   }
 }

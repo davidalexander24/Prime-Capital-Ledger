@@ -299,7 +299,7 @@ export function ValuationChart({ data }: ValuationChartProps) {
             </AreaChart>
           </ResponsiveContainer>
         ) : (
-          <div className="flex h-[280px] items-center justify-center px-6 text-center">
+          <div className="flex h-70 items-center justify-center px-6 text-center">
             <p className="text-[12px] text-[oklch(0.45_0.01_260)]">
               Not enough data in this period to draw a chart.
             </p>

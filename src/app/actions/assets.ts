@@ -40,9 +40,16 @@ export async function searchAssets(
     try {
       const YahooFinance = (await import("yahoo-finance2")).default;
       const yf = new YahooFinance();
-      const yahooResults = await yf.search(q);
+      const yahooResults = await yf.search(q) as {
+        quotes?: Array<{
+          symbol?: string;
+          quoteType?: string;
+          shortname?: string;
+          longname?: string;
+        }>;
+      };
 
-      const quotes = (yahooResults as any)?.quotes ?? [];
+      const quotes = yahooResults.quotes ?? [];
       for (const quote of quotes) {
         if (results.length >= 8) break;
         const symbol: string | undefined = quote?.symbol;

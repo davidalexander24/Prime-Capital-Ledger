@@ -14,8 +14,39 @@ type ActionResponse<T> = {
   error: string | null;
 };
 
+interface PortfolioSummaryData {
+  cashBalanceUSD: number;
+  marketValueUSD: number;
+  totalEquityUSD: number;
+  totalEquityIDR: number;
+  exchangeRate: number;
+  date: string;
+}
+
+interface HoldingDailyChange {
+  ticker: string;
+  name: string;
+  sector: string;
+  totalVolume: number;
+  tradeCount: number;
+  lastPrice: number;
+  changePercent: number;
+  currency: string;
+}
+
+interface TrendingStock {
+  ticker: string;
+  name: string;
+  sector: string;
+  totalVolume: number;
+  tradeCount: number;
+  lastPrice: number;
+  changePercent: number;
+  currency: string;
+}
+
 // Portfolio Summary
-export async function getPortfolioSummary(userId: string): Promise<ActionResponse<any>> {
+export async function getPortfolioSummary(userId: string): Promise<ActionResponse<PortfolioSummaryData>> {
   try {
     const latestValuation = await prisma.dailyValuation.findFirst({
       where: { userId },
@@ -27,7 +58,7 @@ export async function getPortfolioSummary(userId: string): Promise<ActionRespons
     }
 
     // Convert Decimals to native Numbers
-    const serializedData = {
+    const serializedData: PortfolioSummaryData = {
       ...latestValuation,
       cashBalanceUSD: Number(latestValuation.cashBalanceUSD),
       marketValueUSD: Number(latestValuation.marketValueUSD),
@@ -334,7 +365,7 @@ export async function getRecentTransactions(
 // Sorted by largest absolute % move first (biggest movers today).
 export async function getHoldingsDailyChange(
   userId: string
-): Promise<ActionResponse<any>> {
+): Promise<ActionResponse<HoldingDailyChange[]>> {
   try {
     const transactions = await prisma.transaction.findMany({
       where: { userId },
@@ -411,7 +442,7 @@ export async function getHoldingsDailyChange(
 }
 
 // 5 Most Traded Stocks
-export async function getTrendingStocks(): Promise<ActionResponse<any>> {
+export async function getTrendingStocks(): Promise<ActionResponse<TrendingStock[]>> {
   try {
     const topTraded = await prisma.transaction.groupBy({
       by: ['assetId'],

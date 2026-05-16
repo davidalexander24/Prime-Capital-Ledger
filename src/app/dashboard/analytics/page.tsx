@@ -9,11 +9,12 @@ export const dynamic = "force-dynamic";
 
 export default async function AnalyticsPage() {
   const session = await getServerSession(authOptions);
+  
   if (!session || !session.user) {
     redirect("/login");
   }
 
-  const userId = (session.user as any).id;
+  const userId = session.user.id;
   const res = await getAnalyticsData(userId);
 
   const monthlyReturns = res.success && res.data ? res.data.monthlyReturns : [];

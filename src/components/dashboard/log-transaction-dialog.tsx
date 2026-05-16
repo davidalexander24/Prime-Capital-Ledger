@@ -8,7 +8,6 @@ import {
   ArrowUpRight,
   Hash,
   DollarSign,
-  Calendar,
   X,
   CheckCircle2,
   XCircle,
@@ -68,7 +67,7 @@ export function LogTransactionDialog({
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [statusMsg, setStatusMsg] = useState("");
 
-  // Reset form when dialog opens or editData changes
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (open) {
       if (editData) {
@@ -95,6 +94,7 @@ export function LogTransactionDialog({
       setStatusMsg("");
     }
   }, [open, editData]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const parsedAmount = parseFloat(amount) || 0;
   const parsedPrice = parseFloat(pricePerShare) || 0;
@@ -167,7 +167,7 @@ export function LogTransactionDialog({
         <div className="flex flex-col gap-5 px-6 py-5">
           {/* Transaction Type */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.40_0.01_260)]">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
               Transaction Type
             </span>
             <div className="grid grid-cols-2 gap-2">
@@ -204,7 +204,7 @@ export function LogTransactionDialog({
           {/* Amount */}
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.40_0.01_260)]">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
                 Amount
               </span>
               <div className="flex overflow-hidden rounded-md border border-[oklch(0.14_0.005_260)]">
@@ -254,7 +254,7 @@ export function LogTransactionDialog({
           {/* Price + Fee */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.40_0.01_260)]">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
                 Price / Share
               </span>
               <div className="relative">
@@ -274,7 +274,7 @@ export function LogTransactionDialog({
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.40_0.01_260)]">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
                 Fee (optional)
               </span>
               <div className="relative">
@@ -297,7 +297,7 @@ export function LogTransactionDialog({
 
           {/* Date */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.40_0.01_260)]">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
               Transaction Date
             </span>
             <div className="relative">
@@ -314,7 +314,7 @@ export function LogTransactionDialog({
           {/* Order summary (visible when values are filled) */}
           {parsedAmount > 0 && parsedPrice > 0 && (
             <div className="rounded-lg border border-[oklch(0.12_0.005_260)] bg-[oklch(0.03_0.005_260)] px-4 py-3">
-              <p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.40_0.01_260)]">
+              <p className="mb-2 text-[9px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
                 Order Summary
               </p>
               <div className="flex flex-col gap-1.5 text-[11px]">

@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { getHistoricalPrices, getUsdIdrRate, getLatestPrice } from "@/lib/marketData";
+import { getHistoricalPrices, getUsdIdrRate } from "@/lib/marketData";
 
 type ActionResponse<T> = {
   success: boolean;

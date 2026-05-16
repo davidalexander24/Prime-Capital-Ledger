@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import logoPrimeCapital from "@/assets/logoprimecaptial.png";
 import Grainient from "@/components/ui/Grainient";
@@ -11,8 +10,7 @@ export default function AuthLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
-  const isLogin = pathname === "/login";
+  usePathname();
 
   return (
     <div className="auth-layout">
