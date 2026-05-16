@@ -1,4 +1,4 @@
-# UML — Prime Capital Ledger
+# UML - Prime Capital Ledger
 
 Dokumen ini berisi dua diagram UML: **Use Case Diagram** (interaksi pengguna dengan sistem) dan **Class Diagram** (struktur entitas inti). Hanya fitur yang sudah diimplementasikan secara penuh yang ditampilkan.
 
@@ -160,7 +160,7 @@ classDiagram
 ### Catatan Class
 
 - **`User`** adalah aggregate root untuk semua data milik pengguna; cascade delete diterapkan pada `Account` dan `Session`.
-- **`Asset`** bersifat global (master data) — di-share antar user, tidak punya `userId`.
+- **`Asset`** bersifat global (master data), di-share antar user, tidak punya `userId`.
 - **`Transaction`** adalah entitas *append-only* (tidak memiliki `updatedAt`). Koreksi dilakukan dengan menambah transaksi baru, bukan mengubah baris lama → audit trail terjaga.
-- **`DailyValuation`** adalah snapshot yang dihasilkan oleh server (bukan input user) — dibangun ulang setiap kali transaksi baru di-commit.
+- **`DailyValuation`** adalah snapshot yang dihasilkan oleh server (bukan input user), dibangun ulang setiap kali transaksi baru di-commit.
 - Enumerasi **`TransactionType`** disimpan di level PostgreSQL sebagai `ENUM`, bukan `string`, untuk integritas data.

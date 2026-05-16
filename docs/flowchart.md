@@ -1,4 +1,4 @@
-# Flowchart — Prime Capital Ledger
+# Flowchart - Prime Capital Ledger
 
 Dokumen ini berisi dua flowchart utama: **(A) Authentication Flow** dan **(B) PDF Import Flow**. Keduanya merepresentasikan jalur kode nyata yang ada di repository, bukan alur generik.
 
@@ -64,7 +64,7 @@ Alur paling kompleks di aplikasi: user mengunggah laporan PDF dari Ajaib/Stockbi
 ```mermaid
 flowchart TD
     Start([User membuka /dashboard/import]) --> Upload[Drag & drop atau pilih file PDF]
-    Upload --> Validate{File valid?<br/>(PDF, kurang dari 10MB)}
+    Upload --> Validate{"File valid?<br/>(PDF, kurang dari 10MB)"}
     Validate -->|"Tidak"| ShowError[Tampilkan error: format/ukuran salah]
     ShowError --> Start
 
@@ -73,7 +73,7 @@ flowchart TD
     AuthCheck -->|"Tidak"| Unauthorized[Return: Unauthorized]
     AuthCheck -->|"Ya"| ReadPDF["PDFParse(buffer) -> raw text"]
 
-    ReadPDF --> DetectBroker{Format broker terdeteksi?<br/>(Ajaib / Stockbit)}
+    ReadPDF --> DetectBroker{"Format broker terdeteksi?<br/>(Ajaib / Stockbit)"}
     DetectBroker -->|"Tidak"| ParseFail[Return: Format tidak dikenali]
     DetectBroker -->|"Ya"| Extract[Ekstrak baris transaksi<br/>regex per format broker]
 
@@ -109,7 +109,7 @@ flowchart TD
 
 ### Catatan Implementasi
 
-- Server Action utama: `src/app/actions/import.ts` — fungsi `parsePdfTransactions()` dan `commitParsedTransactions()`.
+- Server Action utama: `src/app/actions/import.ts` - fungsi `parsePdfTransactions()` dan `commitParsedTransactions()`.
 - Library parsing: **`pdf-parse`** untuk mengekstrak text mentah, kemudian regex spesifik per broker (Ajaib vs Stockbit) untuk membaca baris transaksi.
 - **Bulan dalam Bahasa Indonesia** (`Jan`, `Feb`, ..., `Des`) dipetakan ke index bulan JavaScript di awal file.
 - **Yahoo Finance lookup** untuk mendapatkan nama perusahaan dilakukan sekali per ticker dan di-cache via Redis agar tidak memukul rate limit.

@@ -96,7 +96,7 @@ erDiagram
 ## Catatan Desain
 
 - **Presisi finansial:** semua kolom uang memakai `Decimal` (PostgreSQL `numeric`), bukan `Float`. Harga `Decimal(19, 4)`, kuantitas `Decimal(19, 9)` (mendukung pecahan saham), total IDR `Decimal(19, 2)`.
-- **Immutable ledger:** tabel `Transaction` tidak memiliki kolom `updatedAt`. Sekali tercatat, baris transaksi tidak diubah — koreksi dilakukan dengan menambah transaksi baru (audit trail terjaga).
+- **Immutable ledger:** tabel `Transaction` tidak memiliki kolom `updatedAt`. Sekali tercatat, baris transaksi tidak diubah - koreksi dilakukan dengan menambah transaksi baru (audit trail terjaga).
 - **Indexing:** index ada pada `transactions(userId)`, `transactions(assetId)`, `transactions(userId, date)`, `daily_valuations(userId)`, `daily_valuations(date)`, plus unique constraint `(userId, date)` di `daily_valuations`.
 - **Enum `TransactionType`:** `BUY`, `SELL`, `DEPOSIT`, `WITHDRAW`.
 
