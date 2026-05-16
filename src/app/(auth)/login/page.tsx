@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Eye, EyeOff } from "lucide-react";
+import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -54,6 +55,8 @@ export default function LoginPage() {
         </p>
       </div>
 
+      <GoogleSignInButton label="Sign in with Google" />
+
       {/* Form */}
       <form onSubmit={handleSubmit}>
         {error && <div className="auth-error-box">{error}</div>}
@@ -76,14 +79,9 @@ export default function LoginPage() {
 
         {/* Password */}
         <div className="auth-field-group" style={{ marginBottom: 8 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <label className="auth-field-label" style={{ marginBottom: 0 }}>
-              Password<span className="auth-required">*</span>
-            </label>
-            <Link href="#" className="auth-forgot-link">
-              Forgot password?
-            </Link>
-          </div>
+          <label className="auth-field-label">
+            Password<span className="auth-required">*</span>
+          </label>
           <div className="auth-field-wrapper" style={{ marginTop: 6 }}>
             <input
               id="login-password"

@@ -362,27 +362,59 @@ export default function AuthLayout({
         }
 
         .auth-submit-btn {
+          position: relative;
           width: 100%;
           height: 44px;
-          border-radius: 10px;
+          border-radius: 6px;
           font-size: 14px;
           font-weight: 600;
+          letter-spacing: 0.01em;
           color: #fff;
-          background: oklch(0.45 0.12 230);
+          background: linear-gradient(135deg, oklch(0.42 0.14 230), oklch(0.50 0.12 240));
           border: none;
           cursor: pointer;
-          transition: all 0.2s ease;
+          overflow: hidden;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           margin-top: 8px;
         }
 
+        .auth-submit-btn::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.12) 50%,
+            transparent 100%
+          );
+          transition: left 0.5s ease;
+        }
+
+        .auth-submit-btn:hover:not(:disabled)::before {
+          left: 100%;
+        }
+
         .auth-submit-btn:hover:not(:disabled) {
-          background: oklch(0.5 0.14 230);
-          box-shadow: 0 4px 20px oklch(0.45 0.12 230 / 0.35);
+          background: linear-gradient(135deg, oklch(0.48 0.14 230), oklch(0.55 0.12 240));
+          box-shadow:
+            0 4px 20px oklch(0.45 0.14 230 / 0.35),
+            0 0 0 1px oklch(0.55 0.12 230 / 0.15);
+          transform: translateY(-1px);
+        }
+
+        .auth-submit-btn:active:not(:disabled) {
+          transform: translateY(0);
+          box-shadow: 0 2px 8px oklch(0.45 0.12 230 / 0.25);
         }
 
         .auth-submit-btn:disabled {
-          opacity: 0.6;
+          opacity: 0.5;
           cursor: not-allowed;
+          background: oklch(0.25 0.005 260);
         }
 
         .auth-switch-text {
