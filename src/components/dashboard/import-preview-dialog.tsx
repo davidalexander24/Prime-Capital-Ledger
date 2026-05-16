@@ -72,7 +72,7 @@ export function ImportPreviewDialog({
           <div className="flex flex-col gap-3 px-6 py-5">
             <div className="overflow-hidden rounded-lg border border-[oklch(0.12_0.005_260)]">
               <table className="w-full text-left text-[11px]">
-                <thead className="bg-[oklch(0.06_0.005_260)] text-[9px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.40_0.01_260)]">
+                <thead className="bg-[oklch(0.06_0.005_260)] text-[9px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
                   <tr>
                     <th className="px-3 py-2">Type</th>
                     <th className="px-3 py-2">Asset</th>

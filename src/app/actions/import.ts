@@ -1,17 +1,22 @@
 "use server";
 
+import { PDFParse } from "pdf-parse";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 // pdf-parse depends on pdf.js, which expects browser globals.
-if (typeof global.DOMMatrix === "undefined") {
-  (global as any).DOMMatrix = class DOMMatrix {};
+const globalWithPolyfills = globalThis as typeof globalThis & {
+  DOMMatrix?: typeof globalThis.DOMMatrix;
+  Path2D?: typeof globalThis.Path2D;
+};
+
+if (typeof globalWithPolyfills.DOMMatrix === "undefined") {
+  globalWithPolyfills.DOMMatrix = class DOMMatrix {} as typeof globalThis.DOMMatrix;
 }
-if (typeof global.Path2D === "undefined") {
-  (global as any).Path2D = class Path2D {};
+if (typeof globalWithPolyfills.Path2D === "undefined") {
+  globalWithPolyfills.Path2D = class Path2D {} as typeof globalThis.Path2D;
 }
-const { PDFParse } = require("pdf-parse");
 
 const INDONESIAN_MONTHS: Record<string, number> = {
   jan: 0, feb: 1, mar: 2, apr: 3, mei: 4, jun: 5,
@@ -48,12 +53,12 @@ async function resolveCompanyName(
   try {
     const YahooFinance = (await import("yahoo-finance2")).default;
     const yf = new YahooFinance();
-    const q: any = await yf.quote(ticker);
+    const q = await yf.quote(ticker) as { longName?: string; shortName?: string };
     const name = q?.longName ?? q?.shortName ?? placeholder;
     cache.set(ticker, name);
     return name;
-  } catch (err) {
-    console.warn(`Yahoo name lookup failed for ${ticker}:`, err);
+  } catch (error: unknown) {
+    console.warn(`Yahoo name lookup failed for ${ticker}:`, error);
     cache.set(ticker, placeholder);
     return placeholder;
   }
@@ -198,9 +203,12 @@ export async function parsePdfTransactions(
       success: true,
       data: { sourceDate: sourceDate.toISOString(), rows },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("PDF parse error:", error);
-    return { success: false, error: error.message || "Failed to parse PDF." };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to parse PDF.",
+    };
   }
 }
 
@@ -212,7 +220,7 @@ export async function commitParsedTransactions(
     if (!session || !session.user) {
       return { success: false, message: "Unauthorized" };
     }
-    const userId = (session.user as any).id;
+    const userId = session.user.id;
 
     if (!rows || rows.length === 0) {
       return { success: false, message: "No rows to import." };
@@ -296,11 +304,11 @@ export async function commitParsedTransactions(
       imported,
       skipped,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("PDF commit error:", error);
     return {
       success: false,
-      message: error.message || "Failed to import transactions.",
+      message: error instanceof Error ? error.message : "Failed to import transactions.",
     };
   }
 }

@@ -23,7 +23,7 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const userId = (session.user as any).id;
+  const userId = session.user.id;
 
   const [valuationRes, transactionsRes, moversRes, holdingsRes, fxRate] =
     await Promise.all([

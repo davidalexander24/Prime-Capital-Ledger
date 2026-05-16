@@ -2,8 +2,9 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
-import { User, Shield, Database } from "lucide-react";
+import { User, Shield, Database, LogOut } from "lucide-react";
 import prisma from "@/lib/prisma";
+import { LogoutButton } from "@/components/dashboard/logout-button";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,7 @@ export default async function SettingsPage() {
     redirect("/login");
   }
 
-  const userId = (session.user as any).id;
+  const userId = session.user.id;
 
   const [transactionCount, lastTransaction] = await Promise.all([
     prisma.transaction.count({ where: { userId } }),
@@ -102,6 +103,19 @@ export default async function SettingsPage() {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="overflow-hidden rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)]">
+        <div className="flex items-center gap-2 border-b border-[oklch(0.12_0.005_260)] px-6 py-4">
+          <LogOut className="h-4 w-4 text-[oklch(0.45_0.01_260)]" strokeWidth={1.75} />
+          <h2 className="text-sm font-semibold text-[oklch(0.88_0.005_260)]">Session</h2>
+        </div>
+        <div className="flex items-center justify-between px-6 py-3.5">
+          <span className="text-[13px] text-[oklch(0.65_0.005_260)]">
+            Signed in as <span className="text-[oklch(0.80_0.005_260)]">{session.user.email}</span>
+          </span>
+          <LogoutButton />
+        </div>
       </div>
 
       <div className="flex items-center justify-between rounded-xl border border-[oklch(0.15_0.02_25)] bg-[oklch(0.06_0.01_25)] p-5">

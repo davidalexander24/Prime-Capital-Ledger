@@ -23,7 +23,7 @@ export default async function TransactionsPage() {
   if (!session || !session.user) {
     redirect("/login");
   }
-  const userId = (session.user as any).id;
+  const userId = session.user.id;
 
   const [res, fxRate] = await Promise.all([
     getTransactions(userId),
