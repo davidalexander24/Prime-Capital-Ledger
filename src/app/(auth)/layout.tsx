@@ -14,7 +14,7 @@ export default function AuthLayout({
 
   return (
     <div className="auth-layout">
-      {/* ── Left Panel: Animated Grainient Background ── */}
+      {/* Left Panel: Animated Grainient Background */}
       <div className="auth-left-panel">
         <div className="auth-grainient-wrapper">
           <Grainient
@@ -57,7 +57,7 @@ export default function AuthLayout({
         </div>
       </div>
 
-      {/* ── Right Panel: Form ── */}
+      {/* Right Panel: Form */}
       <div className="auth-right-panel">
         <div className="auth-right-inner">
           {/* Logo */}
@@ -83,14 +83,14 @@ export default function AuthLayout({
       </div>
 
       <style jsx global>{`
-        /* ── Auth Layout Grid ── */
+        /* Auth Layout Grid */
         .auth-layout {
           display: flex;
           min-height: 100vh;
           background: oklch(0.08 0.005 260);
         }
 
-        /* ── Left Panel ── */
+        /* Left Panel */
         .auth-left-panel {
           position: relative;
           display: none;
@@ -151,7 +151,7 @@ export default function AuthLayout({
           max-width: 420px;
         }
 
-        /* ── Right Panel ── */
+        /* Right Panel */
         .auth-right-panel {
           display: flex;
           align-items: center;

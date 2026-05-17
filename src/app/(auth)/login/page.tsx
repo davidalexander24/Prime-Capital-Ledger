@@ -28,7 +28,6 @@ export default function LoginPage() {
       });
 
       if (res?.error) {
-        // Handle common NextAuth errors
         if (res.error === "CredentialsSignin") {
           setError("Invalid email or password");
         } else {

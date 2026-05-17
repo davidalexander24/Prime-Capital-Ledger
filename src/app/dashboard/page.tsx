@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import prisma from "@/lib/prisma";
 
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { ValuationChart } from "@/components/charts/valuation-chart";
@@ -25,7 +26,7 @@ export default async function DashboardPage() {
 
   const userId = session.user.id;
 
-  const [valuationRes, transactionsRes, moversRes, holdingsRes, fxRate] =
+  const [valuationRes, transactionsRes, moversRes, holdingsRes, fxRate, userRecord] =
     await Promise.all([
       getHistoricalValuations(userId),
       getRecentTransactions(userId),
@@ -36,6 +37,7 @@ export default async function DashboardPage() {
       })),
       getPortfolioHoldings(userId),
       getUsdIdrRate(),
+      prisma.user.findUnique({ where: { id: userId }, select: { baseCurrency: true } }),
     ]);
 
   const valuation = valuationRes.success && valuationRes.data ? valuationRes.data : [];
@@ -43,30 +45,32 @@ export default async function DashboardPage() {
   const movers = moversRes.success && moversRes.data ? moversRes.data : [];
   const holdings = holdingsRes.success && holdingsRes.data ? holdingsRes.data.holdings : [];
   const rate = fxRate ?? 16000;
+  const baseCurrency = userRecord?.baseCurrency || "IDR";
 
-  // Compute totals in IDR, converting USD positions via FX
-  let totalMarketValueIDR = 0;
-  let totalCostBasisIDR = 0;
+  // Compute totals in IDR or USD, converting positions via FX
+  let totalMarketValueConverted = 0;
+  let totalCostBasisConverted = 0;
   for (const h of holdings) {
-    if (h.currency === "IDR") {
-      totalMarketValueIDR += h.marketValue;
-      totalCostBasisIDR += h.costBasis;
+    if (baseCurrency === "USD") {
+      totalMarketValueConverted += h.currency === "IDR" ? h.marketValue / rate : h.marketValue;
+      totalCostBasisConverted += h.currency === "IDR" ? h.costBasis / rate : h.costBasis;
     } else {
-      totalMarketValueIDR += h.marketValue * rate;
-      totalCostBasisIDR += h.costBasis * rate;
+      totalMarketValueConverted += h.currency === "USD" ? h.marketValue * rate : h.marketValue;
+      totalCostBasisConverted += h.currency === "USD" ? h.costBasis * rate : h.costBasis;
     }
   }
-  const unrealizedPnLIDR = totalMarketValueIDR - totalCostBasisIDR;
+  const unrealizedPnLConverted = totalMarketValueConverted - totalCostBasisConverted;
   const totalReturnPct =
-    totalCostBasisIDR > 0 ? (unrealizedPnLIDR / totalCostBasisIDR) * 100 : 0;
+    totalCostBasisConverted > 0 ? (unrealizedPnLConverted / totalCostBasisConverted) * 100 : 0;
 
   const summary = {
-    totalValue: totalMarketValueIDR,
-    totalCostBasis: totalCostBasisIDR,
-    unrealizedPnL: unrealizedPnLIDR,
+    totalValue: totalMarketValueConverted,
+    totalCostBasis: totalCostBasisConverted,
+    unrealizedPnL: unrealizedPnLConverted,
     totalReturnPct,
-    holdingsCount: holdings.length,
-    currency: "IDR",
+    holdingsCount: holdings.filter((h) => h.lots > 0).length,
+    currency: baseCurrency,
+    exchangeRate: baseCurrency === "USD" ? undefined : rate,
   };
 
   return (

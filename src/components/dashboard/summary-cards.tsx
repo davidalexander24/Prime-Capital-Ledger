@@ -6,6 +6,13 @@ function formatIDR(value: number): string {
   return `Rp${rounded.toLocaleString("id-ID")}`;
 }
 
+function formatCurrency(value: number, currency: string): string {
+  if (currency === "USD") {
+    return `$${Math.abs(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+  return formatIDR(value);
+}
+
 interface SummaryCardsProps {
   data: PortfolioSummary;
 }
@@ -13,16 +20,25 @@ interface SummaryCardsProps {
 export function SummaryCards({ data }: SummaryCardsProps) {
   const isPositive = data.unrealizedPnL >= 0;
 
-  const cards = [
+  const cards: Array<{
+    label: string;
+    value: string;
+    icon: React.ElementType;
+    detail: string;
+    extra?: string;
+    prefix?: string;
+    accent?: boolean;
+  }> = [
     {
       label: "Portfolio Value",
-      value: formatIDR(data.totalValue),
+      value: formatCurrency(data.totalValue, data.currency),
       icon: Wallet,
-      detail: `Cost basis: ${formatIDR(data.totalCostBasis)}`,
+      detail: `Cost basis: ${formatCurrency(data.totalCostBasis, data.currency)}`,
+      extra: data.exchangeRate ? `Converted at 1 USD = Rp${data.exchangeRate.toLocaleString("id-ID")}` : undefined,
     },
     {
       label: "Unrealized P&L",
-      value: formatIDR(Math.abs(data.unrealizedPnL)),
+      value: formatCurrency(Math.abs(data.unrealizedPnL), data.currency),
       prefix: isPositive ? "+" : "-",
       icon: isPositive ? TrendingUp : TrendingDown,
       accent: isPositive,
@@ -83,6 +99,11 @@ export function SummaryCards({ data }: SummaryCardsProps) {
           <p className="mt-1.5 text-[11px] text-[oklch(0.40_0.01_260)]">
             {card.detail}
           </p>
+          {card.extra && (
+            <p className="mt-0.5 text-[10px] italic text-[oklch(0.45_0.01_260)]">
+              {card.extra}
+            </p>
+          )}
           <div className="absolute -bottom-8 -right-8 h-24 w-24 rounded-full bg-[oklch(0.08_0.005_260)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
         </div>
       ))}

@@ -15,23 +15,16 @@ function StockLogoInner({
 }: StockLogoProps) {
   const [errorCount, setErrorCount] = useState(0);
 
-  // Clean the ticker (e.g., BBCA.JK becomes BBCA)
   const cleanTicker = ticker.replace(".JK", "").toUpperCase();
 
-  // A resilient, multi-CDN approach. 
-  // It tries TradingView first (very reliable), then FMP, then falls back to text.
   const sources = [
-    // 1. TradingView's public CDN (often has better coverage for international/IDX)
     `https://s3-symbol-logo.tradingview.com/${cleanTicker.toLowerCase()}--big.svg`,
-    // 2. Financial Modeling Prep (Great for US Equities)
     `https://financialmodelingprep.com/image-stock/${cleanTicker}.png`,
-    // 3. EODHD alternative public path
     `https://eodhd.com/img/logos/US/${cleanTicker}.png`
   ];
 
   const imgSrc = sources[errorCount];
 
-  // If ALL databases fail to find the logo, show the elegant minimalist text fallback
   if (errorCount >= sources.length) {
     return (
       <div
@@ -54,10 +47,8 @@ function StockLogoInner({
         alt={`${cleanTicker} logo`}
         width={size}
         height={size}
-        // mix-blend-multiply gracefully handles images with white backgrounds
         className="h-full w-full object-contain opacity-85 mix-blend-multiply dark:mix-blend-normal transition-opacity duration-300 hover:opacity-100"
         onError={() => {
-          // If the image is broken or blocked, try the next database
           setErrorCount((prev) => prev + 1);
         }}
       />

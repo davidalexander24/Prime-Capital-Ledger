@@ -17,7 +17,7 @@ export interface LogTransactionInput {
   amount: number; // shares count or dollar amount
   pricePerShare: number;
   fee: number;
-  date: string; // ISO date string
+  date: string;
   currency: string;
 }
 
@@ -42,7 +42,7 @@ export async function createManualTransaction(
       return { success: false, message: "Amount must be greater than 0." };
     }
 
-    // Calculate quantity: if dollars mode, derive fractional shares
+    // Calculate quantity
     const quantity =
       input.inputMode === "dollars"
         ? input.amount / input.pricePerShare

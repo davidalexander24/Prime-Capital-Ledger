@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
 
-/* eslint-disable @next/next/no-page-custom-font */
-
 export const metadata: Metadata = {
   title: "Prime Capital Ledger",
   description:

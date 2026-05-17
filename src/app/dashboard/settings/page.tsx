@@ -5,6 +5,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { User, Shield, Database, LogOut } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { LogoutButton } from "@/components/dashboard/logout-button";
+import { BaseCurrencySelect } from "@/components/dashboard/base-currency-select";
 
 export const dynamic = "force-dynamic";
 
@@ -16,17 +17,28 @@ export default async function SettingsPage() {
 
   const userId = session.user.id;
 
-  const [transactionCount, lastTransaction] = await Promise.all([
+  const [transactionCount, lastTransaction, userRecord, oauthAccount] = await Promise.all([
     prisma.transaction.count({ where: { userId } }),
     prisma.transaction.findFirst({
       where: { userId },
-      orderBy: { createdAt: "desc" },
-      select: { createdAt: true },
+      orderBy: { date: "desc" },
+      select: { date: true },
+    }),
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { baseCurrency: true }
+    }),
+    prisma.account.findFirst({
+      where: { userId, provider: "google" }
     }),
   ]);
+  
+  const isGoogleAuth = !!oauthAccount;
+
+  const baseCurrency = userRecord?.baseCurrency || "IDR";
 
   const lastEntryLabel = lastTransaction
-    ? lastTransaction.createdAt.toLocaleDateString("en-GB", {
+    ? lastTransaction.date.toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "short",
         year: "numeric",
@@ -40,7 +52,7 @@ export default async function SettingsPage() {
       settings: [
         { label: "Display Name", value: session.user.name || "—", type: "text" },
         { label: "Email", value: session.user.email || "—", type: "text" },
-        { label: "Base Currency", value: "IDR", type: "select" },
+        { label: "Base Currency", value: baseCurrency, type: "currency-select" },
         { label: "Timezone", value: "Asia/Jakarta (GMT+7)", type: "select" },
       ],
     },
@@ -48,7 +60,11 @@ export default async function SettingsPage() {
       title: "Security",
       icon: Shield,
       settings: [
-        { label: "Password", value: "••••••••••••", type: "password" },
+        { 
+          label: "Password", 
+          value: isGoogleAuth ? "Authenticated via Google" : "••••••••••••", 
+          type: isGoogleAuth ? "info" : "password" 
+        },
         { label: "Two-Factor Auth", value: "Disabled", type: "toggle" },
       ],
     },
@@ -95,6 +111,8 @@ export default async function SettingsPage() {
                       <span className="text-[13px] tracking-wider text-[oklch(0.50_0.01_260)]">{setting.value}</span>
                       <button className="text-[11px] font-medium text-[oklch(0.70_0.08_230)] hover:underline">Change</button>
                     </div>
+                  ) : setting.type === "currency-select" ? (
+                    <BaseCurrencySelect initialValue={setting.value} />
                   ) : (
                     <span className="text-[13px] font-medium text-[oklch(0.80_0.005_260)]">{setting.value}</span>
                   )}

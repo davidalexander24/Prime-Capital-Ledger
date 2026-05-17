@@ -63,7 +63,7 @@ export async function getUsdIdrRate(): Promise<number | null> {
     const liveRate = result.regularMarketPrice;
 
     await redis.set(cacheKey, liveRate, { ex: CACHE_TTL });
-    console.log(`[CACHE MISS] Fetched & Cached USD/IDR Rate: Rp ${liveRate}`);
+    console.log(`[CACHE MISS] USD/IDR Rate: Rp ${liveRate}`);
 
     return liveRate;
 
@@ -73,8 +73,6 @@ export async function getUsdIdrRate(): Promise<number | null> {
   }
 }
 
-// Fetches the full market quote (Price and Change Percentage)
-// Caches the object in Upstash Redis to prevent rate limiting
 export async function getMarketQuote(ticker: string): Promise<{ price: number; changePercent: number } | null> {
   const cacheKey = `market:quote:${ticker}`;
 

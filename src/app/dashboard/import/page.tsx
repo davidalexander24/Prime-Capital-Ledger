@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import prisma from "@/lib/prisma";
 
 import { FileText, FileSpreadsheet, Globe, CheckCircle2 } from "lucide-react";
 import { FileUploader } from "@/components/dashboard/file-uploader";
@@ -13,12 +14,10 @@ interface ImportHistoryItem {
   date: string;
 }
 
-const importHistory: ImportHistoryItem[] = [];
-
 const importSources = [
   { id: "ajaib", name: "Ajaib", desc: "Import from Ajaib brokerage PDF statements", icon: FileText, formats: "PDF" },
-  { id: "stockbit", name: "Stockbit", desc: "Import from Stockbit PDF confirmations", icon: FileText, formats: "PDF" },
-  { id: "csv", name: "CSV Upload", desc: "Bulk import from CSV spreadsheet", icon: FileSpreadsheet, formats: "CSV" },
+  { id: "stockbit", name: "Stockbit", desc: "Import from Stockbit PDF confirmations", icon: FileText, formats: "PDF", comingSoon: true },
+  { id: "csv", name: "CSV Upload", desc: "Bulk import from CSV spreadsheet", icon: FileSpreadsheet, formats: "CSV", comingSoon: true },
   { id: "api", name: "Broker API", desc: "Automatic sync via broker API", icon: Globe, formats: "API", comingSoon: true },
 ];
 
@@ -27,6 +26,34 @@ export default async function ImportPage() {
   if (!session || !session.user) {
     redirect("/login");
   }
+
+  const userId = session.user.id;
+
+  const importSessions = await prisma.importSession.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    include: {
+      _count: {
+        select: { transactions: true }
+      }
+    },
+    take: 10,
+  });
+
+  const importHistory: ImportHistoryItem[] = importSessions.map((s) => ({
+    id: s.id,
+    filename: s.filename,
+    source: s.source,
+    transactions: s._count.transactions,
+    date: s.createdAt.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    }),
+  }));
+
   return (
     <div className="flex flex-col gap-6">
       <div>

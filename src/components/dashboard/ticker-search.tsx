@@ -93,7 +93,6 @@ export function TickerSearch({ value, onChange, disabled }: TickerSearchProps) {
     }
   }
 
-  // Selected state — show the selected ticker as a chip
   if (value) {
     return (
       <div className="flex flex-col gap-1.5">
@@ -121,7 +120,6 @@ export function TickerSearch({ value, onChange, disabled }: TickerSearchProps) {
     );
   }
 
-  // Search state
   return (
     <div ref={containerRef} className="relative flex flex-col gap-1.5">
       <span className="text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">

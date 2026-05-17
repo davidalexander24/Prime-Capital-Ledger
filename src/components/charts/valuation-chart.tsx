@@ -149,8 +149,6 @@ export function ValuationChart({ data }: ValuationChartProps) {
     hoverIndex !== null && sliced[hoverIndex] ? sliced[hoverIndex] : endPoint;
 
   const activeValue = activePoint?.totalMarketValue ?? 0;
-  // Change = growth in unrealized P&L over the period, so new contributions
-  // don't inflate the figure. This makes the ALL view match the summary card.
   const startPnL = startPoint?.unrealizedPnL ?? 0;
   const activePnL = activePoint?.unrealizedPnL ?? 0;
   const change = activePnL - startPnL;

@@ -80,15 +80,22 @@ export async function getHistoricalValuations(
   userId: string
 ): Promise<ActionResponse<PortfolioValuationPoint[]>> {
   try {
-    const transactions = await prisma.transaction.findMany({
-      where: { userId },
-      include: {
-        asset: {
-          select: { id: true, ticker: true, currency: true },
+    const [transactions, userRecord] = await Promise.all([
+      prisma.transaction.findMany({
+        where: { userId },
+        include: {
+          asset: {
+            select: { id: true, ticker: true, currency: true },
+          },
         },
-      },
-      orderBy: { date: 'asc' },
-    });
+        orderBy: { date: 'asc' },
+      }),
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: { baseCurrency: true },
+      })
+    ]);
+    const baseCurrency = userRecord?.baseCurrency || "IDR";
 
     if (!transactions.length) {
       return { success: true, data: [], error: null };
@@ -139,10 +146,7 @@ export async function getHistoricalValuations(
       }
     });
 
-    // Use the live FX rate across the whole series. Two reasons:
-    //  - Cost basis is in USD between BUYs; multiplying by a single rate keeps
-    //    the IDR cost basis flat instead of wobbling with daily FX.
-    //  - Summary card also uses the live rate, so end-of-series matches.
+    // FX rate
     const fxRate =
       (await getUsdIdrRate()) ??
       fxHistory?.[fxHistory.length - 1]?.close ??
@@ -170,9 +174,7 @@ export async function getHistoricalValuations(
 
     const valuationSeries: PortfolioValuationPoint[] = [];
 
-    // Synthetic zero-day before the first transaction so ALL-view start has
-    // unrealizedPnL == 0 (otherwise day 1 already includes a small mismatch
-    // between execution price and that day's close).
+    // zero-day before the first transaction
     const seedDate = new Date(startDate);
     seedDate.setUTCDate(seedDate.getUTCDate() - 1);
     valuationSeries.push({
@@ -211,12 +213,14 @@ export async function getHistoricalValuations(
         };
 
         if (tx.type === "BUY") {
-          holding.shares += qty;
+          holding.shares = Math.round((holding.shares + qty) * 1e8) / 1e8;
           holding.totalCost += grossValue + fee;
         } else if (tx.type === "SELL") {
-          const avgCost = holding.shares > 0 ? holding.totalCost / holding.shares : 0;
-          holding.shares -= qty;
+          const avgCost = holding.shares !== 0 ? holding.totalCost / holding.shares : 0;
+          holding.shares = Math.round((holding.shares - qty) * 1e8) / 1e8;
+          if (holding.shares < 0) holding.shares = 0;
           holding.totalCost -= avgCost * qty;
+          if (holding.shares === 0) holding.totalCost = 0;
         }
 
         holdings.set(tx.assetId, holding);
@@ -248,8 +252,12 @@ export async function getHistoricalValuations(
         }
       }
 
-      const totalMarketValue = marketValueUSD * fxRate + marketValueIDR;
-      const totalCostBasis = costBasisUSD * fxRate + costBasisIDR;
+      const totalMarketValue = baseCurrency === "USD"
+        ? marketValueUSD + (marketValueIDR / fxRate)
+        : marketValueUSD * fxRate + marketValueIDR;
+      const totalCostBasis = baseCurrency === "USD"
+        ? costBasisUSD + (costBasisIDR / fxRate)
+        : costBasisUSD * fxRate + costBasisIDR;
       const unrealizedPnL = totalMarketValue - totalCostBasis;
       const dailyReturn =
         previousMarketValue === 0
@@ -267,8 +275,7 @@ export async function getHistoricalValuations(
       });
     }
 
-    // Override the final point with live prices so the chart's "today" value
-    // matches the summary card (which also uses getLatestPrice).
+    // override the final point with live prices
     const lastPoint = valuationSeries[valuationSeries.length - 1];
     if (lastPoint && holdings.size > 0) {
       const liveTickers = Array.from(holdings.values())
@@ -295,7 +302,9 @@ export async function getHistoricalValuations(
         if (holding.currency === "IDR") liveMvIDR += positionValue;
         else liveMvUSD += positionValue;
       }
-      const liveTotalMarketValue = liveMvUSD * fxRate + liveMvIDR;
+      const liveTotalMarketValue = baseCurrency === "USD"
+        ? liveMvUSD + (liveMvIDR / fxRate)
+        : liveMvUSD * fxRate + liveMvIDR;
       lastPoint.totalMarketValue = liveTotalMarketValue;
       lastPoint.unrealizedPnL = liveTotalMarketValue - lastPoint.totalCostBasis;
     }
@@ -397,8 +406,8 @@ export async function getHoldingsDailyChange(
         tradeCount: 0,
       };
 
-      if (t.type === "BUY") holding.shares += qty;
-      else holding.shares -= qty;
+      if (t.type === "BUY") holding.shares = Math.round((holding.shares + qty) * 1e8) / 1e8;
+      else holding.shares = Math.round((holding.shares - qty) * 1e8) / 1e8;
       holding.tradeCount += 1;
 
       holdings.set(t.assetId, holding);

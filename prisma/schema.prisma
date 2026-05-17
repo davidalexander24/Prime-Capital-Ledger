@@ -22,6 +22,7 @@ model User {
   password      String?
   emailVerified DateTime? 
   image         String?   
+  baseCurrency  String    @default("IDR")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -30,6 +31,7 @@ model User {
 
   transactions  Transaction[]
   valuations    DailyValuation[]
+  importSessions ImportSession[]
 }
 
 model Account {
@@ -90,12 +92,29 @@ model Transaction {
   date           DateTime        @db.Date           
   createdAt      DateTime        @default(now())    
 
+  importSessionId String?
+  importSession   ImportSession?  @relation(fields: [importSessionId], references: [id], onDelete: Cascade)
+
   user           User            @relation(fields: [userId], references: [id])
   asset          Asset?          @relation(fields: [assetId], references: [id])
 
   @@index([userId])
   @@index([assetId])
+  @@index([importSessionId])
   @@index([userId, date])
+}
+
+model ImportSession {
+  id           String        @id @default(uuid())
+  userId       String
+  filename     String
+  source       String        @default("Brokerage PDF")
+  createdAt    DateTime      @default(now())
+  
+  transactions Transaction[]
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model DailyValuation {

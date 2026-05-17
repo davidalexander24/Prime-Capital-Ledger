@@ -50,4 +50,5 @@ export interface PortfolioSummary {
   totalReturnPct: number;
   holdingsCount: number;
   currency: string;
+  exchangeRate?: number;
 }
