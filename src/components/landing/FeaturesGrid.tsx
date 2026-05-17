@@ -78,13 +78,8 @@ export function FeaturesGrid() {
                 className="absolute left-0 top-0 h-px w-10 bg-foreground transition-[width] duration-500 ease-out group-hover:w-full group-focus-visible:w-full"
               />
 
-              {/* Index + title row */}
-              <div className="flex items-baseline gap-4 mb-3">
-                <span
-                  className="text-[11px] font-semibold tracking-[0.18em] text-muted-foreground/70 ticker-badge"
-                >
-                  {String(i + 1).padStart(2, "0")}
-                </span>
+              {/* Title row */}
+              <div className="mb-3">
                 <h3
                   className="text-xl font-medium text-foreground tracking-tight leading-snug"
                   style={{ fontFamily: "Space Grotesk, sans-serif" }}
