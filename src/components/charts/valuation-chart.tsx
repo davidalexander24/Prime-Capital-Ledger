@@ -185,12 +185,12 @@ export function ValuationChart({ data }: ValuationChartProps) {
 
   return (
     <div className="overflow-hidden rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)]">
-      <div className="flex items-start justify-between border-b border-[oklch(0.12_0.005_260)] px-6 py-4">
-        <div>
+      <div className="flex flex-col gap-3 border-b border-[oklch(0.12_0.005_260)] px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-6">
+        <div className="min-w-0">
           <h2 className="text-sm font-semibold text-[oklch(0.88_0.005_260)]">
             Portfolio Valuation
           </h2>
-          <div className="mt-1 flex items-baseline gap-3">
+          <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <span className="text-xl font-semibold tracking-tight text-[oklch(0.93_0.005_260)] tabular-nums">
               {formatIDR(activeValue)}
             </span>
@@ -205,7 +205,7 @@ export function ValuationChart({ data }: ValuationChartProps) {
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-4 pt-1">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 sm:pt-1">
           <div className="flex items-center gap-1.5">
             <span className="h-1.5 w-6 rounded-full bg-[oklch(0.70_0.08_230)]" />
             <span className="text-[10px] text-[oklch(0.45_0.01_260)]">Market Value</span>

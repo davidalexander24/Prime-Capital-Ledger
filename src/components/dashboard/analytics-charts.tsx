@@ -21,7 +21,7 @@ export function AnalyticsCharts({ monthlyReturns, sectorAllocation, metrics }: A
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {metrics.map((m) => (
           <div key={m.label} className="rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)] p-5">
             <div className="flex items-start justify-between">
@@ -37,8 +37,8 @@ export function AnalyticsCharts({ monthlyReturns, sectorAllocation, metrics }: A
         ))}
       </div>
 
-      <div className="grid grid-cols-5 gap-6">
-        <div className="col-span-3 overflow-hidden rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+        <div className="overflow-hidden rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)] lg:col-span-3">
           <div className="border-b border-[oklch(0.12_0.005_260)] px-6 py-4">
             <h2 className="text-sm font-semibold text-[oklch(0.88_0.005_260)]">Monthly Returns</h2>
             <p className="mt-0.5 text-[11px] text-[oklch(0.40_0.01_260)]">Cumulative return by month</p>
@@ -68,14 +68,14 @@ export function AnalyticsCharts({ monthlyReturns, sectorAllocation, metrics }: A
           </div>
         </div>
 
-        <div className="col-span-2 overflow-hidden rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)]">
+        <div className="overflow-hidden rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)] lg:col-span-2">
           <div className="border-b border-[oklch(0.12_0.005_260)] px-6 py-4">
             <h2 className="text-sm font-semibold text-[oklch(0.88_0.005_260)]">Asset Allocation</h2>
             <p className="mt-0.5 text-[11px] text-[oklch(0.40_0.01_260)]">Portfolio distribution by asset</p>
           </div>
           {hasSectors ? (
-            <div className="flex items-center px-6 py-4">
-              <div className="w-1/2">
+            <div className="flex flex-col items-center gap-4 px-6 py-4 sm:flex-row">
+              <div className="w-full sm:w-1/2">
                 <ResponsiveContainer width="100%" height={200}>
                   <PieChart>
                     <Pie data={sectorAllocation} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={3} dataKey="value" stroke="none">
@@ -86,7 +86,7 @@ export function AnalyticsCharts({ monthlyReturns, sectorAllocation, metrics }: A
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-              <div className="flex w-1/2 flex-col gap-3">
+              <div className="flex w-full flex-col gap-3 sm:w-1/2">
                 {sectorAllocation.map((s) => (
                   <div key={s.name} className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">

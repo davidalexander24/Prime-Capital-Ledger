@@ -32,7 +32,7 @@ function formatCurrency(value: number, currency?: string): string {
 
 export function TopTraded({ data }: TopTradedProps) {
   return (
-    <div className="overflow-hidden rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)]">
+    <div className="flex h-full flex-col overflow-hidden rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)]">
       <div className="border-b border-[oklch(0.12_0.005_260)] px-6 py-4">
         <h2 className="text-sm font-semibold text-[oklch(0.88_0.005_260)]">
           Daily Movers
@@ -49,7 +49,7 @@ export function TopTraded({ data }: TopTradedProps) {
           </p>
         </div>
       ) : (
-        <div className="divide-y divide-[oklch(0.10_0.005_260)]">
+        <div className="movers-scroll max-h-96 flex-1 divide-y divide-[oklch(0.10_0.005_260)] overflow-y-auto">
           {data.map((asset, index) => {
             const isPositive = asset.changePercent >= 0;
 

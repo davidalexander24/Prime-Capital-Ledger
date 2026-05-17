@@ -75,7 +75,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-end justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
         <div>
           <h1 className="text-xl font-semibold tracking-tight text-[oklch(0.93_0.005_260)]">
             Dashboard
@@ -95,11 +95,11 @@ export default async function DashboardPage() {
 
       <SummaryCards data={summary} />
 
-      <div className="grid grid-cols-5 gap-6">
-        <div className="col-span-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+        <div className="lg:col-span-3">
           <ValuationChart data={valuation} />
         </div>
-        <div className="col-span-2">
+        <div className="lg:col-span-2">
           <TopTraded data={movers} />
         </div>
       </div>

@@ -116,8 +116,8 @@ export function TransactionTable({ data }: TransactionTableProps) {
 
   return (
     <div className="overflow-hidden rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)]">
-      <div className="flex items-center justify-between border-b border-[oklch(0.12_0.005_260)] px-6 py-4">
-        <div>
+      <div className="flex items-center justify-between gap-3 border-b border-[oklch(0.12_0.005_260)] px-4 py-4 sm:px-6">
+        <div className="min-w-0">
           <h2 className="text-sm font-semibold text-[oklch(0.88_0.005_260)]">
             Transaction History
           </h2>
@@ -125,11 +125,105 @@ export function TransactionTable({ data }: TransactionTableProps) {
             Recent buy and sell ledger entries
           </p>
         </div>
-        <span className="rounded-md bg-[oklch(0.10_0.005_260)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[oklch(0.45_0.01_260)]">
+        <span className="shrink-0 rounded-md bg-[oklch(0.10_0.005_260)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[oklch(0.45_0.01_260)]">
           {data.length} entries
         </span>
       </div>
 
+      {/* Mobile card list — visible only below md */}
+      <ul className="divide-y divide-[oklch(0.10_0.005_260)] md:hidden">
+        {data.length === 0 && (
+          <li className="px-4 py-10 text-center text-[12px] text-[oklch(0.45_0.01_260)]">
+            No transactions yet.
+          </li>
+        )}
+        {data.map((tx) => (
+          <li
+            key={tx.id}
+            className="flex flex-col gap-2 px-4 py-3"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <StockLogo ticker={tx.ticker} size={22} />
+                <div className="flex min-w-0 flex-col">
+                  <span className="truncate text-[13px] font-semibold text-[oklch(0.90_0.005_260)]">
+                    {tx.ticker.replace(".JK", "")}
+                  </span>
+                  <span className="truncate text-[10px] text-[oklch(0.40_0.01_260)]">
+                    {tx.assetName}
+                  </span>
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <div
+                  className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${
+                    tx.type === "BUY"
+                      ? "bg-[oklch(0.15_0.04_155)] text-[oklch(0.70_0.15_155)]"
+                      : "bg-[oklch(0.15_0.04_25)] text-[oklch(0.70_0.15_25)]"
+                  }`}
+                >
+                  {tx.type === "BUY" ? (
+                    <ArrowDownLeft className="h-3 w-3" strokeWidth={2.5} />
+                  ) : (
+                    <ArrowUpRight className="h-3 w-3" strokeWidth={2.5} />
+                  )}
+                  {tx.type}
+                </div>
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger asChild>
+                    <button
+                      type="button"
+                      aria-label="Row actions"
+                      className="flex h-7 w-7 items-center justify-center rounded-md text-[oklch(0.55_0.01_260)] transition-colors hover:bg-[oklch(0.10_0.005_260)] hover:text-[oklch(0.85_0.005_260)] data-[state=open]:bg-[oklch(0.10_0.005_260)] data-[state=open]:text-[oklch(0.85_0.005_260)]"
+                    >
+                      <MoreHorizontal className="h-3.5 w-3.5" />
+                    </button>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content
+                      align="end"
+                      sideOffset={4}
+                      collisionPadding={8}
+                      className="z-50 w-36 overflow-hidden rounded-lg border border-[oklch(0.18_0.005_260)] bg-[oklch(0.06_0.005_260)] shadow-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95"
+                    >
+                      <DropdownMenu.Item
+                        onSelect={() => handleEdit(tx)}
+                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-[12px] font-medium text-[oklch(0.80_0.005_260)] outline-none transition-colors data-highlighted:bg-[oklch(0.10_0.005_260)]"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                        Edit
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item
+                        onSelect={() => handleDelete(tx)}
+                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-[12px] font-medium text-[oklch(0.70_0.15_25)] outline-none transition-colors data-highlighted:bg-[oklch(0.15_0.04_25)]"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete
+                      </DropdownMenu.Item>
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
+              </div>
+            </div>
+            <div className="flex items-end justify-between gap-3 pl-8.5">
+              <div className="flex flex-col">
+                <span className="text-[10px] uppercase tracking-[0.06em] text-[oklch(0.40_0.01_260)]">
+                  {formatDate(tx.executedAt)} · {formatTime(tx.executedAt)}
+                </span>
+                <span className="text-[11px] text-[oklch(0.60_0.005_260)]">
+                  {tx.quantity} × {formatCurrency(tx.pricePerShare, tx.currency)}
+                </span>
+              </div>
+              <span className="shrink-0 text-[12px] font-semibold tabular-nums text-[oklch(0.90_0.005_260)]">
+                {formatCurrency(tx.netValue, tx.currency, true)}
+              </span>
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      {/* Desktop table — visible md and up */}
+      <div className="hidden md:block">
       <Table>
         <TableHeader>
           <TableRow className="border-b border-[oklch(0.12_0.005_260)] hover:bg-transparent">
@@ -255,6 +349,7 @@ export function TransactionTable({ data }: TransactionTableProps) {
           ))}
         </TableBody>
       </Table>
+      </div>
 
       {/* Edit dialog (controlled) */}
       <LogTransactionDialog

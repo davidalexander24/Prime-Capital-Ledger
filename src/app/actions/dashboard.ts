@@ -439,7 +439,7 @@ export async function getHoldingsDailyChange(
       (a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent)
     );
 
-    return { success: true, data: rows.slice(0, 5), error: null };
+    return { success: true, data: rows, error: null };
   } catch (error) {
     console.error("Error fetching holdings daily change:", error);
     return {

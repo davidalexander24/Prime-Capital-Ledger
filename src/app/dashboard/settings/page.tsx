@@ -100,7 +100,7 @@ export default async function SettingsPage() {
             </div>
             <div className="divide-y divide-[oklch(0.10_0.005_260)]">
               {section.settings.map((setting) => (
-                <div key={setting.label} className="flex items-center justify-between px-6 py-3.5">
+                <div key={setting.label} className="flex flex-col gap-2 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                   <span className="text-[13px] text-[oklch(0.65_0.005_260)]">{setting.label}</span>
                   {setting.type === "toggle" ? (
                     <div className={`flex h-6 w-10 items-center rounded-full px-0.5 transition-colors ${setting.value === "Enabled" ? "bg-[oklch(0.70_0.08_230)]" : "bg-[oklch(0.18_0.005_260)]"}`}>
@@ -128,20 +128,20 @@ export default async function SettingsPage() {
           <LogOut className="h-4 w-4 text-[oklch(0.45_0.01_260)]" strokeWidth={1.75} />
           <h2 className="text-sm font-semibold text-[oklch(0.88_0.005_260)]">Session</h2>
         </div>
-        <div className="flex items-center justify-between px-6 py-3.5">
-          <span className="text-[13px] text-[oklch(0.65_0.005_260)]">
+        <div className="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <span className="break-all text-[13px] text-[oklch(0.65_0.005_260)]">
             Signed in as <span className="text-[oklch(0.80_0.005_260)]">{session.user.email}</span>
           </span>
           <LogoutButton />
         </div>
       </div>
 
-      <div className="flex items-center justify-between rounded-xl border border-[oklch(0.15_0.02_25)] bg-[oklch(0.06_0.01_25)] p-5">
+      <div className="flex flex-col gap-3 rounded-xl border border-[oklch(0.15_0.02_25)] bg-[oklch(0.06_0.01_25)] p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-[13px] font-semibold text-[oklch(0.70_0.15_25)]">Danger Zone</h3>
           <p className="mt-0.5 text-[11px] text-[oklch(0.45_0.01_260)]">Permanently delete all data. This action cannot be undone.</p>
         </div>
-        <button className="h-9 rounded-lg border border-[oklch(0.25_0.08_25)] px-4 text-[12px] font-semibold text-[oklch(0.65_0.15_25)] transition-colors hover:bg-[oklch(0.12_0.05_25)]">
+        <button className="h-9 self-start rounded-lg border border-[oklch(0.25_0.08_25)] px-4 text-[12px] font-semibold text-[oklch(0.65_0.15_25)] transition-colors hover:bg-[oklch(0.12_0.05_25)] sm:self-auto">
           Delete Account
         </button>
       </div>
