@@ -1,20 +1,30 @@
 "use server";
 
-import { PDFParse } from "pdf-parse";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
-const globalWithPolyfills = globalThis as typeof globalThis & {
-  DOMMatrix?: typeof globalThis.DOMMatrix;
-  Path2D?: typeof globalThis.Path2D;
-};
+async function extractPdfText(buffer: Buffer): Promise<string> {
+  const pdfjs = await import("pdfjs-dist");
+  pdfjs.GlobalWorkerOptions.workerSrc = "";
 
-if (typeof globalWithPolyfills.DOMMatrix === "undefined") {
-  globalWithPolyfills.DOMMatrix = class DOMMatrix { } as typeof globalThis.DOMMatrix;
-}
-if (typeof globalWithPolyfills.Path2D === "undefined") {
-  globalWithPolyfills.Path2D = class Path2D { } as typeof globalThis.Path2D;
+  const doc = await pdfjs.getDocument({
+    data: new Uint8Array(buffer),
+    useWorkerFetch: false,
+    isEvalSupported: false,
+    useSystemFonts: true,
+  }).promise;
+
+  const parts: string[] = [];
+  for (let p = 1; p <= doc.numPages; p++) {
+    const page = await doc.getPage(p);
+    const content = await page.getTextContent();
+    parts.push(content.items.map((item) => ("str" in item ? item.str : "")).join(""));
+    page.cleanup();
+  }
+  await doc.destroy();
+
+  return parts.join("\n");
 }
 
 const INDONESIAN_MONTHS: Record<string, number> = {
@@ -88,14 +98,7 @@ export async function parsePdfTransactions(
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const parser = new PDFParse({ data: buffer });
-    let text = "";
-    try {
-      const textResult = await parser.getText();
-      text = textResult?.text ?? "";
-    } finally {
-      await parser.destroy?.();
-    }
+    const text = await extractPdfText(buffer);
 
     const dateRegex =
       /Tgl\.\s*Transaksi\s*:\s*(?:[A-Za-z]+,\s*)?(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/i;
