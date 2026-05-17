@@ -5,26 +5,10 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 async function extractPdfText(buffer: Buffer): Promise<string> {
-  const pdfjs = await import("pdfjs-dist");
-  pdfjs.GlobalWorkerOptions.workerSrc = "";
-
-  const doc = await pdfjs.getDocument({
-    data: new Uint8Array(buffer),
-    useWorkerFetch: false,
-    isEvalSupported: false,
-    useSystemFonts: true,
-  }).promise;
-
-  const parts: string[] = [];
-  for (let p = 1; p <= doc.numPages; p++) {
-    const page = await doc.getPage(p);
-    const content = await page.getTextContent();
-    parts.push(content.items.map((item) => ("str" in item ? item.str : "")).join(""));
-    page.cleanup();
-  }
-  await doc.destroy();
-
-  return parts.join("\n");
+  const { extractText, getDocumentProxy } = await import("unpdf");
+  const pdf = await getDocumentProxy(new Uint8Array(buffer));
+  const { text } = await extractText(pdf, { mergePages: true });
+  return text;
 }
 
 const INDONESIAN_MONTHS: Record<string, number> = {
