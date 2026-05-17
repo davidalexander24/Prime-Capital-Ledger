@@ -12,7 +12,7 @@ const features = [
   {
     title: "Brokerage PDF import",
     description:
-      "Drop in statements from Ajaib or Stockbit. Trades are parsed, deduped, and ready in seconds.",
+      "Drop in statements from broker apps. Trades are parsed, deduped, and ready in seconds.",
   },
   {
     title: "Real-time P&L",
@@ -55,7 +55,7 @@ export function FeaturesGrid() {
           >
             Everything you need to run a portfolio
             <span className="text-muted-foreground/60">
-              {" "}— nothing you don&apos;t.
+              {" "}- nothing you don&apos;t.
             </span>
           </h2>
         </ScrollReveal>

@@ -38,7 +38,7 @@ export function Footer() {
               </span>
             </div>
             <p className="text-xs text-muted-foreground max-w-[200px] leading-relaxed">
-              Portfolio management for Indonesian retail investors. Track IDR &
+              Portfolio management for retail investors. Track IDR &
               USD in one place.
             </p>
           </div>
@@ -73,7 +73,7 @@ export function Footer() {
             &copy; {new Date().getFullYear()} Prime Capital Ledger. All rights reserved.
           </p>
           <p className="text-xs text-muted-foreground/40">
-            Built for Indonesian markets · IDX + NYSE
+            Built for modern markets · IDX + NYSE
           </p>
         </div>
       </div>

@@ -5,7 +5,7 @@ import { Providers } from "./providers";
 export const metadata: Metadata = {
   title: "Prime Capital Ledger",
   description:
-    "Professional portfolio management platform for Indonesian equity markets. Track transactions, analyze performance, and manage your investment ledger.",
+    "Professional portfolio management platform for equity markets. Track transactions, analyze performance, and manage your investment ledger.",
 };
 
 export default function RootLayout({

@@ -15,15 +15,15 @@ const steps = [
     step: "02",
     title: "Import or log transactions",
     description:
-      "Upload brokerage PDFs from Ajaib or Stockbit, or log trades manually — your choice, anytime.",
-    highlight: "Ajaib & Stockbit supported",
+      "Upload brokerage PDFs, or log trades manually - your choice, anytime.",
+    highlight: "Broker apps supported",
   },
   {
     step: "03",
     title: "Track & analyze",
     description:
       "Watch your portfolio grow with live valuations, historical charts, and real-time P&L in IDR or USD.",
-    highlight: "Live every 15 minutes",
+    highlight: "Live updates",
   },
 ]
 
@@ -50,7 +50,7 @@ export function HowItWorks() {
           >
             Up and running in minutes
             <span className="text-muted-foreground/60">
-              {" "}— three steps, no setup theatre.
+              {" "}- three steps, no setup theatre.
             </span>
           </h2>
         </ScrollReveal>

@@ -39,8 +39,8 @@ export function Hero() {
                 className="text-4xl font-bold leading-[1.1] tracking-tight text-foreground sm:text-5xl lg:text-[3.75rem]"
                 style={{ fontFamily: "Space Grotesk, sans-serif" }}
               >
-                Your Indonesian portfolio.{" "}
-                <span className="gradient-text">One ledger.</span>{" "}
+                <span className="block">Your portfolio.</span>
+                <span className="gradient-text block">One ledger.</span>
                 <span className="text-muted-foreground/70 font-light text-3xl sm:text-4xl lg:text-[2.75rem] tracking-normal block mt-1">
                   Fully in control.
                 </span>
@@ -55,8 +55,8 @@ export function Hero() {
               className="text-base text-muted-foreground max-w-lg leading-relaxed"
             >
               Track IDR and USD holdings side by side, import brokerage PDFs
-              automatically, and watch your real-time P&amp;L — built for
-              Indonesian retail investors.
+              automatically, and watch your real-time P&amp;L - built for
+              retail investors.
             </motion.p>
 
             {/* CTA buttons */}
