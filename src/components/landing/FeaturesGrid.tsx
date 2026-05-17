@@ -12,7 +12,7 @@ const features = [
   {
     title: "Brokerage PDF import",
     description:
-      "Drop in statements from Ajaib or Stockbit. Trades are parsed, deduped, and ready in seconds.",
+      "Drop in statements from broker apps. Trades are parsed, deduped, and ready in seconds.",
   },
   {
     title: "Real-time P&L",
