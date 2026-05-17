@@ -8,9 +8,7 @@
 
 Professional portfolio management and financial analytics platform for global equity markets.
 
-- **Live demo:** _coming soon_
-- **Link Presentation:**: https://canva.link/ml3j7nmw1yauxx5
-- **Link Deploy:** https://primecapitaledger.site/
+## **Live Site:** [primecapitaledger.site](https://primecapitaledger.site)
 
 ![Dashboard](docs/screenshots/dashboard.png)
 
@@ -95,10 +93,28 @@ A full-stack Next.js app that lets investors track holdings across brokerages, i
 
 ## Screenshots
 
-| | |
-|---|---|
-| ![Portfolio](docs/screenshots/portfolio.png)<br/>**Portfolio** - aggregated holdings with live P&L | ![Transactions](docs/screenshots/transactions.png)<br/>**Transactions** - immutable buy/sell/deposit/withdraw ledger |
-| ![Import](docs/screenshots/import.png)<br/>**Import** - PDF parsing for broker statements | ![Analytics](docs/screenshots/analytics.png)<br/>**Analytics** - returns, allocation, risk metrics |
+<table>
+  <tr>
+    <td width="50%">
+      <img src="docs/screenshots/portfolio.png" width="100%" />
+      <br/><b>Portfolio</b> - aggregated holdings with live P&L
+    </td>
+    <td width="50%">
+      <img src="docs/screenshots/transactions.png" width="100%" />
+      <br/><b>Transactions</b> - buy/sell/deposit/withdraw ledger
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="docs/screenshots/import.png" width="100%" />
+      <br/><b>Import</b> - PDF parsing for broker statements
+    </td>
+    <td width="50%">
+      <img src="docs/screenshots/analytics.png" width="100%" />
+      <br/><b>Analytics</b> - returns, allocation, risk metrics
+    </td>
+  </tr>
+</table>
 
 ---
 
