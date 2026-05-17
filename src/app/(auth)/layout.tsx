@@ -203,7 +203,37 @@ export default function AuthLayout({
           color: oklch(0.5 0.005 260);
         }
 
-        /* Form Styles */
+        /* Back button */
+        .auth-back-btn {
+          position: fixed;
+          top: 24px;
+          left: 24px;
+          z-index: 20;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          height: 36px;
+          padding: 0 14px;
+          border-radius: 8px;
+          font-size: 13px;
+          font-weight: 500;
+          color: oklch(0.75 0.005 260);
+          background: oklch(0.12 0.005 260 / 0.6);
+          border: 1px solid oklch(0.2 0.005 260);
+          text-decoration: none;
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          transition: all 0.2s ease;
+        }
+
+        .auth-back-btn:hover {
+          color: oklch(0.95 0.005 260);
+          background: oklch(0.16 0.005 260 / 0.8);
+          border-color: oklch(0.28 0.005 260);
+          transform: translateX(-2px);
+        }
+
+        /* ── Shared Form Styles ── */
         .auth-heading {
           font-size: 24px;
           font-weight: 600;

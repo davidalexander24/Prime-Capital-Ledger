@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 
 export default function LoginPage() {
@@ -46,6 +46,12 @@ export default function LoginPage() {
 
   return (
     <div>
+      {/* Back to landing */}
+      <Link href="/" className="auth-back-btn" aria-label="Back to landing page">
+        <ArrowLeft size={18} />
+        <span>Back</span>
+      </Link>
+
       {/* Heading */}
       <div style={{ textAlign: "center", marginBottom: 24 }}>
         <h1 className="auth-heading">Welcome back</h1>
