@@ -62,7 +62,7 @@ export function AnalyticsCharts({ monthlyReturns, sectorAllocation, metrics }: A
               </ResponsiveContainer>
             ) : (
               <div className="flex h-70 items-center justify-center px-6 text-center">
-                <p className="text-[12px] text-[oklch(0.45_0.01_260)]">Not enough history yet — monthly returns will appear once you have transactions across multiple months.</p>
+                <p className="text-[12px] text-[oklch(0.45_0.01_260)]">Not enough history yet - monthly returns will appear once you have transactions across multiple months.</p>
               </div>
             )}
           </div>

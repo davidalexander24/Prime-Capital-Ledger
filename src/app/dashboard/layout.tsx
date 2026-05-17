@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { Sidebar } from "@/components/layout/sidebar";
 
 export const metadata: Metadata = {
-  title: "Dashboard — Prime Capital Ledger",
+  title: "Dashboard - Prime Capital Ledger",
   description:
-    "Portfolio management dashboard for Indonesian equity markets. Track holdings, transactions, and performance analytics.",
+    "Portfolio management dashboard for equity markets. Track holdings, transactions, and performance analytics.",
 };
 
 export default function DashboardLayout({

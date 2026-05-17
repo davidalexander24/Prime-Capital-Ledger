@@ -55,7 +55,7 @@ export function FeaturesGrid() {
           >
             Everything you need to run a portfolio
             <span className="text-muted-foreground/60">
-              {" "}— nothing you don&apos;t.
+              {" "}- nothing you don&apos;t.
             </span>
           </h2>
         </ScrollReveal>

@@ -11,9 +11,9 @@ import { Footer } from "@/components/landing/Footer"
 import Aurora from "@/components/landing/Aurora"
 
 export const metadata: Metadata = {
-  title: "Prime Capital Ledger — Portfolio Management for Indonesian Markets",
+  title: "Prime Capital Ledger - Portfolio Management for Equity Markets",
   description:
-    "Track your IDR and USD holdings, import brokerage PDFs, and see real-time P&L. Built for Indonesian retail investors.",
+    "Track your IDR and USD holdings, import brokerage PDFs, and see real-time P&L. Built for retail investors.",
 }
 
 export default async function LandingPage() {
