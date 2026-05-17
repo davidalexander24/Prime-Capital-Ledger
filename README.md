@@ -8,9 +8,9 @@
 
 Professional portfolio management and financial analytics platform for global equity markets.
 
-**Live demo:** _coming soon_
-**Link Presentation:**: https://canva.link/ml3j7nmw1yauxx5
-**Link Deploy:** https://primecapitaledger.site/
+- **Live demo:** _coming soon_
+- **Link Presentation:**: https://canva.link/ml3j7nmw1yauxx5
+- **Link Deploy:** https://primecapitaledger.site/
 
 ![Dashboard](docs/screenshots/dashboard.png)
 
