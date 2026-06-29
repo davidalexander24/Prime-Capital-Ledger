@@ -33,6 +33,8 @@ export interface PortfolioData {
   totalCostBasis: number;
   totalPnl: number;
   totalPnlPct: number;
+  realizedByCurrency: Record<string, number>;
+  investedByCurrency: Record<string, number>;
 }
 
 export async function getPortfolioHoldings(
@@ -58,12 +60,18 @@ export async function getPortfolioHoldings(
       }
     > = {};
 
+    // Realized P&L locked in from SELLs and total capital deployed via BUYs,
+    // tracked per currency so the page can convert with live FX.
+    const realizedByCurrency: Record<string, number> = {};
+    const investedByCurrency: Record<string, number> = {};
+
     for (const t of transactions) {
       if (!t.asset || !t.assetId) continue;
 
       const qty = Number(t.quantity);
       const price = Number(t.executionPrice);
       const fee = Number(t.fee);
+      const currency = t.asset.currency ?? "USD";
 
       if (!holdingsMap[t.assetId]) {
         holdingsMap[t.assetId] = {
@@ -79,12 +87,15 @@ export async function getPortfolioHoldings(
       if (t.type === "BUY") {
         holdingsMap[t.assetId].shares = Math.round((holdingsMap[t.assetId].shares + qty) * 1e8) / 1e8;
         holdingsMap[t.assetId].totalCost += qty * price + fee;
+        investedByCurrency[currency] = (investedByCurrency[currency] ?? 0) + qty * price + fee;
       }
 
       if (t.type === "SELL") {
         // Proportionally reduce cost basis
         const h = holdingsMap[t.assetId];
         const avgCostPerShare = h.shares !== 0 ? h.totalCost / h.shares : 0;
+        const realized = (qty * price - fee) - avgCostPerShare * qty;
+        realizedByCurrency[currency] = (realizedByCurrency[currency] ?? 0) + realized;
         h.shares = Math.round((h.shares - qty) * 1e8) / 1e8;
         if (h.shares < 0) {
           h.shares = 0;
@@ -153,6 +164,8 @@ export async function getPortfolioHoldings(
         totalCostBasis: grandTotalCost,
         totalPnl,
         totalPnlPct,
+        realizedByCurrency,
+        investedByCurrency,
       },
       error: null,
     };

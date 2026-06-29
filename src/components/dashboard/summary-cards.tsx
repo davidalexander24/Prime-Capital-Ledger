@@ -13,12 +13,16 @@ function formatCurrency(value: number, currency: string): string {
   return formatIDR(value);
 }
 
+function formatCurrencySigned(value: number, currency: string): string {
+  return `${value < 0 ? "-" : "+"}${formatCurrency(value, currency)}`;
+}
+
 interface SummaryCardsProps {
   data: PortfolioSummary;
 }
 
 export function SummaryCards({ data }: SummaryCardsProps) {
-  const isPositive = data.unrealizedPnL >= 0;
+  const lifetimePositive = data.lifetimePnL >= 0;
 
   const cards: Array<{
     label: string;
@@ -37,19 +41,19 @@ export function SummaryCards({ data }: SummaryCardsProps) {
       extra: data.exchangeRate ? `Converted at 1 USD = Rp${data.exchangeRate.toLocaleString("id-ID")}` : undefined,
     },
     {
-      label: "Unrealized P&L",
-      value: formatCurrency(Math.abs(data.unrealizedPnL), data.currency),
-      prefix: isPositive ? "+" : "-",
-      icon: isPositive ? TrendingUp : TrendingDown,
-      accent: isPositive,
-      detail: `${isPositive ? "+" : ""}${data.totalReturnPct.toFixed(2)}% return`,
+      label: "Lifetime P&L",
+      value: formatCurrency(Math.abs(data.lifetimePnL), data.currency),
+      prefix: lifetimePositive ? "+" : "-",
+      icon: lifetimePositive ? TrendingUp : TrendingDown,
+      accent: lifetimePositive,
+      detail: `Realized ${formatCurrencySigned(data.realizedPnL, data.currency)} · Unrealized ${formatCurrencySigned(data.unrealizedPnL, data.currency)}`,
     },
     {
       label: "Total Return",
-      value: `${data.totalReturnPct.toFixed(2)}%`,
-      prefix: isPositive ? "+" : "",
+      value: `${data.lifetimeReturnPct.toFixed(2)}%`,
+      prefix: lifetimePositive ? "+" : "",
       icon: BarChart3,
-      accent: isPositive,
+      accent: lifetimePositive,
       detail: "Since inception",
     },
     {

@@ -9,6 +9,15 @@ type ActionResponse<T> = {
   error: string | null;
 };
 
+function formatCurrencySigned(value: number, currency: string): string {
+  const sign = value < 0 ? "-" : "+";
+  const abs = Math.abs(value);
+  if (currency === "USD") {
+    return `${sign}$${abs.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+  return `${sign}Rp${Math.round(abs).toLocaleString("id-ID")}`;
+}
+
 export interface MonthlyReturn {
   month: string;
   return: number;
@@ -76,6 +85,7 @@ export async function getAnalyticsData(
             { label: "Max Drawdown", value: "0.00%", icon: "Activity", detail: "Peak to trough" },
             { label: "Win Rate", value: "0.0%", icon: "TrendingUp", detail: "Profitable trades" },
             { label: "Avg Return", value: "0.00%", icon: "BarChart3", detail: "Monthly average" },
+            { label: "Realized P&L", value: formatCurrencySigned(0, baseCurrency), icon: "Wallet", detail: "Locked-in gains" },
           ],
         },
         error: null,
@@ -152,6 +162,9 @@ export async function getAnalyticsData(
       { ticker: string; currency: string; shares: number; totalCost: number }
     >();
 
+    // Realized P&L locked in from SELLs, tracked per currency.
+    const realizedByCurrency: Record<string, number> = {};
+
     // Monthly values
     const monthlyValues = new Map<string, { start: number; end: number; firstDay: boolean }>();
     let prevDayMarketValue = 0;
@@ -193,6 +206,8 @@ export async function getAnalyticsData(
           holding.totalCost += grossValue + fee;
         } else if (tx.type === "SELL") {
           const avgCost = holding.shares !== 0 ? holding.totalCost / holding.shares : 0;
+          const realized = (grossValue - fee) - avgCost * qty;
+          realizedByCurrency[meta.currency] = (realizedByCurrency[meta.currency] ?? 0) + realized;
           holding.shares -= qty;
           if (holding.shares < 0) holding.shares = 0;
           holding.totalCost -= avgCost * qty;
@@ -326,6 +341,14 @@ export async function getAnalyticsData(
       ? monthlyReturnValues.reduce((s, r) => s + r, 0) / monthlyReturnValues.length
       : 0;
 
+    // Realized P&L, converted to the user's base currency.
+    let realizedConverted = 0;
+    for (const [cur, amount] of Object.entries(realizedByCurrency)) {
+      realizedConverted += baseCurrency === "USD"
+        ? (cur === "IDR" ? amount / fxRate : amount)
+        : (cur === "USD" ? amount * fxRate : amount);
+    }
+
     const metrics: AnalyticsMetric[] = [
       {
         label: "Sharpe Ratio",
@@ -350,6 +373,12 @@ export async function getAnalyticsData(
         value: `${avgMonthlyReturn.toFixed(2)}%`,
         icon: "BarChart3",
         detail: "Monthly average",
+      },
+      {
+        label: "Realized P&L",
+        value: formatCurrencySigned(realizedConverted, baseCurrency),
+        icon: "Wallet",
+        detail: "Locked-in gains",
       },
     ];
 
