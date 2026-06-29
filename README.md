@@ -36,7 +36,7 @@ A full-stack Next.js app that lets investors track holdings across brokerages, i
 - NextAuth JWT sessions, protected dashboard routes
 
 **Dashboard**
-- Summary cards: total value, cost basis, unrealized P&L, period return
+- Summary cards: portfolio value (with cost basis), lifetime P&L (realized + unrealized), total return since inception, holdings count
 - Portfolio valuation chart over time (USD and IDR)
 - Top-traded / movers widget
 - Recent transactions table
@@ -58,7 +58,7 @@ A full-stack Next.js app that lets investors track holdings across brokerages, i
 **Analytics**
 - Monthly returns chart
 - Sector allocation breakdown
-- Headline metrics: Sharpe ratio, max drawdown, win rate, average return
+- Headline metrics: Sharpe ratio, max drawdown, win rate, average return, realized P&L
 
 **Market data**
 - Live prices via Yahoo Finance
