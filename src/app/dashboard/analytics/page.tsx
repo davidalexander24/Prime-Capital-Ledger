@@ -26,6 +26,7 @@ export default async function AnalyticsPage() {
         { label: "Max Drawdown", value: "0.00%", icon: "Activity", detail: "Peak to trough" },
         { label: "Win Rate", value: "0.0%", icon: "TrendingUp", detail: "Profitable trades" },
         { label: "Avg Return", value: "0.00%", icon: "BarChart3", detail: "Monthly average" },
+        { label: "Realized P&L", value: "$0.00", icon: "Wallet", detail: "Locked-in gains" },
       ];
 
   return (

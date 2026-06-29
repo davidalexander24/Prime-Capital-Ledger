@@ -3,8 +3,8 @@
 import { 
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell 
 } from "recharts";
-import { 
-  BarChart3, TrendingUp, Activity, Target
+import {
+  BarChart3, TrendingUp, Activity, Target, Wallet
 } from "lucide-react";
 import { StockLogo } from "@/components/ui/stock-logo";
 import type { AnalyticsMetric, MonthlyReturn, SectorAllocation } from "@/app/actions/analytics";
@@ -21,7 +21,7 @@ export function AnalyticsCharts({ monthlyReturns, sectorAllocation, metrics }: A
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         {metrics.map((m) => (
           <div key={m.label} className="rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)] p-5">
             <div className="flex items-start justify-between">
@@ -30,6 +30,7 @@ export function AnalyticsCharts({ monthlyReturns, sectorAllocation, metrics }: A
               {m.icon === "Activity" && <Activity className="h-3.5 w-3.5 text-[oklch(0.35_0.01_260)]" strokeWidth={1.75} />}
               {m.icon === "TrendingUp" && <TrendingUp className="h-3.5 w-3.5 text-[oklch(0.35_0.01_260)]" strokeWidth={1.75} />}
               {m.icon === "BarChart3" && <BarChart3 className="h-3.5 w-3.5 text-[oklch(0.35_0.01_260)]" strokeWidth={1.75} />}
+              {m.icon === "Wallet" && <Wallet className="h-3.5 w-3.5 text-[oklch(0.35_0.01_260)]" strokeWidth={1.75} />}
             </div>
             <p className="mt-3 text-xl font-semibold text-[oklch(0.93_0.005_260)]">{m.value}</p>
             <p className="mt-1 text-[11px] text-[oklch(0.40_0.01_260)]">{m.detail}</p>

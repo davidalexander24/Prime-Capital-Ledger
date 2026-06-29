@@ -44,8 +44,23 @@ export default async function DashboardPage() {
   const transactions = transactionsRes.success && transactionsRes.data ? transactionsRes.data : [];
   const movers = moversRes.success && moversRes.data ? moversRes.data : [];
   const holdings = holdingsRes.success && holdingsRes.data ? holdingsRes.data.holdings : [];
+  const realizedByCurrency = holdingsRes.success && holdingsRes.data ? holdingsRes.data.realizedByCurrency : {};
+  const investedByCurrency = holdingsRes.success && holdingsRes.data ? holdingsRes.data.investedByCurrency : {};
   const rate = fxRate ?? 16000;
   const baseCurrency = userRecord?.baseCurrency || "IDR";
+
+  // Convert a per-currency amount map into the user's base currency via FX.
+  const toBaseCurrency = (byCurrency: Record<string, number>): number => {
+    let total = 0;
+    for (const [cur, amount] of Object.entries(byCurrency)) {
+      if (baseCurrency === "USD") {
+        total += cur === "IDR" ? amount / rate : amount;
+      } else {
+        total += cur === "USD" ? amount * rate : amount;
+      }
+    }
+    return total;
+  };
 
   // Compute totals in IDR or USD, converting positions via FX
   let totalMarketValueConverted = 0;
@@ -63,11 +78,20 @@ export default async function DashboardPage() {
   const totalReturnPct =
     totalCostBasisConverted > 0 ? (unrealizedPnLConverted / totalCostBasisConverted) * 100 : 0;
 
+  const realizedConverted = toBaseCurrency(realizedByCurrency);
+  const investedConverted = toBaseCurrency(investedByCurrency);
+  const lifetimePnL = unrealizedPnLConverted + realizedConverted;
+  const lifetimeReturnPct =
+    investedConverted > 0 ? (lifetimePnL / investedConverted) * 100 : 0;
+
   const summary = {
     totalValue: totalMarketValueConverted,
     totalCostBasis: totalCostBasisConverted,
     unrealizedPnL: unrealizedPnLConverted,
     totalReturnPct,
+    realizedPnL: realizedConverted,
+    lifetimePnL,
+    lifetimeReturnPct,
     holdingsCount: holdings.filter((h) => h.lots > 0).length,
     currency: baseCurrency,
     exchangeRate: baseCurrency === "USD" ? undefined : rate,

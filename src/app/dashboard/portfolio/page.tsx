@@ -50,7 +50,7 @@ export default async function PortfolioPage() {
   ]);
   const holdings = res.success && res.data?.holdings ? res.data.holdings : [];
   const baseCurrency = userRecord?.baseCurrency || "IDR";
-  
+
 
   const rate = fxRate ?? 16000;
 

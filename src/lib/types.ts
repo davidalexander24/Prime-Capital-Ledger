@@ -48,6 +48,9 @@ export interface PortfolioSummary {
   totalCostBasis: number;
   unrealizedPnL: number;
   totalReturnPct: number;
+  realizedPnL: number;
+  lifetimePnL: number;
+  lifetimeReturnPct: number;
   holdingsCount: number;
   currency: string;
   exchangeRate?: number;
