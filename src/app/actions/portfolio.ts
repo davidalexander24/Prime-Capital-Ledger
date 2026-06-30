@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { getLatestPrice } from "@/lib/marketData";
+import { getLedger, getCurrentQuotesForUser } from "@/lib/requestData";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
@@ -41,11 +41,7 @@ export async function getPortfolioHoldings(
   userId: string
 ): Promise<ActionResponse<PortfolioData>> {
   try {
-    const transactions = await prisma.transaction.findMany({
-      where: { userId },
-      include: { asset: true },
-      orderBy: { date: "asc" },
-    });
+    const transactions = await getLedger(userId);
 
     // Reconstruct holdings from transaction ledger
     const holdingsMap: Record<
@@ -114,9 +110,11 @@ export async function getPortfolioHoldings(
     let grandTotalMarket = 0;
     let grandTotalCost = 0;
 
+    // Single batched quote fetch shared across the request.
+    const quotes = await getCurrentQuotesForUser(userId);
+
     for (const h of holdingEntries) {
-      const livePrice = await getLatestPrice(h.ticker);
-      const lastPrice = livePrice ?? 0;
+      const lastPrice = quotes.get(h.ticker)?.price ?? 0;
       const avgPrice = h.shares > 0 ? h.totalCost / h.shares : 0;
       const marketValue = h.shares * lastPrice;
       const costBasis = h.totalCost;

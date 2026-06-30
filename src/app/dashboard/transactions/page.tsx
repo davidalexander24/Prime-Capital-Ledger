@@ -5,7 +5,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { TransactionTable } from "@/components/dashboard/transaction-table";
 import { LogTransactionDialog } from "@/components/dashboard/log-transaction-dialog";
 import { getTransactions } from "@/app/actions/transactions";
-import { getUsdIdrRate } from "@/lib/marketData";
+import { getCachedUsdIdrRate } from "@/lib/requestData";
 import { ArrowLeftRight } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +26,7 @@ export default async function TransactionsPage() {
 
   const [res, fxRate] = await Promise.all([
     getTransactions(userId),
-    getUsdIdrRate(),
+    getCachedUsdIdrRate(),
   ]);
   const transactions = res.success && res.data ? res.data : [];
   const rate = fxRate ?? 16000;

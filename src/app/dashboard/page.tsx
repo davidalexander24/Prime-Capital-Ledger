@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import prisma from "@/lib/prisma";
 
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { ValuationChart } from "@/components/charts/valuation-chart";
@@ -13,7 +12,7 @@ import {
   getHoldingsDailyChange,
 } from "@/app/actions/dashboard";
 import { getPortfolioHoldings } from "@/app/actions/portfolio";
-import { getUsdIdrRate } from "@/lib/marketData";
+import { getCachedUsdIdrRate, getUserBaseCurrency } from "@/lib/requestData";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +25,7 @@ export default async function DashboardPage() {
 
   const userId = session.user.id;
 
-  const [valuationRes, transactionsRes, moversRes, holdingsRes, fxRate, userRecord] =
+  const [valuationRes, transactionsRes, moversRes, holdingsRes, fxRate, baseCurrency] =
     await Promise.all([
       getHistoricalValuations(userId),
       getRecentTransactions(userId),
@@ -36,8 +35,8 @@ export default async function DashboardPage() {
         error: null,
       })),
       getPortfolioHoldings(userId),
-      getUsdIdrRate(),
-      prisma.user.findUnique({ where: { id: userId }, select: { baseCurrency: true } }),
+      getCachedUsdIdrRate(),
+      getUserBaseCurrency(userId),
     ]);
 
   const valuation = valuationRes.success && valuationRes.data ? valuationRes.data : [];
@@ -47,7 +46,6 @@ export default async function DashboardPage() {
   const realizedByCurrency = holdingsRes.success && holdingsRes.data ? holdingsRes.data.realizedByCurrency : {};
   const investedByCurrency = holdingsRes.success && holdingsRes.data ? holdingsRes.data.investedByCurrency : {};
   const rate = fxRate ?? 16000;
-  const baseCurrency = userRecord?.baseCurrency || "IDR";
 
   // Convert a per-currency amount map into the user's base currency via FX.
   const toBaseCurrency = (byCurrency: Record<string, number>): number => {

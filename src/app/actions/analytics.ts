@@ -1,7 +1,6 @@
 "use server";
 
-import prisma from "@/lib/prisma";
-import { getHistoricalPrices, getUsdIdrRate } from "@/lib/marketData";
+import { buildPortfolioTimeline } from "@/lib/timeline";
 
 type ActionResponse<T> = {
   success: boolean;
@@ -57,24 +56,19 @@ export async function getAnalyticsData(
   userId: string
 ): Promise<ActionResponse<AnalyticsData>> {
   try {
-    const [transactions, userRecord] = await Promise.all([
-      prisma.transaction.findMany({
-        where: { userId },
-        include: {
-          asset: {
-            select: { id: true, ticker: true, companyName: true, currency: true },
-          },
-        },
-        orderBy: { date: "asc" },
-      }),
-      prisma.user.findUnique({
-        where: { id: userId },
-        select: { baseCurrency: true },
-      })
-    ]);
-    const baseCurrency = userRecord?.baseCurrency || "IDR";
+    const timeline = await buildPortfolioTimeline(userId);
+    const {
+      baseCurrency,
+      fxRate,
+      monthlyValues,
+      dailyReturns,
+      maxDrawdown,
+      realizedByCurrency,
+      finalHoldings,
+      lastPriceByTicker,
+    } = timeline;
 
-    if (!transactions.length) {
+    if (!monthlyValues.length) {
       return {
         success: true,
         data: {
@@ -92,186 +86,15 @@ export async function getAnalyticsData(
       };
     }
 
-    // Monthly Returns
-    const startDate = new Date(
-      Date.UTC(
-        transactions[0].date.getUTCFullYear(),
-        transactions[0].date.getUTCMonth(),
-        transactions[0].date.getUTCDate()
-      )
-    );
-    const endDate = new Date(
-      Date.UTC(
-        new Date().getUTCFullYear(),
-        new Date().getUTCMonth(),
-        new Date().getUTCDate()
-      )
-    );
-
-    const tickerSet = new Set<string>();
-    const assetMeta = new Map<string, { ticker: string; currency: string }>();
-
-    for (const tx of transactions) {
-      if (tx.asset && tx.assetId) {
-        tickerSet.add(tx.asset.ticker);
-        assetMeta.set(tx.assetId, {
-          ticker: tx.asset.ticker,
-          currency: tx.asset.currency ?? "USD",
-        });
-      }
-    }
-
-    const tickers = Array.from(tickerSet);
-    const [fxHistory, ...priceHistories] = await Promise.all([
-      getHistoricalPrices("USDIDR=X", startDate, endDate),
-      ...tickers.map((ticker) => getHistoricalPrices(ticker, startDate, endDate)),
-    ]);
-
-    const priceByTickerDate = new Map<string, Map<string, number>>();
-    const lastPriceByTicker = new Map<string, number>();
-
-    tickers.forEach((ticker, index) => {
-      const series = priceHistories[index] || [];
-      const byDate = new Map<string, number>();
-      for (const point of series) {
-        byDate.set(point.date, point.close);
-      }
-      priceByTickerDate.set(ticker, byDate);
-      if (series.length) {
-        lastPriceByTicker.set(ticker, series[0].close);
-      }
-    });
-
-    const fxRate =
-      (await getUsdIdrRate()) ??
-      fxHistory?.[fxHistory.length - 1]?.close ??
-      16000;
-
-    // Build daily transaction lookup
-    const txByDate = new Map<string, typeof transactions>();
-    for (const tx of transactions) {
-      const dateKey = tx.date.toISOString().split("T")[0];
-      const list = txByDate.get(dateKey);
-      if (list) list.push(tx);
-      else txByDate.set(dateKey, [tx]);
-    }
-
-    // Holdings tracker
-    const holdings = new Map<
-      string,
-      { ticker: string; currency: string; shares: number; totalCost: number }
-    >();
-
-    // Realized P&L locked in from SELLs, tracked per currency.
-    const realizedByCurrency: Record<string, number> = {};
-
-    // Monthly values
-    const monthlyValues = new Map<string, { start: number; end: number; firstDay: boolean }>();
-    let prevDayMarketValue = 0;
-
-    // daily returns
-    const dailyReturns: number[] = [];
-    let peakValue = 0;
-    let maxDrawdown = 0;
-
-    for (
-      let cursor = new Date(startDate);
-      cursor <= endDate;
-      cursor.setUTCDate(cursor.getUTCDate() + 1)
-    ) {
-      const dateKey = cursor.toISOString().split("T")[0];
-      const dayTransactions = txByDate.get(dateKey) ?? [];
-
-      for (const tx of dayTransactions) {
-        if (tx.type === "DEPOSIT" || tx.type === "WITHDRAW") continue;
-        if (!tx.assetId || !tx.asset) continue;
-
-        const meta = assetMeta.get(tx.assetId);
-        if (!meta) continue;
-
-        const qty = Number(tx.quantity);
-        const price = Number(tx.executionPrice);
-        const fee = Number(tx.fee);
-        const grossValue = qty * price;
-
-        const holding = holdings.get(tx.assetId) ?? {
-          ticker: meta.ticker,
-          currency: meta.currency,
-          shares: 0,
-          totalCost: 0,
-        };
-
-        if (tx.type === "BUY") {
-          holding.shares += qty;
-          holding.totalCost += grossValue + fee;
-        } else if (tx.type === "SELL") {
-          const avgCost = holding.shares !== 0 ? holding.totalCost / holding.shares : 0;
-          const realized = (grossValue - fee) - avgCost * qty;
-          realizedByCurrency[meta.currency] = (realizedByCurrency[meta.currency] ?? 0) + realized;
-          holding.shares -= qty;
-          if (holding.shares < 0) holding.shares = 0;
-          holding.totalCost -= avgCost * qty;
-          if (holding.shares === 0) holding.totalCost = 0;
-        }
-
-        holdings.set(tx.assetId, holding);
-      }
-
-      // market value
-      let marketValueUSD = 0;
-      let marketValueIDR = 0;
-
-      for (const holding of holdings.values()) {
-        if (holding.shares <= 0) continue;
-        const priceMap = priceByTickerDate.get(holding.ticker);
-        let lastPrice = lastPriceByTicker.get(holding.ticker) ?? 0;
-        if (priceMap?.has(dateKey)) {
-          lastPrice = priceMap.get(dateKey) ?? lastPrice;
-          lastPriceByTicker.set(holding.ticker, lastPrice);
-        }
-        const positionValue = holding.shares * lastPrice;
-        if (holding.currency === "IDR") marketValueIDR += positionValue;
-        else marketValueUSD += positionValue;
-      }
-
-      const totalMarketValue = baseCurrency === "USD"
-        ? marketValueUSD + (marketValueIDR / fxRate)
-        : marketValueUSD * fxRate + marketValueIDR;
-
-      // Track daily returns
-      if (prevDayMarketValue > 0 && totalMarketValue > 0) {
-        const dailyReturn = (totalMarketValue - prevDayMarketValue) / prevDayMarketValue;
-        dailyReturns.push(dailyReturn);
-      }
-
-      // Track max drawdown
-      if (totalMarketValue > peakValue) peakValue = totalMarketValue;
-      if (peakValue > 0) {
-        const drawdown = (peakValue - totalMarketValue) / peakValue;
-        if (drawdown > maxDrawdown) maxDrawdown = drawdown;
-      }
-
-      prevDayMarketValue = totalMarketValue;
-
-      // Monthly tracking
-      const monthKey = dateKey.substring(0, 7); // "YYYY-MM"
-      const existing = monthlyValues.get(monthKey);
-      if (!existing) {
-        monthlyValues.set(monthKey, { start: totalMarketValue, end: totalMarketValue, firstDay: true });
-      } else {
-        existing.end = totalMarketValue;
-      }
-    }
-
-    // Build monthly returns array
+    // Build monthly returns array (cumulative)
     const monthlyReturns: MonthlyReturn[] = [];
     let cumulativeReturn = 0;
 
-    for (const [monthKey, mv] of monthlyValues) {
+    for (const mv of monthlyValues) {
       const monthReturn = mv.start > 0 ? ((mv.end - mv.start) / mv.start) * 100 : 0;
       cumulativeReturn += monthReturn;
 
-      const [year, month] = monthKey.split("-");
+      const [year, month] = mv.monthKey.split("-");
       const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
       const label = `${monthNames[parseInt(month) - 1]} ${year.slice(2)}`;
 
@@ -286,9 +109,8 @@ export async function getAnalyticsData(
     const allocationMap = new Map<string, { name: string; marketValue: number }>();
     let totalPortfolioValue = 0;
 
-    for (const holding of holdings.values()) {
-      if (holding.shares <= 0) continue;
-      const lastPrice = lastPriceByTicker.get(holding.ticker) ?? 0;
+    for (const holding of finalHoldings) {
+      const lastPrice = lastPriceByTicker[holding.ticker] ?? 0;
       const positionValue = holding.shares * lastPrice;
       const valueInBase = baseCurrency === "USD"
         ? (holding.currency === "IDR" ? positionValue / fxRate : positionValue)
