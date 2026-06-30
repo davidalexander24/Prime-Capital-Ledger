@@ -1,11 +1,10 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import prisma from "@/lib/prisma";
 
 import { Briefcase, TrendingUp, TrendingDown } from "lucide-react";
 import { getPortfolioHoldings } from "@/app/actions/portfolio";
-import { getUsdIdrRate } from "@/lib/marketData";
+import { getCachedUsdIdrRate, getUserBaseCurrency } from "@/lib/requestData";
 import { StockLogo } from "@/components/ui/stock-logo";
 import { SplitAction } from "@/components/dashboard/split-dialog";
 
@@ -43,13 +42,12 @@ export default async function PortfolioPage() {
   }
   const userId = session.user.id;
 
-  const [res, fxRate, userRecord] = await Promise.all([
+  const [res, fxRate, baseCurrency] = await Promise.all([
     getPortfolioHoldings(userId),
-    getUsdIdrRate(),
-    prisma.user.findUnique({ where: { id: userId }, select: { baseCurrency: true } }),
+    getCachedUsdIdrRate(),
+    getUserBaseCurrency(userId),
   ]);
   const holdings = res.success && res.data?.holdings ? res.data.holdings : [];
-  const baseCurrency = userRecord?.baseCurrency || "IDR";
 
 
   const rate = fxRate ?? 16000;

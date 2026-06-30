@@ -1,12 +1,9 @@
 "use server";
 
 import prisma from '@/lib/prisma';
-import {
-  getLatestPrice,
-  getUsdIdrRate,
-  getMarketQuote,
-  getHistoricalPrices,
-} from '@/lib/marketData';
+import { getMarketQuote } from '@/lib/marketData';
+import { getLedger, getCurrentQuotesForUser } from '@/lib/requestData';
+import { buildPortfolioTimeline } from '@/lib/timeline';
 import type { PortfolioValuationPoint, TransactionRecord } from '@/lib/types';
 type ActionResponse<T> = {
   success: boolean;
@@ -80,231 +77,33 @@ export async function getHistoricalValuations(
   userId: string
 ): Promise<ActionResponse<PortfolioValuationPoint[]>> {
   try {
-    const [transactions, userRecord] = await Promise.all([
-      prisma.transaction.findMany({
-        where: { userId },
-        include: {
-          asset: {
-            select: { id: true, ticker: true, currency: true },
-          },
-        },
-        orderBy: { date: 'asc' },
-      }),
-      prisma.user.findUnique({
-        where: { id: userId },
-        select: { baseCurrency: true },
-      })
-    ]);
-    const baseCurrency = userRecord?.baseCurrency || "IDR";
+    const timeline = await buildPortfolioTimeline(userId);
+    const { valuationSeries, finalHoldings, lastPriceByTicker, fxRate, baseCurrency } =
+      timeline;
 
-    if (!transactions.length) {
+    if (!valuationSeries.length) {
       return { success: true, data: [], error: null };
     }
 
-    const startDate = new Date(Date.UTC(
-      transactions[0].date.getUTCFullYear(),
-      transactions[0].date.getUTCMonth(),
-      transactions[0].date.getUTCDate()
-    ));
-    const endDate = new Date(Date.UTC(
-      new Date().getUTCFullYear(),
-      new Date().getUTCMonth(),
-      new Date().getUTCDate()
-    ));
-
-    const tickerSet = new Set<string>();
-    const assetMeta = new Map<string, { ticker: string; currency: string }>();
-
-    for (const tx of transactions) {
-      if (tx.asset && tx.assetId) {
-        tickerSet.add(tx.asset.ticker);
-        assetMeta.set(tx.assetId, {
-          ticker: tx.asset.ticker,
-          currency: tx.asset.currency ?? "USD",
-        });
-      }
-    }
-
-    const tickers = Array.from(tickerSet);
-    const [fxHistory, ...priceHistories] = await Promise.all([
-      getHistoricalPrices("USDIDR=X", startDate, endDate),
-      ...tickers.map((ticker) => getHistoricalPrices(ticker, startDate, endDate)),
-    ]);
-
-    const priceByTickerDate = new Map<string, Map<string, number>>();
-    const lastPriceByTicker = new Map<string, number>();
-
-    tickers.forEach((ticker, index) => {
-      const series = priceHistories[index] || [];
-      const byDate = new Map<string, number>();
-      for (const point of series) {
-        byDate.set(point.date, point.close);
-      }
-      priceByTickerDate.set(ticker, byDate);
-      if (series.length) {
-        lastPriceByTicker.set(ticker, series[0].close);
-      }
-    });
-
-    // FX rate
-    const fxRate =
-      (await getUsdIdrRate()) ??
-      fxHistory?.[fxHistory.length - 1]?.close ??
-      16000;
-
-    const txByDate = new Map<string, typeof transactions>();
-    for (const tx of transactions) {
-      const dateKey = tx.date.toISOString().split('T')[0];
-      const list = txByDate.get(dateKey);
-      if (list) {
-        list.push(tx);
-      } else {
-        txByDate.set(dateKey, [tx]);
-      }
-    }
-
-    const holdings = new Map<string, {
-      ticker: string;
-      currency: string;
-      shares: number;
-      totalCost: number;
-    }>();
-
-    let previousMarketValue = 0;
-
-    const valuationSeries: PortfolioValuationPoint[] = [];
-
-    // zero-day before the first transaction
-    const seedDate = new Date(startDate);
-    seedDate.setUTCDate(seedDate.getUTCDate() - 1);
-    valuationSeries.push({
-      date: seedDate.toISOString().split('T')[0],
-      totalMarketValue: 0,
-      totalCostBasis: 0,
-      unrealizedPnL: 0,
-      dailyReturn: 0,
-    });
-
-    for (
-      let cursor = new Date(startDate);
-      cursor <= endDate;
-      cursor.setUTCDate(cursor.getUTCDate() + 1)
-    ) {
-      const dateKey = cursor.toISOString().split('T')[0];
-      const dayTransactions = txByDate.get(dateKey) ?? [];
-
-      for (const tx of dayTransactions) {
-        if (tx.type === "DEPOSIT" || tx.type === "WITHDRAW") continue;
-        if (!tx.assetId || !tx.asset) continue;
-
-        const meta = assetMeta.get(tx.assetId);
-        if (!meta) continue;
-
-        const qty = Number(tx.quantity);
-        const price = Number(tx.executionPrice);
-        const fee = Number(tx.fee);
-        const grossValue = qty * price;
-
-        const holding = holdings.get(tx.assetId) ?? {
-          ticker: meta.ticker,
-          currency: meta.currency,
-          shares: 0,
-          totalCost: 0,
-        };
-
-        if (tx.type === "BUY") {
-          holding.shares = Math.round((holding.shares + qty) * 1e8) / 1e8;
-          holding.totalCost += grossValue + fee;
-        } else if (tx.type === "SELL") {
-          const avgCost = holding.shares !== 0 ? holding.totalCost / holding.shares : 0;
-          holding.shares = Math.round((holding.shares - qty) * 1e8) / 1e8;
-          if (holding.shares < 0) holding.shares = 0;
-          holding.totalCost -= avgCost * qty;
-          if (holding.shares === 0) holding.totalCost = 0;
-        }
-
-        holdings.set(tx.assetId, holding);
-      }
-
-      let marketValueUSD = 0;
-      let marketValueIDR = 0;
-      let costBasisUSD = 0;
-      let costBasisIDR = 0;
-
-      for (const holding of holdings.values()) {
-        if (holding.shares <= 0) continue;
-
-        const priceMap = priceByTickerDate.get(holding.ticker);
-        let lastPrice = lastPriceByTicker.get(holding.ticker) ?? 0;
-        if (priceMap?.has(dateKey)) {
-          lastPrice = priceMap.get(dateKey) ?? lastPrice;
-          lastPriceByTicker.set(holding.ticker, lastPrice);
-        }
-
-        const positionValue = holding.shares * lastPrice;
-
-        if (holding.currency === "IDR") {
-          marketValueIDR += positionValue;
-          costBasisIDR += holding.totalCost;
-        } else {
-          marketValueUSD += positionValue;
-          costBasisUSD += holding.totalCost;
-        }
-      }
-
-      const totalMarketValue = baseCurrency === "USD"
-        ? marketValueUSD + (marketValueIDR / fxRate)
-        : marketValueUSD * fxRate + marketValueIDR;
-      const totalCostBasis = baseCurrency === "USD"
-        ? costBasisUSD + (costBasisIDR / fxRate)
-        : costBasisUSD * fxRate + costBasisIDR;
-      const unrealizedPnL = totalMarketValue - totalCostBasis;
-      const dailyReturn =
-        previousMarketValue === 0
-          ? 0
-          : (totalMarketValue - previousMarketValue) / previousMarketValue;
-
-      previousMarketValue = totalMarketValue;
-
-      valuationSeries.push({
-        date: dateKey,
-        totalMarketValue,
-        totalCostBasis,
-        unrealizedPnL,
-        dailyReturn,
-      });
-    }
-
-    // override the final point with live prices
+    // Override the final point with live prices (the only real-time part).
     const lastPoint = valuationSeries[valuationSeries.length - 1];
-    if (lastPoint && holdings.size > 0) {
-      const liveTickers = Array.from(holdings.values())
-        .filter((h) => h.shares > 0)
-        .map((h) => h.ticker);
-      const livePrices = await Promise.all(
-        liveTickers.map((t) => getLatestPrice(t))
-      );
-      const liveByTicker = new Map<string, number>();
-      liveTickers.forEach((t, i) => {
-        const p = livePrices[i];
-        if (p != null) liveByTicker.set(t, p);
-      });
-
+    if (lastPoint && finalHoldings.length > 0) {
+      const quotes = await getCurrentQuotesForUser(userId);
       let liveMvUSD = 0;
       let liveMvIDR = 0;
-      for (const holding of holdings.values()) {
-        if (holding.shares <= 0) continue;
+      for (const holding of finalHoldings) {
         const price =
-          liveByTicker.get(holding.ticker) ??
-          lastPriceByTicker.get(holding.ticker) ??
+          quotes.get(holding.ticker)?.price ??
+          lastPriceByTicker[holding.ticker] ??
           0;
         const positionValue = holding.shares * price;
         if (holding.currency === "IDR") liveMvIDR += positionValue;
         else liveMvUSD += positionValue;
       }
-      const liveTotalMarketValue = baseCurrency === "USD"
-        ? liveMvUSD + (liveMvIDR / fxRate)
-        : liveMvUSD * fxRate + liveMvIDR;
+      const liveTotalMarketValue =
+        baseCurrency === "USD"
+          ? liveMvUSD + liveMvIDR / fxRate
+          : liveMvUSD * fxRate + liveMvIDR;
       lastPoint.totalMarketValue = liveTotalMarketValue;
       lastPoint.unrealizedPnL = liveTotalMarketValue - lastPoint.totalCostBasis;
     }
@@ -376,11 +175,7 @@ export async function getHoldingsDailyChange(
   userId: string
 ): Promise<ActionResponse<HoldingDailyChange[]>> {
   try {
-    const transactions = await prisma.transaction.findMany({
-      where: { userId },
-      include: { asset: true },
-      orderBy: { date: "asc" },
-    });
+    const transactions = await getLedger(userId);
 
     const holdings = new Map<
       string,
@@ -417,12 +212,10 @@ export async function getHoldingsDailyChange(
       (h) => h.shares > 0
     );
 
-    const quotes = await Promise.all(
-      positions.map((p) => getMarketQuote(p.ticker))
-    );
+    const quotes = await getCurrentQuotesForUser(userId);
 
-    const rows = positions.map((p, i) => {
-      const q = quotes[i];
+    const rows = positions.map((p) => {
+      const q = quotes.get(p.ticker);
       return {
         ticker: p.ticker,
         name: p.name,
