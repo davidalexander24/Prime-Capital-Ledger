@@ -23,6 +23,8 @@ A full-stack Next.js app that lets investors track holdings across brokerages, i
 - **`Decimal(19,4)` precision** for every monetary value, never `Float`, no rounding errors on financial math.
 - **Immutable transaction ledger** with `daily_valuations` snapshots, full audit trail, append-only design.
 - **Upstash Redis caching layer** for Yahoo Finance prices and USD↔IDR FX, stays under API rate limits, sub-100ms reads.
+- **Request-scoped data layer**, batched Redis `mget` reads dedupe the ledger query and price fetches within a single render.
+- **Memoized valuation timeline**, the day-by-day portfolio history is cached in Redis (keyed by a ledger signature) so it is not recomputed on every navigation.
 - **PDF parsing pipeline** for Ajaib and Stockbit broker statements, with deduplication on commit.
 - **End-to-end type safety** from Prisma schema through Server Actions to React 19 components.
 
@@ -232,7 +234,9 @@ prime-capital-ledger/
 │   ├── lib/
 │   │   ├── prisma.ts                # Prisma client singleton
 │   │   ├── redis.ts                 # Upstash client
-│   │   ├── marketData.ts            # Yahoo Finance + FX, with Redis caching
+│   │   ├── marketData.ts            # Yahoo Finance + FX, Redis caching + batched reads
+│   │   ├── requestData.ts           # Request-scoped data layer (React cache dedup)
+│   │   ├── timeline.ts              # Portfolio valuation timeline, memoized in Redis
 │   │   ├── types.ts                 # Shared TypeScript types
 │   │   └── utils.ts                 # `cn`, formatters
 │   └── assets/                      # Static images (logo)
