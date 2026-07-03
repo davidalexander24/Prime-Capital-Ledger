@@ -3,7 +3,7 @@
 import prisma from "@/lib/prisma";
 import { getLedger, getCurrentQuotesForUser } from "@/lib/requestData";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions, getSessionUserId } from "@/lib/auth";
 
 type ActionResponse<T> = {
   success: boolean;
@@ -37,9 +37,9 @@ export interface PortfolioData {
   investedByCurrency: Record<string, number>;
 }
 
-export async function getPortfolioHoldings(
-  userId: string
-): Promise<ActionResponse<PortfolioData>> {
+export async function getPortfolioHoldings(): Promise<ActionResponse<PortfolioData>> {
+  const userId = await getSessionUserId();
+  if (!userId) return { success: false, data: null, error: "Unauthorized" };
   try {
     const transactions = await getLedger(userId);
 

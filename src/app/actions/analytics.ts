@@ -1,6 +1,7 @@
 "use server";
 
 import { buildPortfolioTimeline } from "@/lib/timeline";
+import { getSessionUserId } from "@/lib/auth";
 
 type ActionResponse<T> = {
   success: boolean;
@@ -52,9 +53,9 @@ const SECTOR_COLORS = [
   "oklch(0.55 0.12 270)",  // indigo
 ];
 
-export async function getAnalyticsData(
-  userId: string
-): Promise<ActionResponse<AnalyticsData>> {
+export async function getAnalyticsData(): Promise<ActionResponse<AnalyticsData>> {
+  const userId = await getSessionUserId();
+  if (!userId) return { success: false, data: null, error: "Unauthorized" };
   try {
     const timeline = await buildPortfolioTimeline(userId);
     const {

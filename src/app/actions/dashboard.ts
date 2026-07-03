@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from '@/lib/prisma';
-import { getMarketQuote } from '@/lib/marketData';
+import { getSessionUserId } from '@/lib/auth';
 import { getLedger, getCurrentQuotesForUser } from '@/lib/requestData';
 import { buildPortfolioTimeline } from '@/lib/timeline';
 import type { PortfolioValuationPoint, TransactionRecord } from '@/lib/types';
@@ -10,15 +10,6 @@ type ActionResponse<T> = {
   data: T | null;
   error: string | null;
 };
-
-interface PortfolioSummaryData {
-  cashBalanceUSD: number;
-  marketValueUSD: number;
-  totalEquityUSD: number;
-  totalEquityIDR: number;
-  exchangeRate: number;
-  date: string;
-}
 
 interface HoldingDailyChange {
   ticker: string;
@@ -31,51 +22,10 @@ interface HoldingDailyChange {
   currency: string;
 }
 
-interface TrendingStock {
-  ticker: string;
-  name: string;
-  sector: string;
-  totalVolume: number;
-  tradeCount: number;
-  lastPrice: number;
-  changePercent: number;
-  currency: string;
-}
-
-// Portfolio Summary
-export async function getPortfolioSummary(userId: string): Promise<ActionResponse<PortfolioSummaryData>> {
-  try {
-    const latestValuation = await prisma.dailyValuation.findFirst({
-      where: { userId },
-      orderBy: { date: 'desc' }, // Get the newest entry
-    });
-
-    if (!latestValuation) {
-      return { success: true, data: null, error: "No valuation data found for this user." };
-    }
-
-    // Convert Decimals to native Numbers
-    const serializedData: PortfolioSummaryData = {
-      ...latestValuation,
-      cashBalanceUSD: Number(latestValuation.cashBalanceUSD),
-      marketValueUSD: Number(latestValuation.marketValueUSD),
-      totalEquityUSD: Number(latestValuation.totalEquityUSD),
-      totalEquityIDR: Number(latestValuation.totalEquityIDR),
-      exchangeRate: Number(latestValuation.exchangeRate),
-      date: latestValuation.date.toISOString()
-    };
-
-    return { success: true, data: serializedData, error: null };
-  } catch (error) {
-    console.error("Error fetching portfolio summary:", error);
-    return { success: false, data: null, error: "Failed to retrieve portfolio summary." };
-  }
-}
-
 // Historical Valuation Timeline
-export async function getHistoricalValuations(
-  userId: string
-): Promise<ActionResponse<PortfolioValuationPoint[]>> {
+export async function getHistoricalValuations(): Promise<ActionResponse<PortfolioValuationPoint[]>> {
+  const userId = await getSessionUserId();
+  if (!userId) return { success: false, data: null, error: "Unauthorized" };
   try {
     const timeline = await buildPortfolioTimeline(userId);
     const { valuationSeries, finalHoldings, lastPriceByTicker, fxRate, baseCurrency } =
@@ -116,9 +66,9 @@ export async function getHistoricalValuations(
 }
 
 // 10 Most Recent Ledger Entries
-export async function getRecentTransactions(
-  userId: string
-): Promise<ActionResponse<TransactionRecord[]>> {
+export async function getRecentTransactions(): Promise<ActionResponse<TransactionRecord[]>> {
+  const userId = await getSessionUserId();
+  if (!userId) return { success: false, data: null, error: "Unauthorized" };
   try {
     const transactions = await prisma.transaction.findMany({
       where: { userId },
@@ -171,9 +121,9 @@ export async function getRecentTransactions(
 
 // Daily price change for the stocks the user actually owns.
 // Sorted by largest absolute % move first (biggest movers today).
-export async function getHoldingsDailyChange(
-  userId: string
-): Promise<ActionResponse<HoldingDailyChange[]>> {
+export async function getHoldingsDailyChange(): Promise<ActionResponse<HoldingDailyChange[]>> {
+  const userId = await getSessionUserId();
+  if (!userId) return { success: false, data: null, error: "Unauthorized" };
   try {
     const transactions = await getLedger(userId);
 
@@ -240,68 +190,5 @@ export async function getHoldingsDailyChange(
       data: null,
       error: "Failed to retrieve holdings daily change.",
     };
-  }
-}
-
-// 5 Most Traded Stocks
-export async function getTrendingStocks(): Promise<ActionResponse<TrendingStock[]>> {
-  try {
-    const topTraded = await prisma.transaction.groupBy({
-      by: ['assetId'],
-      where: {
-        assetId: { not: null }, 
-      },
-      _count: {
-        assetId: true,
-      },
-      _sum: {
-        quantity: true,
-      },
-      orderBy: {
-        _count: {
-          assetId: 'desc',
-        },
-      },
-      take: 5,
-    });
-
-    const assetIds = topTraded.map(t => t.assetId as string);
-
-    const assets = await prisma.asset.findMany({
-      where: { id: { in: assetIds } },
-    });
-
-    const trendingData = await Promise.all(topTraded.map(async (trade) => {
-      const assetDetails = assets.find(a => a.id === trade.assetId);
-      const ticker = assetDetails?.ticker || "Unknown";
-      const currency = assetDetails?.currency ?? "USD";
-
-      let lastPrice = 0;
-      let changePercent = 0;
-
-      if (ticker !== "Unknown") {
-        const quote = await getMarketQuote(ticker);
-        if (quote) {
-          lastPrice = quote.price;
-          changePercent = quote.changePercent;
-        }
-      }
-
-      return {
-        ticker,
-        name: assetDetails?.companyName || "Unknown",
-        sector: "",
-        totalVolume: Number(trade._sum.quantity) || 0,
-        tradeCount: trade._count.assetId,
-        lastPrice,
-        changePercent,
-        currency
-      };
-    }));
-    
-    return { success: true, data: trendingData, error: null };
-  } catch (error) {
-    console.error("Error calculating trending stocks:", error);
-    return { success: false, data: null, error: "Failed to calculate trending assets." };
   }
 }

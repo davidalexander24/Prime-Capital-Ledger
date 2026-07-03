@@ -1,6 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { getSessionUserId } from "@/lib/auth";
 import type { TransactionRecord } from "@/lib/types";
 
 type ActionResponse<T> = {
@@ -10,9 +11,10 @@ type ActionResponse<T> = {
 };
 
 export async function getTransactions(
-  userId: string,
   limit?: number
 ): Promise<ActionResponse<TransactionRecord[]>> {
+  const userId = await getSessionUserId();
+  if (!userId) return { success: false, data: null, error: "Unauthorized" };
   try {
     const transactions = await prisma.transaction.findMany({
       where: { userId },

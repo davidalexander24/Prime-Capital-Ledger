@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
 import { Briefcase, TrendingUp, TrendingDown } from "lucide-react";
 import { getPortfolioHoldings } from "@/app/actions/portfolio";
@@ -43,7 +43,7 @@ export default async function PortfolioPage() {
   const userId = session.user.id;
 
   const [res, fxRate, baseCurrency] = await Promise.all([
-    getPortfolioHoldings(userId),
+    getPortfolioHoldings(),
     getCachedUsdIdrRate(),
     getUserBaseCurrency(userId),
   ]);

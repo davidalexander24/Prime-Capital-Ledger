@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { ValuationChart } from "@/components/charts/valuation-chart";
@@ -27,14 +27,14 @@ export default async function DashboardPage() {
 
   const [valuationRes, transactionsRes, moversRes, holdingsRes, fxRate, baseCurrency] =
     await Promise.all([
-      getHistoricalValuations(userId),
-      getRecentTransactions(userId),
-      getHoldingsDailyChange(userId).catch(() => ({
+      getHistoricalValuations(),
+      getRecentTransactions(),
+      getHoldingsDailyChange().catch(() => ({
         success: false as const,
         data: null,
         error: null,
       })),
-      getPortfolioHoldings(userId),
+      getPortfolioHoldings(),
       getCachedUsdIdrRate(),
       getUserBaseCurrency(userId),
     ]);

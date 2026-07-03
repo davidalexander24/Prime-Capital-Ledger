@@ -1,6 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { getSessionUserId } from "@/lib/auth";
 
 export interface AssetSearchResult {
   ticker: string;
@@ -11,6 +12,8 @@ export interface AssetSearchResult {
 export async function searchAssets(
   query: string
 ): Promise<AssetSearchResult[]> {
+  const userId = await getSessionUserId();
+  if (!userId) return [];
   if (!query || query.trim().length < 1) return [];
 
   const q = query.trim();

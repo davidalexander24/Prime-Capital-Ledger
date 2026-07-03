@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
 import { AnalyticsCharts } from "@/components/dashboard/analytics-charts";
 import { getAnalyticsData } from "@/app/actions/analytics";
@@ -14,8 +14,7 @@ export default async function AnalyticsPage() {
     redirect("/login");
   }
 
-  const userId = session.user.id;
-  const res = await getAnalyticsData(userId);
+  const res = await getAnalyticsData();
 
   const monthlyReturns = res.success && res.data ? res.data.monthlyReturns : [];
   const sectorAllocation = res.success && res.data ? res.data.sectorAllocation : [];

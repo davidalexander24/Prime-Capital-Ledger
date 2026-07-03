@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
 import { TransactionTable } from "@/components/dashboard/transaction-table";
 import { LogTransactionDialog } from "@/components/dashboard/log-transaction-dialog";
@@ -22,10 +22,9 @@ export default async function TransactionsPage() {
   if (!session || !session.user) {
     redirect("/login");
   }
-  const userId = session.user.id;
 
   const [res, fxRate] = await Promise.all([
-    getTransactions(userId),
+    getTransactions(),
     getCachedUsdIdrRate(),
   ]);
   const transactions = res.success && res.data ? res.data : [];
