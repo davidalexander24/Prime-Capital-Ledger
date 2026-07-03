@@ -11,25 +11,35 @@ export function SplitAction({ ticker }: { ticker: string }) {
   const [ratio, setRatio] = useState("8");
   const [date, setDate] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSplit() {
     if (!ratio || !date) return;
     setLoading(true);
+    setError(null);
     const r = parseFloat(ratio);
-    const res = await applyStockSplit(ticker, r, date);
-    setLoading(false);
-    if (res.success) {
-      setOpen(false);
-      router.refresh();
-    } else {
-      alert(res.error);
+    try {
+      const res = await applyStockSplit(ticker, r, date);
+      if (res.success) {
+        setOpen(false);
+        router.refresh();
+      } else {
+        setError(res.error ?? "Failed to apply stock split.");
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          setError(null);
+          setOpen(true);
+        }}
         className="ml-2 inline-flex items-center gap-1 rounded bg-[oklch(0.12_0.005_260)] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.06em] text-[oklch(0.50_0.01_260)] hover:bg-[oklch(0.20_0.005_260)] hover:text-[oklch(0.80_0.01_260)] transition-colors"
         title="Apply Stock Split"
       >
@@ -47,26 +57,34 @@ export function SplitAction({ ticker }: { ticker: string }) {
             
             <div className="mt-4 flex flex-col gap-3">
               <div>
-                <label className="text-xs font-medium text-[oklch(0.70_0.01_260)]">Split Ratio (e.g. 8 for 8:1)</label>
-                <input 
-                  type="number" 
+                <label htmlFor="split-ratio" className="text-xs font-medium text-[oklch(0.70_0.01_260)]">Split Ratio (e.g. 8 for 8:1)</label>
+                <input
+                  id="split-ratio"
+                  type="number"
                   step="0.001"
-                  value={ratio} 
+                  value={ratio}
                   onChange={e => setRatio(e.target.value)}
                   className="mt-1 w-full rounded-md border border-[oklch(0.20_0.005_260)] bg-[oklch(0.05_0.005_260)] px-3 py-2 text-sm text-[oklch(0.90_0.005_260)] focus:border-[oklch(0.50_0.01_260)] focus:outline-none"
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-[oklch(0.70_0.01_260)]">Effective Date</label>
-                <input 
-                  type="date" 
-                  value={date} 
+                <label htmlFor="split-date" className="text-xs font-medium text-[oklch(0.70_0.01_260)]">Effective Date</label>
+                <input
+                  id="split-date"
+                  type="date"
+                  value={date}
                   onChange={e => setDate(e.target.value)}
                   className="mt-1 w-full rounded-md border border-[oklch(0.20_0.005_260)] bg-[oklch(0.05_0.005_260)] px-3 py-2 text-sm text-[oklch(0.90_0.005_260)] focus:border-[oklch(0.50_0.01_260)] focus:outline-none"
                 />
                 <p className="mt-1 text-[10px] text-[oklch(0.40_0.01_260)]">Transactions strictly before this date will be adjusted.</p>
               </div>
             </div>
+
+            {error && (
+              <div className="mt-4 rounded-md border border-[oklch(0.30_0.10_25)] bg-[oklch(0.15_0.05_25)] px-3 py-2 text-[11px] text-[oklch(0.70_0.12_25)]">
+                {error}
+              </div>
+            )}
 
             <div className="mt-6 flex justify-end gap-3">
               <button 

@@ -29,7 +29,7 @@ interface ValuationChartProps {
 
 function formatDateShort(dateStr: string): string {
   const d = new Date(dateStr);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 }
 
 function formatTooltipDate(dateStr: string): string {
@@ -38,6 +38,7 @@ function formatTooltipDate(dateStr: string): string {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    timeZone: "UTC",
   });
 }
 

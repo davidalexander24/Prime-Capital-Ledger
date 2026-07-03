@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { usePathname } from "next/navigation";
 import logoPrimeCapital from "@/assets/logoprimecaptial.png";
 import Grainient from "@/components/ui/Grainient";
 
@@ -10,8 +9,6 @@ export default function AuthLayout({
 }: {
   children: React.ReactNode;
 }) {
-  usePathname();
-
   return (
     <div className="auth-layout">
       {/* Left Panel: Animated Grainient Background */}

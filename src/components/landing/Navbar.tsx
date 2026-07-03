@@ -18,7 +18,6 @@ import logoPrimeCapital from "@/assets/logoprimecaptial.png"
 const navLinks = [
   { href: "#features", label: "Features" },
   { href: "#how-it-works", label: "How It Works" },
-  { href: "#faq", label: "FAQ" },
 ]
 
 function smoothScrollTo(id: string) {

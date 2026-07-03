@@ -180,7 +180,6 @@ export async function parsePdfTransactions(
         const priceRaw = m[7].replace(/,/g, "");
         const buyValRaw = m[8].replace(/,/g, "");
         const sellValRaw = m[9].replace(/,/g, "");
-        const taxRaw = m[10] ? m[10].replace(/,/g, "") : "0";
 
         const lot = Number(lotRaw);
         const quantity = lot * 100; // 1 Lot = 100 shares

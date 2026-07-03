@@ -89,7 +89,7 @@ export default function RegisterPage() {
 
         {/* Full Name */}
         <div className="auth-field-group" style={{ marginBottom: 16 }}>
-          <label className="auth-field-label">
+          <label htmlFor="register-name" className="auth-field-label">
             Full name<span className="auth-required">*</span>
           </label>
           <input
@@ -105,7 +105,7 @@ export default function RegisterPage() {
 
         {/* Email */}
         <div className="auth-field-group" style={{ marginBottom: 16 }}>
-          <label className="auth-field-label">
+          <label htmlFor="register-email" className="auth-field-label">
             Email address<span className="auth-required">*</span>
           </label>
           <input
@@ -122,7 +122,7 @@ export default function RegisterPage() {
         {/* Password + Confirm side by side */}
         <div className="auth-fields-row" style={{ marginBottom: 16 }}>
           <div className="auth-field-group">
-            <label className="auth-field-label">
+            <label htmlFor="register-password" className="auth-field-label">
               Password<span className="auth-required">*</span>
             </label>
             <div className="auth-field-wrapper">
@@ -147,7 +147,7 @@ export default function RegisterPage() {
             </div>
           </div>
           <div className="auth-field-group">
-            <label className="auth-field-label">
+            <label htmlFor="register-confirm-password" className="auth-field-label">
               Confirm password<span className="auth-required">*</span>
             </label>
             <div className="auth-field-wrapper">

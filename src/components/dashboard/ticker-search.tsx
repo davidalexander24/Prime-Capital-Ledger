@@ -131,7 +131,14 @@ export function TickerSearch({ value, onChange, disabled }: TickerSearchProps) {
           id="ticker-search"
           type="text"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            const next = e.target.value;
+            setQuery(next);
+            if (!next) {
+              setResults([]);
+              setIsOpen(false);
+            }
+          }}
           onFocus={() => results.length > 0 && setIsOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder="Search ticker or company name…"

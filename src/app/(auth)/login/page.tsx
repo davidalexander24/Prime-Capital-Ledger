@@ -68,7 +68,7 @@ export default function LoginPage() {
 
         {/* Email */}
         <div className="auth-field-group" style={{ marginBottom: 16 }}>
-          <label className="auth-field-label">
+          <label htmlFor="login-email" className="auth-field-label">
             Email address<span className="auth-required">*</span>
           </label>
           <input
@@ -84,7 +84,7 @@ export default function LoginPage() {
 
         {/* Password */}
         <div className="auth-field-group" style={{ marginBottom: 8 }}>
-          <label className="auth-field-label">
+          <label htmlFor="login-password" className="auth-field-label">
             Password<span className="auth-required">*</span>
           </label>
           <div className="auth-field-wrapper" style={{ marginTop: 6 }}>

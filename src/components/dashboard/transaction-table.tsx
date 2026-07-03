@@ -39,6 +39,7 @@ function formatDate(dateStr: string): string {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    timeZone: "UTC",
   });
 }
 
@@ -47,6 +48,7 @@ function formatTime(dateStr: string): string {
   return d.toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "UTC",
   });
 }
 
@@ -104,13 +106,18 @@ export function TransactionTable({ data }: TransactionTableProps) {
     if (!deleteTarget) return;
     setDeleting(true);
     setDeleteError(null);
-    const res = await deleteTransaction(deleteTarget.id);
-    setDeleting(false);
-    if (res.success) {
-      setDeleteTarget(null);
-      router.refresh();
-    } else {
-      setDeleteError(res.message);
+    try {
+      const res = await deleteTransaction(deleteTarget.id);
+      if (res.success) {
+        setDeleteTarget(null);
+        router.refresh();
+      } else {
+        setDeleteError(res.message);
+      }
+    } catch {
+      setDeleteError("Something went wrong. Please try again.");
+    } finally {
+      setDeleting(false);
     }
   }
 

@@ -30,10 +30,12 @@ export function Sidebar() {
   const { data: session } = useSession();
   const [open, setOpen] = useState(false);
 
-  // Close drawer whenever the route changes
-  useEffect(() => {
+  // Close drawer whenever the route changes, adjusted during render
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
     setOpen(false);
-  }, [pathname]);
+  }
 
   // Lock body scroll while drawer is open
   useEffect(() => {

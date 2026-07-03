@@ -65,7 +65,7 @@ export function FeaturesGrid() {
           className="grid gap-x-10 gap-y-14 md:grid-cols-2 lg:grid-cols-3"
           staggerDelay={0.06}
         >
-          {features.map((f, i) => (
+          {features.map((f) => (
             <motion.article
               key={f.title}
               variants={staggerItem}
