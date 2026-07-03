@@ -95,10 +95,9 @@ model Transaction {
   importSessionId String?
   importSession   ImportSession?  @relation(fields: [importSessionId], references: [id], onDelete: Cascade)
 
-  user           User            @relation(fields: [userId], references: [id])
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   asset          Asset?          @relation(fields: [assetId], references: [id])
 
-  @@index([userId])
   @@index([assetId])
   @@index([importSessionId])
   @@index([userId, date])
@@ -129,9 +128,8 @@ model DailyValuation {
   totalEquityIDR Decimal  @db.Decimal(19, 2)
   exchangeRate   Decimal  @db.Decimal(19, 4) 
 
-  user           User     @relation(fields: [userId], references: [id])
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, date])
-  @@index([userId])
   @@index([date])
 }

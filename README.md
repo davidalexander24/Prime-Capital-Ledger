@@ -54,8 +54,9 @@ A full-stack Next.js app that lets investors track holdings across brokerages, i
 
 **Imports**
 - PDF parsing for Ajaib and Stockbit brokerage statements
-- CSV bulk import with preview before commit
+- Preview parsed rows before commit
 - Import history view
+- CSV bulk import is planned (not yet implemented)
 
 **Analytics**
 - Monthly returns chart
@@ -88,7 +89,7 @@ A full-stack Next.js app that lets investors track holdings across brokerages, i
 | Auth | NextAuth 4 (Google + Credentials), bcryptjs |
 | Cache | Upstash Redis |
 | Market data | yahoo-finance2 |
-| PDF parsing | pdf-parse, pdf2json |
+| PDF parsing | unpdf |
 | Dates | date-fns |
 
 ---
@@ -163,9 +164,6 @@ GOOGLE_CLIENT_SECRET=""
 UPSTASH_REDIS_REST_URL=""
 UPSTASH_REDIS_REST_TOKEN=""
 
-# Scheduled jobs
-CRON_SECRET="local-development-secret"
-
 # Optional: seed a dev user when running `npm run db:seed`
 DEV_SEED_EMAIL="admin@example.com"
 DEV_SEED_PASSWORD="admin123"
@@ -175,9 +173,11 @@ DEV_SEED_NAME="Admin"
 ### 3. Set up the database
 
 ```bash
-npx prisma migrate dev
+npx prisma db push      # sync the schema to the database
 npm run db:seed         # optional, creates the DEV_SEED_* user and demo data
 ```
+
+Schema changes use `prisma db push` (edit `prisma/schema.prisma`, then push). The project does not maintain a migration history.
 
 ### 4. Run
 
@@ -208,8 +208,7 @@ Open http://localhost:3000 and sign in.
 prime-capital-ledger/
 ├── prisma/
 │   ├── schema.prisma                # Models, enums, relations
-│   ├── seed.ts                      # Dev seed script
-│   └── migrations/                  # Prisma migrations
+│   └── seed.ts                      # Dev seed script
 ├── src/
 │   ├── app/
 │   │   ├── (auth)/                  # Login & register pages
@@ -218,7 +217,7 @@ prime-capital-ledger/
 │   │   │   ├── page.tsx             # Overview
 │   │   │   ├── portfolio/           # Holdings
 │   │   │   ├── transactions/        # Ledger
-│   │   │   ├── import/              # PDF / CSV import
+│   │   │   ├── import/              # PDF import
 │   │   │   ├── analytics/           # Performance metrics
 │   │   │   └── settings/            # Account settings
 │   │   ├── actions/                 # Server Actions (data fetching & mutations)
@@ -229,7 +228,7 @@ prime-capital-ledger/
 │   │   ├── auth/                    # Google sign-in button, etc.
 │   │   ├── charts/                  # Recharts wrappers
 │   │   ├── dashboard/               # Feature components (cards, dialogs, tables)
-│   │   ├── layout/                  # Sidebar, header, footer
+│   │   ├── layout/                  # Sidebar, footer, logo
 │   │   └── ui/                      # shadcn/ui primitives, do not edit manually
 │   ├── lib/
 │   │   ├── prisma.ts                # Prisma client singleton
@@ -241,7 +240,6 @@ prime-capital-ledger/
 │   │   └── utils.ts                 # `cn`, formatters
 │   └── assets/                      # Static images (logo)
 ├── public/                          # Public static assets
-├── components.json                  # shadcn/ui config
 ├── next.config.ts
 ├── prisma.config.ts
 ├── tsconfig.json
@@ -262,15 +260,18 @@ prime-capital-ledger/
 └──────┘
 ```
 
+The schema has no `@@map`, so table names match the model names.
+
 | Model | Table | Description |
 |---|---|---|
-| `User` | `users` | Identity, profile, preferences |
-| `Account` | `accounts` | NextAuth OAuth provider links |
-| `Session` | `sessions` | NextAuth sessions |
-| `VerificationToken` | `verification_tokens` | NextAuth email verification |
-| `Asset` | `assets` | Master security data (ticker, company, currency) |
-| `Transaction` | `transactions` | Immutable buy/sell/deposit/withdraw ledger |
-| `DailyValuation` | `daily_valuations` | End-of-day portfolio snapshots (USD + IDR) |
+| `User` | `User` | Identity, profile, preferences |
+| `Account` | `Account` | NextAuth OAuth provider links |
+| `Session` | `Session` | NextAuth sessions |
+| `VerificationToken` | `VerificationToken` | NextAuth email verification |
+| `Asset` | `Asset` | Master security data (ticker, company, currency) |
+| `Transaction` | `Transaction` | Immutable buy/sell/deposit/withdraw ledger |
+| `ImportSession` | `ImportSession` | Batch metadata for imported statements |
+| `DailyValuation` | `DailyValuation` | End-of-day portfolio snapshots (USD + IDR) |
 
 **Enum** - `TransactionType`: `BUY`, `SELL`, `DEPOSIT`, `WITHDRAW`.
 
@@ -280,8 +281,7 @@ prime-capital-ledger/
 
 ```bash
 npx prisma studio                        # Visual DB browser
-npx prisma migrate dev --name <name>     # Create + apply a migration
-npx prisma migrate reset                 # Reset DB (destructive)
+npx prisma db push                       # Sync schema to the database
 npx prisma generate                      # Regenerate client
 npx prisma validate                      # Validate schema
 ```
@@ -299,17 +299,17 @@ npx prisma validate                      # Validate schema
 - Use `cn()` from `@/lib/utils` for conditional Tailwind classes; reference semantic design tokens from `globals.css` rather than hardcoding colors.
 - All monetary values use Prisma `Decimal`, never `Float`. Always pair a value with its currency. Use `date-fns` for date math.
 
-**Adding a UI component.** This project uses [shadcn/ui](https://ui.shadcn.com/) - components are copied into the codebase, not imported from a package.
+**Adding a UI component.** This project uses [shadcn/ui](https://ui.shadcn.com/) - components are copied into the codebase, not imported from a package. Run `npx shadcn@latest init` once to regenerate `components.json`, then:
 
 ```bash
-npx shadcn add <component-name>
+npx shadcn@latest add <component-name>
 ```
 
 Don't edit files in `src/components/ui/` manually. If you need to customize, wrap the primitive in a component under `src/components/`.
 
 ### Troubleshooting
 
-- **`prisma generate` fails** - verify `DATABASE_URL` and that the database exists. For a fresh local Postgres: `createdb prime_capital_ledger && npx prisma migrate dev`.
+- **`prisma generate` fails** - verify `DATABASE_URL` and that the database exists. For a fresh local Postgres: `createdb prime_capital_ledger && npx prisma db push`.
 - **Port 3000 in use** - `npx kill-port 3000` then `npm run dev`.
 - **Tailwind classes not applying** - this project uses Tailwind CSS v4 with PostCSS. Ensure `postcss.config.mjs` is present and `@tailwindcss/postcss` is in `devDependencies`.
 
