@@ -21,6 +21,34 @@ export interface LogTransactionInput {
   currency: string;
 }
 
+function validateInput(input: LogTransactionInput): string | null {
+  if (!input.ticker || input.ticker.trim().length === 0) {
+    return "Ticker symbol is required.";
+  }
+  if (input.type !== "BUY" && input.type !== "SELL") {
+    return "Invalid transaction type.";
+  }
+  if (input.inputMode !== "shares" && input.inputMode !== "dollars") {
+    return "Invalid input mode.";
+  }
+  if (!Number.isFinite(input.pricePerShare) || input.pricePerShare <= 0) {
+    return "Price per share must be a positive number.";
+  }
+  if (!Number.isFinite(input.amount) || input.amount <= 0) {
+    return "Amount must be a positive number.";
+  }
+  if (input.fee != null && (!Number.isFinite(input.fee) || input.fee < 0)) {
+    return "Fee must be a non-negative number.";
+  }
+  if (input.currency !== "USD" && input.currency !== "IDR") {
+    return "Unsupported currency.";
+  }
+  if (Number.isNaN(new Date(input.date).getTime())) {
+    return "Invalid transaction date.";
+  }
+  return null;
+}
+
 export async function createManualTransaction(
   input: LogTransactionInput
 ): Promise<ActionResponse> {
@@ -31,15 +59,9 @@ export async function createManualTransaction(
     }
     const userId = session.user.id;
 
-    // Validate inputs
-    if (!input.ticker || input.ticker.trim().length === 0) {
-      return { success: false, message: "Ticker symbol is required." };
-    }
-    if (input.pricePerShare <= 0) {
-      return { success: false, message: "Price per share must be greater than 0." };
-    }
-    if (input.amount <= 0) {
-      return { success: false, message: "Amount must be greater than 0." };
+    const validationError = validateInput(input);
+    if (validationError) {
+      return { success: false, message: validationError };
     }
 
     // Calculate quantity
@@ -53,28 +75,30 @@ export async function createManualTransaction(
       input.companyName.trim() || `${ticker} Inc`;
     const transactionDate = new Date(input.date);
 
-    // Upsert the Asset record
-    const asset = await prisma.asset.upsert({
-      where: { ticker },
-      update: {},
-      create: {
-        ticker,
-        companyName,
-        currency: input.currency || "USD",
-      },
-    });
+    await prisma.$transaction(async (tx) => {
+      // Upsert the Asset record
+      const asset = await tx.asset.upsert({
+        where: { ticker },
+        update: {},
+        create: {
+          ticker,
+          companyName,
+          currency: input.currency || "USD",
+        },
+      });
 
-    // Create the Transaction record
-    await prisma.transaction.create({
-      data: {
-        userId,
-        assetId: asset.id,
-        type: input.type,
-        quantity,
-        executionPrice: input.pricePerShare,
-        fee: input.fee || 0,
-        date: transactionDate,
-      },
+      // Create the Transaction record
+      await tx.transaction.create({
+        data: {
+          userId,
+          assetId: asset.id,
+          type: input.type,
+          quantity,
+          executionPrice: input.pricePerShare,
+          fee: input.fee || 0,
+          date: transactionDate,
+        },
+      });
     });
 
     const displayQty =
@@ -114,14 +138,9 @@ export async function updateTransaction(
       return { success: false, message: "Transaction not found." };
     }
 
-    if (!input.ticker || input.ticker.trim().length === 0) {
-      return { success: false, message: "Ticker symbol is required." };
-    }
-    if (input.pricePerShare <= 0) {
-      return { success: false, message: "Price per share must be greater than 0." };
-    }
-    if (input.amount <= 0) {
-      return { success: false, message: "Amount must be greater than 0." };
+    const validationError = validateInput(input);
+    if (validationError) {
+      return { success: false, message: validationError };
     }
 
     const quantity =
@@ -133,26 +152,28 @@ export async function updateTransaction(
     const companyName = input.companyName.trim() || `${ticker} Inc`;
     const transactionDate = new Date(input.date);
 
-    const asset = await prisma.asset.upsert({
-      where: { ticker },
-      update: {},
-      create: {
-        ticker,
-        companyName,
-        currency: input.currency || "USD",
-      },
-    });
+    await prisma.$transaction(async (tx) => {
+      const asset = await tx.asset.upsert({
+        where: { ticker },
+        update: {},
+        create: {
+          ticker,
+          companyName,
+          currency: input.currency || "USD",
+        },
+      });
 
-    await prisma.transaction.update({
-      where: { id: transactionId },
-      data: {
-        assetId: asset.id,
-        type: input.type,
-        quantity,
-        executionPrice: input.pricePerShare,
-        fee: input.fee || 0,
-        date: transactionDate,
-      },
+      await tx.transaction.update({
+        where: { id: transactionId },
+        data: {
+          assetId: asset.id,
+          type: input.type,
+          quantity,
+          executionPrice: input.pricePerShare,
+          fee: input.fee || 0,
+          date: transactionDate,
+        },
+      });
     });
 
     return {

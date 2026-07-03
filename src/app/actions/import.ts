@@ -215,14 +215,14 @@ export async function parsePdfTransactions(
           currency: "IDR",
         });
       }
+    }
 
-      if (rawRows.length === 0) {
-        const preview = text.substring(0, 300).replace(/\s+/g, " ");
-        return {
-          success: false,
-          error: `Could not find transaction date or valid rows. PDF preview: "${preview}..."`,
-        };
-      }
+    if (rawRows.length === 0) {
+      const preview = text.substring(0, 300).replace(/\s+/g, " ");
+      return {
+        success: false,
+        error: `Could not find transaction date or valid rows. PDF preview: "${preview}..."`,
+      };
     }
 
 

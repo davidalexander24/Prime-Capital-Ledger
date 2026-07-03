@@ -188,13 +188,20 @@ export async function applyStockSplit(
       return { success: false, data: null, error: "Unauthorized" };
     }
     const userId = session.user.id;
-    
+
+    if (!Number.isFinite(splitRatio) || splitRatio <= 0) {
+      return { success: false, data: null, error: "Split ratio must be a positive number." };
+    }
+
+    const effectiveDate = new Date(effectiveDateStr);
+    if (Number.isNaN(effectiveDate.getTime())) {
+      return { success: false, data: null, error: "Invalid effective date." };
+    }
+
     const asset = await prisma.asset.findUnique({
       where: { ticker }
     });
     if (!asset) return { success: false, data: null, error: "Asset not found" };
-
-    const effectiveDate = new Date(effectiveDateStr);
 
     const transactions = await prisma.transaction.findMany({
       where: {

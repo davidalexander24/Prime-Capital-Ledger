@@ -10,6 +10,9 @@ export async function updateBaseCurrency(currency: string) {
     if (!session || !session.user) {
       return { success: false, message: "Unauthorized" };
     }
+    if (currency !== "USD" && currency !== "IDR") {
+      return { success: false, message: "Unsupported currency." };
+    }
     await prisma.user.update({
       where: { id: session.user.id },
       data: { baseCurrency: currency },
