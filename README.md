@@ -8,7 +8,7 @@
 
 Professional portfolio management and financial analytics platform for global equity markets.
 
-## **Live Site:** [primecapitaledger.vercel.app](https://primecapitaledger.vercel.app)
+## **Live Site:** [primecapitaledger.site](https://primecapitaledger.site)
 
 ![Dashboard](docs/screenshots/dashboard.png)
 
