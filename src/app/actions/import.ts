@@ -13,7 +13,7 @@ async function extractPdfText(buffer: Buffer): Promise<string> {
 
 const INDONESIAN_MONTHS: Record<string, number> = {
   jan: 0, feb: 1, mar: 2, apr: 3, mei: 4, jun: 5,
-  jul: 6, agt: 7, sep: 8, okt: 9, nov: 10, des: 11,
+  jul: 6, agu: 7, agt: 7, sep: 8, okt: 9, nov: 10, des: 11,
 };
 
 export interface ParsedRow {
@@ -83,20 +83,7 @@ export async function parsePdfTransactions(
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const text = await extractPdfText(buffer);
-
-    const dateRegex =
-      /Tgl\.\s*Transaksi\s*:\s*(?:[A-Za-z]+,\s*)?(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/i;
-    let sourceDate: Date | null = null;
-    const dateMatch = text.match(dateRegex);
-    if (dateMatch) {
-      const day = parseInt(dateMatch[1], 10);
-      const monthStr = dateMatch[2].toLowerCase().substring(0, 3);
-      const year = parseInt(dateMatch[3], 10);
-      const month = INDONESIAN_MONTHS[monthStr];
-      if (month !== undefined && !Number.isNaN(day) && !Number.isNaN(year)) {
-        sourceDate = new Date(Date.UTC(year, month, day));
-      }
-    }
+    const preview = text.substring(0, 300).replace(/\s+/g, " ");
 
     type RawRow = {
       type: "BUY" | "SELL";
@@ -112,8 +99,33 @@ export async function parsePdfTransactions(
     };
     const rawRows: RawRow[] = [];
 
+    // Broker is detected from the statement footer so that an unreadable
+    // date reports an Ajaib error instead of falling through to Stockbit.
+    const isAjaib = /Ajaib\s+Futures\s+Asia/i.test(text);
+
     // Ajaib Parsing
-    if (sourceDate) {
+    if (isAjaib) {
+      const dateRegex =
+        /Tgl\.\s*Transaksi\s*:\s*(?:[A-Za-z]+,\s*)?(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/i;
+      const dateMatch = text.match(dateRegex);
+      if (!dateMatch) {
+        return {
+          success: false,
+          error: "Could not find the transaction date in this Ajaib statement.",
+        };
+      }
+      const [, dayStr, monthStr, yearStr] = dateMatch;
+      const month = INDONESIAN_MONTHS[monthStr.toLowerCase().substring(0, 3)];
+      if (month === undefined) {
+        return {
+          success: false,
+          error: `Unrecognized transaction date "${dayStr} ${monthStr} ${yearStr}" in this Ajaib statement.`,
+        };
+      }
+      const sourceDate = new Date(
+        Date.UTC(parseInt(yearStr, 10), month, parseInt(dayStr, 10))
+      );
+
       const beliMatch = text.match(/\bBeli\b/i);
       const jualMatch = text.match(/\bJual\b/i);
       const beliIdx = beliMatch?.index ?? -1;
@@ -161,6 +173,13 @@ export async function parsePdfTransactions(
           dateStr: sourceDate.toISOString(),
           currency: "USD",
         });
+      }
+
+      if (rawRows.length === 0) {
+        return {
+          success: false,
+          error: `No transactions found in this Ajaib statement. PDF preview: "${preview}..."`,
+        };
       }
     } else {
       // Stockbit Parsing
@@ -217,7 +236,6 @@ export async function parsePdfTransactions(
     }
 
     if (rawRows.length === 0) {
-      const preview = text.substring(0, 300).replace(/\s+/g, " ");
       return {
         success: false,
         error: `Could not find transaction date or valid rows. PDF preview: "${preview}..."`,
