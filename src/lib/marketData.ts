@@ -21,7 +21,11 @@ export async function getLatestPrice(ticker: string): Promise<number | null> {
       console.log(`[CACHE HIT] ${ticker}: $${cachedPrice}`);
       return cachedPrice;
     }
+  } catch (error) {
+    console.warn(`[CACHE WARNING] Failed to read price for ${ticker}:`, error);
+  }
 
+  try {
     const result = await yahooFinance.quote(ticker);
     
     if (!result.regularMarketPrice) {
@@ -31,8 +35,12 @@ export async function getLatestPrice(ticker: string): Promise<number | null> {
 
     const livePrice = result.regularMarketPrice;
 
-    await redis.set(cacheKey, livePrice, { ex: CACHE_TTL });
-    console.log(`[CACHE MISS] Fetched & Cached ${ticker}: $${livePrice}`);
+    try {
+      await redis.set(cacheKey, livePrice, { ex: CACHE_TTL });
+      console.log(`[CACHE MISS] Fetched & Cached ${ticker}: $${livePrice}`);
+    } catch (error) {
+      console.warn(`[CACHE WARNING] Failed to cache price for ${ticker}:`, error);
+    }
 
     return livePrice;
 
@@ -52,7 +60,11 @@ export async function getUsdIdrRate(): Promise<number | null> {
       console.log(`[CACHE HIT] USD/IDR Rate: Rp ${cachedRate}`);
       return cachedRate;
     }
+  } catch (error) {
+    console.warn(`[CACHE WARNING] Failed to read USD/IDR rate:`, error);
+  }
 
+  try {
     const result = await yahooFinance.quote('USDIDR=X');
     
     if (!result.regularMarketPrice) {
@@ -62,8 +74,12 @@ export async function getUsdIdrRate(): Promise<number | null> {
 
     const liveRate = result.regularMarketPrice;
 
-    await redis.set(cacheKey, liveRate, { ex: CACHE_TTL });
-    console.log(`[CACHE MISS] USD/IDR Rate: Rp ${liveRate}`);
+    try {
+      await redis.set(cacheKey, liveRate, { ex: CACHE_TTL });
+      console.log(`[CACHE MISS] USD/IDR Rate: Rp ${liveRate}`);
+    } catch (error) {
+      console.warn(`[CACHE WARNING] Failed to cache USD/IDR rate:`, error);
+    }
 
     return liveRate;
 
@@ -81,7 +97,11 @@ export async function getMarketQuote(ticker: string): Promise<{ price: number; c
     if (cachedQuote !== null) {
       return cachedQuote;
     }
+  } catch (error) {
+    console.warn(`[CACHE WARNING] Failed to read quote for ${ticker}:`, error);
+  }
 
+  try {
     const result = await yahooFinance.quote(ticker);
     
     if (!result.regularMarketPrice) return null;
@@ -91,7 +111,11 @@ export async function getMarketQuote(ticker: string): Promise<{ price: number; c
       changePercent: result.regularMarketChangePercent || 0 
     };
 
-    await redis.set(cacheKey, quote, { ex: CACHE_TTL });
+    try {
+      await redis.set(cacheKey, quote, { ex: CACHE_TTL });
+    } catch (error) {
+      console.warn(`[CACHE WARNING] Failed to cache quote for ${ticker}:`, error);
+    }
     
     return quote;
 
