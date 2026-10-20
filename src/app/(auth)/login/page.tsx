@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Loader2 } from "lucide-react";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 
 export default function LoginPage() {
@@ -13,11 +13,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [pendingLabel, setPendingLabel] = useState<string | null>(null);
+  const isLoading = pendingLabel !== null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setPendingLabel("Signing in...");
     setError("");
 
     try {
@@ -34,14 +35,17 @@ export default function LoginPage() {
           setError(res.error);
         }
       } else if (res?.ok) {
-        router.push("/dashboard");
-        router.refresh();
+        // Stay pending until the dashboard replaces this page, so the button
+        // never looks idle while the server is still rendering it.
+        setPendingLabel("Opening dashboard...");
+        router.replace("/dashboard");
+        return;
       }
     } catch {
       setError("An unexpected error occurred");
-    } finally {
-      setIsLoading(false);
     }
+
+    setPendingLabel(null);
   };
 
   return (
@@ -60,7 +64,7 @@ export default function LoginPage() {
         </p>
       </div>
 
-      <GoogleSignInButton label="Sign in with Google" />
+      <GoogleSignInButton label="Sign in with Google" disabled={isLoading} />
 
       {/* Form */}
       <form onSubmit={handleSubmit}>
@@ -115,9 +119,17 @@ export default function LoginPage() {
           type="submit"
           className="auth-submit-btn"
           disabled={isLoading}
+          aria-busy={isLoading}
           style={{ marginTop: 20 }}
         >
-          {isLoading ? "Signing in..." : "Sign In"}
+          {isLoading ? (
+            <span className="inline-flex items-center justify-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              {pendingLabel}
+            </span>
+          ) : (
+            "Sign In"
+          )}
         </button>
       </form>
 

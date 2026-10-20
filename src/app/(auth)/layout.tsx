@@ -444,6 +444,12 @@ export default function AuthLayout({
           background: oklch(0.25 0.005 260);
         }
 
+        .auth-submit-btn[aria-busy="true"]:disabled {
+          opacity: 0.85;
+          cursor: progress;
+          background: linear-gradient(135deg, oklch(0.42 0.14 230), oklch(0.50 0.12 240));
+        }
+
         .auth-switch-text {
           text-align: center;
           font-size: 13px;

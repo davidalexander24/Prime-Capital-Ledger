@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 
 export default function RegisterPage() {
@@ -17,24 +17,24 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [pendingLabel, setPendingLabel] = useState<string | null>(null);
+  const isLoading = pendingLabel !== null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError("");
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");
-      setIsLoading(false);
       return;
     }
 
     if (!agreed) {
       setError("Please agree to the Terms of Service and Privacy Policy");
-      setIsLoading(false);
       return;
     }
+
+    setPendingLabel("Creating account...");
 
     try {
       // custom registration API route
@@ -48,10 +48,11 @@ export default function RegisterPage() {
 
       if (!res.ok) {
         setError(data.message || "Something went wrong during registration");
-        setIsLoading(false);
+        setPendingLabel(null);
         return;
       }
 
+      setPendingLabel("Signing in...");
       const signInRes = await signIn("credentials", {
         email,
         password,
@@ -61,14 +62,15 @@ export default function RegisterPage() {
       if (signInRes?.error) {
         setError("Account created, but failed to log in automatically.");
       } else if (signInRes?.ok) {
-        router.push("/dashboard");
-        router.refresh();
+        setPendingLabel("Opening dashboard...");
+        router.replace("/dashboard");
+        return;
       }
     } catch {
       setError("An unexpected error occurred");
-    } finally {
-      setIsLoading(false);
     }
+
+    setPendingLabel(null);
   };
 
   return (
@@ -81,7 +83,7 @@ export default function RegisterPage() {
         </p>
       </div>
 
-      <GoogleSignInButton label="Sign up with Google" />
+      <GoogleSignInButton label="Sign up with Google" disabled={isLoading} />
 
       {/* Form */}
       <form onSubmit={handleSubmit}>
@@ -132,6 +134,7 @@ export default function RegisterPage() {
                 className="auth-input"
                 placeholder="••••••••"
                 required
+                minLength={8}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 style={{ paddingRight: 40 }}
@@ -195,9 +198,17 @@ export default function RegisterPage() {
           type="submit"
           className="auth-submit-btn"
           disabled={isLoading}
+          aria-busy={isLoading}
           style={{ marginTop: 20 }}
         >
-          {isLoading ? "Creating Account..." : "Create account"}
+          {isLoading ? (
+            <span className="inline-flex items-center justify-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              {pendingLabel}
+            </span>
+          ) : (
+            "Create account"
+          )}
         </button>
       </form>
 

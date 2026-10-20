@@ -1,19 +1,39 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 
-export function GoogleSignInButton({ label = "Continue with Google" }: { label?: string }) {
+export function GoogleSignInButton({
+  label = "Continue with Google",
+  disabled = false,
+}: {
+  label?: string;
+  disabled?: boolean;
+}) {
   const [pending, setPending] = useState(false);
+  const inactive = pending || disabled;
+
+  // Coming back from Google with the Back button restores this page from the
+  // bfcache with pending still set, which would leave the button stuck.
+  useEffect(() => {
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setPending(false);
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
+
   return (
     <>
       <button
         type="button"
         onClick={() => {
           setPending(true);
-          signIn("google", { callbackUrl: "/dashboard" });
+          signIn("google", { callbackUrl: "/dashboard" }).catch(() => setPending(false));
         }}
-        disabled={pending}
+        disabled={inactive}
+        aria-busy={pending}
         style={{
           width: "100%",
           height: 42,
@@ -28,19 +48,19 @@ export function GoogleSignInButton({ label = "Continue with Google" }: { label?:
           color: "oklch(0.85 0.005 260)",
           fontSize: 13,
           fontWeight: 500,
-          cursor: pending ? "default" : "pointer",
-          opacity: pending ? 0.6 : 1,
+          cursor: pending ? "progress" : disabled ? "not-allowed" : "pointer",
+          opacity: inactive ? 0.6 : 1,
           transition: "background-color 150ms",
         }}
         onMouseEnter={(e) => {
-          if (!pending) e.currentTarget.style.background = "oklch(0.12 0.005 260)";
+          if (!inactive) e.currentTarget.style.background = "oklch(0.12 0.005 260)";
         }}
         onMouseLeave={(e) => {
-          if (!pending) e.currentTarget.style.background = "oklch(0.08 0.005 260)";
+          if (!inactive) e.currentTarget.style.background = "oklch(0.08 0.005 260)";
         }}
       >
-        <GoogleGlyph />
-        {pending ? "Redirecting…" : label}
+        {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleGlyph />}
+        {pending ? "Redirecting to Google…" : label}
       </button>
       <div
         style={{
