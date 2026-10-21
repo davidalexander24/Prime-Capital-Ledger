@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 interface StockLogoProps {
   ticker: string;
@@ -14,6 +14,14 @@ function StockLogoInner({
   size = 32,
 }: StockLogoProps) {
   const [errorCount, setErrorCount] = useState(0);
+
+  // A server-rendered <img> can fail before hydration attaches onError, which
+  // left a broken image instead of moving to the next source.
+  const imgRef = useCallback((img: HTMLImageElement | null) => {
+    if (img && img.complete && img.naturalWidth === 0) {
+      setErrorCount((prev) => prev + 1);
+    }
+  }, []);
 
   const cleanTicker = ticker.replace(".JK", "").toUpperCase();
 
@@ -43,6 +51,7 @@ function StockLogoInner({
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
+        ref={imgRef}
         src={imgSrc}
         alt={`${cleanTicker} logo`}
         width={size}
