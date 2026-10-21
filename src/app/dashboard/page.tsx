@@ -13,6 +13,7 @@ import {
 } from "@/app/actions/dashboard";
 import { getPortfolioHoldings } from "@/app/actions/portfolio";
 import { getCachedUsdIdrRate, getUserBaseCurrency } from "@/lib/requestData";
+import { formatDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -90,7 +91,7 @@ export default async function DashboardPage() {
     realizedPnL: realizedConverted,
     lifetimePnL,
     lifetimeReturnPct,
-    holdingsCount: holdings.filter((h) => h.lots > 0).length,
+    holdingsCount: holdings.filter((h) => h.shares > 0).length,
     currency: baseCurrency,
     exchangeRate: baseCurrency === "USD" ? undefined : rate,
   };
@@ -107,11 +108,7 @@ export default async function DashboardPage() {
           </p>
         </div>
         <span className="text-[11px] text-[oklch(0.35_0.01_260)]">
-          Last updated: {new Date().toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })}
+          Last updated: {formatDate(new Date(), "Asia/Jakarta")}
         </span>
       </div>
 
@@ -119,7 +116,7 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3">
-          <ValuationChart data={valuation} />
+          <ValuationChart data={valuation} currency={baseCurrency} />
         </div>
         <div className="lg:col-span-2">
           <TopTraded data={movers} />

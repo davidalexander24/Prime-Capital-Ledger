@@ -1,21 +1,6 @@
 import { TrendingUp, TrendingDown, Wallet, BarChart3, Layers } from "lucide-react";
 import type { PortfolioSummary } from "@/lib/types";
-
-function formatIDR(value: number): string {
-  const rounded = Math.round(Math.abs(value));
-  return `Rp${rounded.toLocaleString("id-ID")}`;
-}
-
-function formatCurrency(value: number, currency: string): string {
-  if (currency === "USD") {
-    return `$${Math.abs(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  }
-  return formatIDR(value);
-}
-
-function formatCurrencySigned(value: number, currency: string): string {
-  return `${value < 0 ? "-" : "+"}${formatCurrency(value, currency)}`;
-}
+import { formatMoney } from "@/lib/format";
 
 interface SummaryCardsProps {
   data: PortfolioSummary;
@@ -35,18 +20,18 @@ export function SummaryCards({ data }: SummaryCardsProps) {
   }> = [
     {
       label: "Portfolio Value",
-      value: formatCurrency(data.totalValue, data.currency),
+      value: formatMoney(data.totalValue, data.currency),
       icon: Wallet,
-      detail: `Cost basis: ${formatCurrency(data.totalCostBasis, data.currency)}`,
-      extra: data.exchangeRate ? `Converted at 1 USD = Rp${data.exchangeRate.toLocaleString("id-ID")}` : undefined,
+      detail: `Cost basis: ${formatMoney(data.totalCostBasis, data.currency)}`,
+      extra: data.exchangeRate ? `Converted at 1 USD = ${formatMoney(data.exchangeRate, "IDR")}` : undefined,
     },
     {
       label: "Lifetime P&L",
-      value: formatCurrency(Math.abs(data.lifetimePnL), data.currency),
+      value: formatMoney(Math.abs(data.lifetimePnL), data.currency),
       prefix: lifetimePositive ? "+" : "-",
       icon: lifetimePositive ? TrendingUp : TrendingDown,
       accent: lifetimePositive,
-      detail: `Realized ${formatCurrencySigned(data.realizedPnL, data.currency)} · Unrealized ${formatCurrencySigned(data.unrealizedPnL, data.currency)}`,
+      detail: `Realized ${formatMoney(data.realizedPnL, data.currency, { signed: true })} · Unrealized ${formatMoney(data.unrealizedPnL, data.currency, { signed: true })}`,
     },
     {
       label: "Total Return",
@@ -96,7 +81,7 @@ export function SummaryCards({ data }: SummaryCardsProps) {
                 {card.prefix}
               </span>
             )}
-            <span className="text-xl font-semibold tracking-tight text-[oklch(0.93_0.005_260)]">
+            <span className="text-xl font-semibold tracking-tight tabular-nums text-[oklch(0.93_0.005_260)]">
               {card.value}
             </span>
           </div>

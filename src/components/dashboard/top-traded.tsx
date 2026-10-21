@@ -1,33 +1,10 @@
 import { TrendingUp, TrendingDown } from "lucide-react";
 import type { TopTradedAsset } from "@/lib/types";
 import { StockLogo } from "@/components/ui/stock-logo";
+import { formatMoney, formatQuantity } from "@/lib/format";
 
 interface TopTradedProps {
   data: TopTradedAsset[];
-}
-
-function formatShares(value: number): string {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(2)}M`;
-  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
-  return value.toLocaleString("en-US", { maximumFractionDigits: 4 });
-}
-
-function formatIDR(value: number): string {
-  const rounded = Math.round(Math.abs(value));
-  return `Rp${rounded.toLocaleString("id-ID")}`;
-}
-
-function formatUSD(value: number): string {
-  const abs = Math.abs(value);
-  const formatted = abs.toLocaleString("id-ID", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-  return `$${formatted}`;
-}
-
-function formatCurrency(value: number, currency?: string): string {
-  return currency === "USD" ? formatUSD(value) : formatIDR(value);
 }
 
 export function TopTraded({ data }: TopTradedProps) {
@@ -76,8 +53,8 @@ export function TopTraded({ data }: TopTradedProps) {
 
                 <div className="flex flex-col items-end gap-0.5">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[12px] font-semibold text-[oklch(0.88_0.005_260)]">
-                      {formatCurrency(asset.lastPrice, asset.currency)}
+                    <span className="text-[12px] font-semibold tabular-nums text-[oklch(0.88_0.005_260)]">
+                      {formatMoney(asset.lastPrice, asset.currency)}
                     </span>
                     <div
                       className={`flex items-center gap-0.5 text-[11px] font-medium ${
@@ -95,8 +72,8 @@ export function TopTraded({ data }: TopTradedProps) {
                       {asset.changePercent.toFixed(2)}%
                     </div>
                   </div>
-                  <span className="text-[10px] text-[oklch(0.38_0.01_260)]">
-                    Holding {formatShares(asset.totalVolume)}{" "}
+                  <span className="text-[10px] tabular-nums text-[oklch(0.38_0.01_260)]">
+                    Holding {formatQuantity(asset.totalVolume)}{" "}
                     {asset.totalVolume === 1 ? "share" : "shares"}
                   </span>
                 </div>

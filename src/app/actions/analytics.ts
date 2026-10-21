@@ -2,21 +2,13 @@
 
 import { buildPortfolioTimeline } from "@/lib/timeline";
 import { getSessionUserId } from "@/lib/auth";
+import { formatMoney } from "@/lib/format";
 
 type ActionResponse<T> = {
   success: boolean;
   data: T | null;
   error: string | null;
 };
-
-function formatCurrencySigned(value: number, currency: string): string {
-  const sign = value < 0 ? "-" : "+";
-  const abs = Math.abs(value);
-  if (currency === "USD") {
-    return `${sign}$${abs.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  }
-  return `${sign}Rp${Math.round(abs).toLocaleString("id-ID")}`;
-}
 
 export interface MonthlyReturn {
   month: string;
@@ -80,7 +72,7 @@ export async function getAnalyticsData(): Promise<ActionResponse<AnalyticsData>>
             { label: "Max Drawdown", value: "0.00%", icon: "Activity", detail: "Peak to trough" },
             { label: "Win Rate", value: "0.0%", icon: "TrendingUp", detail: "Profitable trades" },
             { label: "Avg Return", value: "0.00%", icon: "BarChart3", detail: "Monthly average" },
-            { label: "Realized P&L", value: formatCurrencySigned(0, baseCurrency), icon: "Wallet", detail: "Locked-in gains" },
+            { label: "Realized P&L", value: formatMoney(0, baseCurrency, { signed: true }), icon: "Wallet", detail: "Locked-in gains" },
           ],
         },
         error: null,
@@ -199,7 +191,7 @@ export async function getAnalyticsData(): Promise<ActionResponse<AnalyticsData>>
       },
       {
         label: "Realized P&L",
-        value: formatCurrencySigned(realizedConverted, baseCurrency),
+        value: formatMoney(realizedConverted, baseCurrency, { signed: true }),
         icon: "Wallet",
         detail: "Locked-in gains",
       },

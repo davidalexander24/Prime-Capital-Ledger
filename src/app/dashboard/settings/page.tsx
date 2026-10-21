@@ -6,6 +6,7 @@ import { User, Shield, Database, LogOut } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { LogoutButton } from "@/components/dashboard/logout-button";
 import { BaseCurrencySelect } from "@/components/dashboard/base-currency-select";
+import { formatDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -37,13 +38,7 @@ export default async function SettingsPage() {
 
   const baseCurrency = userRecord?.baseCurrency || "IDR";
 
-  const lastEntryLabel = lastTransaction
-    ? lastTransaction.date.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
-    : "—";
+  const lastEntryLabel = lastTransaction ? formatDate(lastTransaction.date) : "—";
 
   const settingSections = [
     {

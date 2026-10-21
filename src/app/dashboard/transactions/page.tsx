@@ -5,17 +5,11 @@ import { authOptions } from "@/lib/auth";
 import { TransactionTable } from "@/components/dashboard/transaction-table";
 import { LogTransactionDialog } from "@/components/dashboard/log-transaction-dialog";
 import { getTransactions } from "@/app/actions/transactions";
-import { getCachedUsdIdrRate } from "@/lib/requestData";
+import { getCachedUsdIdrRate, getUserBaseCurrency } from "@/lib/requestData";
+import { formatMoney } from "@/lib/format";
 import { ArrowLeftRight } from "lucide-react";
 
 export const dynamic = "force-dynamic";
-
-export function formatVolumeIDR(value: number): string {
-  return `Rp ${value.toLocaleString("id-ID", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  })}`;
-}
 
 export default async function TransactionsPage() {
   const session = await getServerSession(authOptions);
@@ -23,18 +17,22 @@ export default async function TransactionsPage() {
     redirect("/login");
   }
 
-  const [res, fxRate] = await Promise.all([
+  const [res, fxRate, baseCurrency] = await Promise.all([
     getTransactions(),
     getCachedUsdIdrRate(),
+    getUserBaseCurrency(session.user.id),
   ]);
   const transactions = res.success && res.data ? res.data : [];
   const rate = fxRate ?? 16000;
 
   const buyCount = transactions.filter((t) => t.type === "BUY").length;
   const sellCount = transactions.filter((t) => t.type === "SELL").length;
-  const totalVolumeIDR = transactions.reduce((sum, t) => {
+  const totalVolume = transactions.reduce((sum, t) => {
     const value = Math.abs(Number(t.netValue || 0));
-    return sum + (t.currency === "IDR" ? value : value * rate);
+    if (baseCurrency === "USD") {
+      return sum + (t.currency === "IDR" ? value / rate : value);
+    }
+    return sum + (t.currency === "USD" ? value * rate : value);
   }, 0);
 
   return (
@@ -84,8 +82,8 @@ export default async function TransactionsPage() {
             <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-[oklch(0.45_0.01_260)]">
               Total Volume
             </span>
-            <p className="mt-0.5 text-lg font-semibold text-[oklch(0.93_0.005_260)]">
-              {formatVolumeIDR(totalVolumeIDR)}
+            <p className="mt-0.5 text-lg font-semibold tabular-nums text-[oklch(0.93_0.005_260)]">
+              {formatMoney(totalVolume, baseCurrency)}
             </p>
           </div>
         </div>

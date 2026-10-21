@@ -11,6 +11,7 @@ import {
   FileCheck,
 } from "lucide-react";
 import type { ParsedRow } from "@/app/actions/import";
+import { formatDate, formatMoney } from "@/lib/format";
 
 interface ImportPreviewDialogProps {
   open: boolean;
@@ -20,19 +21,6 @@ interface ImportPreviewDialogProps {
   status: "idle" | "loading" | "success" | "error";
   statusMessage: string;
   onConfirm: () => void;
-}
-
-function formatDate(iso: string | null): string {
-  if (!iso) return "—";
-  try {
-    return new Date(iso).toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  } catch {
-    return iso;
-  }
 }
 
 export function ImportPreviewDialog({
@@ -58,7 +46,8 @@ export function ImportPreviewDialog({
                 Confirm import
               </Dialog.Title>
               <Dialog.Description className="mt-0.5 text-[11px] text-[oklch(0.40_0.01_260)]">
-                Found {rows.length} transaction{rows.length === 1 ? "" : "s"} dated {formatDate(sourceDate)}.
+                Found {rows.length} transaction{rows.length === 1 ? "" : "s"}
+                {sourceDate ? ` dated ${formatDate(sourceDate)}` : ""}.
               </Dialog.Description>
             </div>
             <Dialog.Close
@@ -86,8 +75,6 @@ export function ImportPreviewDialog({
                     const isBuy = r.type === "BUY";
                     const quantityDisplay =
                       r.quantityRaw ?? r.quantity.toFixed(6);
-                    const priceDisplay = r.priceRaw ?? r.price.toFixed(2);
-                    const feeDisplay = r.feeRaw ?? r.fee.toFixed(2);
 
                     return (
                       <tr key={`${r.ticker}-${i}`} className="bg-[oklch(0.03_0.005_260)]">
@@ -118,10 +105,10 @@ export function ImportPreviewDialog({
                           {quantityDisplay}
                         </td>
                         <td className="px-3 py-2 text-right font-mono text-[oklch(0.80_0.005_260)]">
-                          {r.currency === "IDR" ? "Rp " : "$"}{priceDisplay}
+                          {formatMoney(r.price, r.currency)}
                         </td>
                         <td className="px-3 py-2 text-right font-mono text-[oklch(0.60_0.005_260)]">
-                          {r.currency === "IDR" ? "Rp " : "$"}{feeDisplay}
+                          {formatMoney(r.fee, r.currency)}
                         </td>
                       </tr>
                     );

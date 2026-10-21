@@ -16,7 +16,7 @@ export interface HoldingRow {
   name: string;
   sector: string;
   currency: string;
-  lots: number;
+  shares: number;
   avgPrice: number;
   lastPrice: number;
   marketValue: number;
@@ -129,7 +129,7 @@ export async function getPortfolioHoldings(): Promise<ActionResponse<PortfolioDa
         name: h.companyName,
         currency: h.currency,
         sector: "",
-        lots: h.shares,
+        shares: h.shares,
         avgPrice: Math.round(avgPrice * 100) / 100,
         lastPrice,
         marketValue,

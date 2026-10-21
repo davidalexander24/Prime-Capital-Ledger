@@ -7,33 +7,7 @@ import { getPortfolioHoldings } from "@/app/actions/portfolio";
 import { getCachedUsdIdrRate, getUserBaseCurrency } from "@/lib/requestData";
 import { StockLogo } from "@/components/ui/stock-logo";
 import { SplitAction } from "@/components/dashboard/split-dialog";
-
-function formatCurrency(value: number, currency: string): string {
-  if (currency === "USD") {
-    return `$${Math.abs(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  }
-  const rounded = Math.round(Math.abs(value));
-  return `Rp${rounded.toLocaleString("id-ID")}`;
-}
-
-function formatCurrencySigned(value: number, currency: string): string {
-  const sign = value < 0 ? "-" : "+";
-  return `${sign}${formatCurrency(Math.abs(value), currency)}`;
-}
-
-function formatUSD(value: number): string {
-  const abs = Math.abs(value);
-  const formatted = abs.toLocaleString("id-ID", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-  return `$${formatted}`;
-}
-
-function formatUSDSigned(value: number): string {
-  const sign = value < 0 ? "-" : "+";
-  return `${sign}${formatUSD(Math.abs(value))}`;
-}
+import { formatMoney, formatQuantity } from "@/lib/format";
 
 export default async function PortfolioPage() {
   const session = await getServerSession(authOptions);
@@ -82,12 +56,12 @@ export default async function PortfolioPage() {
           <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-[oklch(0.45_0.01_260)]">
             Total Market Value
           </span>
-          <p className="mt-2 text-xl font-semibold text-[oklch(0.93_0.005_260)]">
-            {formatCurrency(totalMarketValueConverted, baseCurrency)}
+          <p className="mt-2 text-xl font-semibold tabular-nums text-[oklch(0.93_0.005_260)]">
+            {formatMoney(totalMarketValueConverted, baseCurrency)}
           </p>
           {baseCurrency === "IDR" && (
             <p className="mt-1 text-[10px] italic text-[oklch(0.45_0.01_260)]">
-              Converted at 1 USD = Rp{rate.toLocaleString("id-ID")}
+              Converted at 1 USD = {formatMoney(rate, "IDR")}
             </p>
           )}
         </div>
@@ -95,8 +69,8 @@ export default async function PortfolioPage() {
           <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-[oklch(0.45_0.01_260)]">
             Total Cost Basis
           </span>
-          <p className="mt-2 text-xl font-semibold text-[oklch(0.93_0.005_260)]">
-            {formatCurrency(totalCostConverted, baseCurrency)}
+          <p className="mt-2 text-xl font-semibold tabular-nums text-[oklch(0.93_0.005_260)]">
+            {formatMoney(totalCostConverted, baseCurrency)}
           </p>
         </div>
         <div className="rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)] p-5">
@@ -104,8 +78,8 @@ export default async function PortfolioPage() {
             Unrealized P&L
           </span>
           <div className="mt-2 flex items-baseline gap-2">
-            <p className={`text-xl font-semibold ${totalPnlConverted >= 0 ? "text-[oklch(0.65_0.15_155)]" : "text-[oklch(0.65_0.15_25)]"}`}>
-              {formatCurrencySigned(totalPnlConverted, baseCurrency)}
+            <p className={`text-xl font-semibold tabular-nums ${totalPnlConverted >= 0 ? "text-[oklch(0.65_0.15_155)]" : "text-[oklch(0.65_0.15_25)]"}`}>
+              {formatMoney(totalPnlConverted, baseCurrency, { signed: true })}
             </p>
             <span className={`text-sm font-medium ${totalPnlConverted >= 0 ? "text-[oklch(0.65_0.15_155)]" : "text-[oklch(0.65_0.15_25)]"}`}>
               ({totalPnlPct >= 0 ? "+" : ""}{totalPnlPct.toFixed(2)}%)
@@ -160,7 +134,7 @@ export default async function PortfolioPage() {
                   </div>
                   <div className="flex shrink-0 flex-col items-end">
                     <span className="text-[12px] font-semibold tabular-nums text-[oklch(0.90_0.005_260)]">
-                      {formatUSD(h.marketValue)}
+                      {formatMoney(h.marketValue, h.currency)}
                     </span>
                     <span className={`flex items-center gap-0.5 text-[11px] font-semibold tabular-nums ${isPositive ? "text-[oklch(0.65_0.15_155)]" : "text-[oklch(0.65_0.15_25)]"}`}>
                       {isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
@@ -171,16 +145,16 @@ export default async function PortfolioPage() {
 
                 <div className="grid grid-cols-3 gap-2 pl-8.5 text-[11px] tabular-nums">
                   <div className="flex flex-col">
-                    <span className="text-[9px] uppercase tracking-[0.06em] text-[oklch(0.38_0.01_260)]">Lots</span>
-                    <span className="font-medium text-[oklch(0.78_0.005_260)]">{h.lots}</span>
+                    <span className="text-[9px] uppercase tracking-[0.06em] text-[oklch(0.38_0.01_260)]">Shares</span>
+                    <span className="font-medium text-[oklch(0.78_0.005_260)]">{formatQuantity(h.shares)}</span>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[9px] uppercase tracking-[0.06em] text-[oklch(0.38_0.01_260)]">Avg</span>
-                    <span className="font-medium text-[oklch(0.78_0.005_260)]">{formatUSD(h.avgPrice)}</span>
+                    <span className="font-medium text-[oklch(0.78_0.005_260)]">{formatMoney(h.avgPrice, h.currency)}</span>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[9px] uppercase tracking-[0.06em] text-[oklch(0.38_0.01_260)]">Last</span>
-                    <span className="font-medium text-[oklch(0.78_0.005_260)]">{formatUSD(h.lastPrice)}</span>
+                    <span className="font-medium text-[oklch(0.78_0.005_260)]">{formatMoney(h.lastPrice, h.currency)}</span>
                   </div>
                 </div>
 
@@ -205,12 +179,12 @@ export default async function PortfolioPage() {
         <table className="w-full min-w-225 text-sm">
           <thead>
             <tr className="border-b border-[oklch(0.12_0.005_260)]">
-              {["Asset", "Sector", "Lots", "Avg Price", "Last Price", "Market Value", "P&L", "Weight"].map(
+              {["Asset", "Sector", "Shares", "Avg Price", "Last Price", "Market Value", "P&L", "Weight"].map(
                 (h) => (
                   <th
                     key={h}
                     className={`h-10 px-6 text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)] ${
-                      ["Lots", "Avg Price", "Last Price", "Market Value", "P&L", "Weight"].includes(h)
+                      ["Shares", "Avg Price", "Last Price", "Market Value", "P&L", "Weight"].includes(h)
                         ? "text-right"
                         : "text-left"
                     }`}
@@ -254,23 +228,23 @@ export default async function PortfolioPage() {
                       {h.sector || "—"}
                     </span>
                   </td>
-                  <td className="px-6 py-3 text-right text-[12px] font-medium text-[oklch(0.80_0.005_260)]">
-                    {h.lots}
+                  <td className="px-6 py-3 text-right text-[12px] font-medium tabular-nums text-[oklch(0.80_0.005_260)]">
+                    {formatQuantity(h.shares)}
                   </td>
-                  <td className="px-6 py-3 text-right text-[12px] font-medium text-[oklch(0.80_0.005_260)]">
-                    {formatUSD(h.avgPrice)}
+                  <td className="px-6 py-3 text-right text-[12px] font-medium tabular-nums text-[oklch(0.80_0.005_260)]">
+                    {formatMoney(h.avgPrice, h.currency)}
                   </td>
-                  <td className="px-6 py-3 text-right text-[12px] font-medium text-[oklch(0.80_0.005_260)]">
-                    {formatUSD(h.lastPrice)}
+                  <td className="px-6 py-3 text-right text-[12px] font-medium tabular-nums text-[oklch(0.80_0.005_260)]">
+                    {formatMoney(h.lastPrice, h.currency)}
                   </td>
-                  <td className="px-6 py-3 text-right text-[12px] font-semibold text-[oklch(0.88_0.005_260)]">
-                    {formatUSD(h.marketValue)}
+                  <td className="px-6 py-3 text-right text-[12px] font-semibold tabular-nums text-[oklch(0.88_0.005_260)]">
+                    {formatMoney(h.marketValue, h.currency)}
                   </td>
                   <td className="px-6 py-3 text-right">
                     <div className="flex flex-col items-end">
-                      <span className={`flex items-center gap-1 text-[12px] font-semibold ${isPositive ? "text-[oklch(0.65_0.15_155)]" : "text-[oklch(0.65_0.15_25)]"}`}>
+                      <span className={`flex items-center gap-1 text-[12px] font-semibold tabular-nums ${isPositive ? "text-[oklch(0.65_0.15_155)]" : "text-[oklch(0.65_0.15_25)]"}`}>
                         {isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                        {formatUSDSigned(h.pnl)}
+                        {formatMoney(h.pnl, h.currency, { signed: true })}
                       </span>
                       <span className={`text-[10px] font-medium ${isPositive ? "text-[oklch(0.55_0.10_155)]" : "text-[oklch(0.55_0.10_25)]"}`}>
                         {isPositive ? "+" : ""}{h.pnlPct.toFixed(2)}%

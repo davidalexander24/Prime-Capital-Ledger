@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 
 import { FileText, FileSpreadsheet, Globe, CheckCircle2 } from "lucide-react";
 import { FileUploader } from "@/components/dashboard/file-uploader";
+import { formatDateTime } from "@/lib/format";
 
 interface ImportHistoryItem {
   id: string;
@@ -45,13 +46,7 @@ export default async function ImportPage() {
     filename: s.filename,
     source: s.source,
     transactions: s._count.transactions,
-    date: s.createdAt.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
-    }),
+    date: formatDateTime(s.createdAt, "Asia/Jakarta"),
   }));
 
   return (

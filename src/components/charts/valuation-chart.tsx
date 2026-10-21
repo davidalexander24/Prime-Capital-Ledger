@@ -11,6 +11,12 @@ import {
   CartesianGrid,
 } from "recharts";
 import type { PortfolioValuationPoint } from "@/lib/types";
+import {
+  axisValueFormatter,
+  formatAxisDate,
+  formatDate,
+  formatMoney,
+} from "@/lib/format";
 
 type PeriodId = "1W" | "1M" | "3M" | "YTD" | "1Y" | "ALL";
 
@@ -25,38 +31,24 @@ const PERIODS: Array<{ id: PeriodId; label: string; longLabel: string }> = [
 
 interface ValuationChartProps {
   data: PortfolioValuationPoint[];
+  // The series is built in the user's base currency.
+  currency: string;
 }
 
-function formatDateShort(dateStr: string): string {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
-}
-
-function formatTooltipDate(dateStr: string): string {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-}
-
-function formatValueAxis(value: number): string {
-  if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`;
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(0)}M`;
-  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`;
-  return value.toLocaleString();
-}
-
-function formatIDR(value: number): string {
-  const rounded = Math.round(value);
-  return `Rp${rounded.toLocaleString("id-ID")}`;
-}
-
-function formatSignedIDR(value: number): string {
-  const sign = value < 0 ? "-" : "+";
-  return `${sign}${formatIDR(Math.abs(value))}`;
+// Five round, evenly spaced ticks covering [min, max]. Recharts starts ticks
+// at the exact domain floor (449.44, 1,949.44, ...), so the domain is snapped
+// to these instead.
+function niceTicks(min: number, max: number, count = 5): number[] {
+  const rough = (max - min || Math.abs(max) || 1) / (count - 1);
+  const power = 10 ** Math.floor(Math.log10(rough));
+  for (const factor of [1, 1.5, 2, 2.5, 3, 4, 5, 7.5, 10, 15, 20]) {
+    const step = factor * power;
+    const start = Math.floor(min / step) * step;
+    if (start + step * (count - 1) >= max) {
+      return Array.from({ length: count }, (_, i) => start + i * step);
+    }
+  }
+  return [min, max];
 }
 
 function sliceByPeriod(
@@ -100,10 +92,12 @@ function CustomTooltip({
   active,
   payload,
   label,
+  currency,
 }: {
   active?: boolean;
   payload?: Array<{ value: number; dataKey: string }>;
   label?: string;
+  currency: string;
 }) {
   if (!active || !payload || !payload.length) return null;
 
@@ -113,14 +107,14 @@ function CustomTooltip({
   return (
     <div className="rounded-lg border border-[oklch(0.18_0.005_260)] bg-[oklch(0.06_0.005_260)] px-4 py-3 shadow-xl">
       <p className="mb-2 text-[11px] font-medium text-[oklch(0.50_0.01_260)]">
-        {label ? formatTooltipDate(label) : ""}
+        {label ? formatDate(label) : ""}
       </p>
       {marketValue && (
         <p className="flex items-center gap-2 text-[12px]">
           <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.70_0.08_230)]" />
           <span className="text-[oklch(0.50_0.01_260)]">Market Value</span>
-          <span className="ml-auto font-medium text-[oklch(0.90_0.005_260)]">
-            {formatIDR(marketValue.value)}
+          <span className="ml-auto font-medium tabular-nums text-[oklch(0.90_0.005_260)]">
+            {formatMoney(marketValue.value, currency)}
           </span>
         </p>
       )}
@@ -128,8 +122,8 @@ function CustomTooltip({
         <p className="mt-1 flex items-center gap-2 text-[12px]">
           <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.40_0.01_260)]" />
           <span className="text-[oklch(0.50_0.01_260)]">Cost Basis</span>
-          <span className="ml-auto font-medium text-[oklch(0.70_0.005_260)]">
-            {formatIDR(costBasis.value)}
+          <span className="ml-auto font-medium tabular-nums text-[oklch(0.70_0.005_260)]">
+            {formatMoney(costBasis.value, currency)}
           </span>
         </p>
       )}
@@ -137,7 +131,7 @@ function CustomTooltip({
   );
 }
 
-export function ValuationChart({ data }: ValuationChartProps) {
+export function ValuationChart({ data, currency }: ValuationChartProps) {
   const [period, setPeriod] = useState<PeriodId>("ALL");
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
@@ -160,9 +154,14 @@ export function ValuationChart({ data }: ValuationChartProps) {
     ? "text-[oklch(0.72_0.16_155)]"
     : "text-[oklch(0.68_0.18_25)]";
 
-  const { yDomain, baseValue } = useMemo(() => {
+  const { yDomain, yTicks, baseValue, formatYAxis } = useMemo(() => {
     if (!hasData) {
-      return { yDomain: ["auto", "auto"] as const, baseValue: 0 };
+      return {
+        yDomain: ["auto", "auto"] as const,
+        yTicks: undefined,
+        baseValue: 0,
+        formatYAxis: axisValueFormatter(0, 0),
+      };
     }
     let minVal = Infinity;
     let maxVal = -Infinity;
@@ -175,12 +174,21 @@ export function ValuationChart({ data }: ValuationChartProps) {
     const range = maxVal - minVal;
     const bottomPad = range > 0 ? range * 0.15 : maxVal * 0.05 || 1;
     const topPad = range > 0 ? range * 0.05 : maxVal * 0.02 || 1;
-    const floor = Math.max(0, minVal - bottomPad);
+    const ticks = niceTicks(Math.max(0, minVal - bottomPad), maxVal + topPad);
+    const floor = ticks[0];
+    const ceiling = ticks[ticks.length - 1];
     return {
-      yDomain: [floor, maxVal + topPad] as const,
+      yDomain: [floor, ceiling] as const,
+      yTicks: ticks,
       baseValue: floor,
+      formatYAxis: axisValueFormatter(floor, ceiling),
     };
   }, [sliced, hasData]);
+
+  // A year or more of data puts ticks over a month apart, so "Apr '25" is
+  // unambiguous; shorter ranges keep day labels.
+  const yearScale =
+    hasData && Date.parse(endPoint.date) - Date.parse(startPoint.date) >= 365 * 86_400_000;
 
   const currentLabel = PERIODS.find((p) => p.id === period)?.longLabel ?? "";
 
@@ -193,15 +201,15 @@ export function ValuationChart({ data }: ValuationChartProps) {
           </h2>
           <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <span className="text-xl font-semibold tracking-tight text-[oklch(0.93_0.005_260)] tabular-nums">
-              {formatIDR(activeValue)}
+              {formatMoney(activeValue, currency)}
             </span>
             <span className={`text-[12px] font-medium tabular-nums ${accentColor}`}>
-              {formatSignedIDR(change)} ({change >= 0 ? "+" : ""}
+              {formatMoney(change, currency, { signed: true })} ({change >= 0 ? "+" : ""}
               {changePct.toFixed(2)}%)
             </span>
             <span className="text-[11px] text-[oklch(0.45_0.01_260)]">
               {hoverIndex !== null && activePoint
-                ? formatTooltipDate(activePoint.date)
+                ? formatDate(activePoint.date)
                 : currentLabel}
             </span>
           </div>
@@ -245,7 +253,7 @@ export function ValuationChart({ data }: ValuationChartProps) {
               />
               <XAxis
                 dataKey="date"
-                tickFormatter={formatDateShort}
+                tickFormatter={(value: string) => formatAxisDate(value, yearScale)}
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 11, fill: "oklch(0.40 0.01 260)" }}
@@ -253,7 +261,8 @@ export function ValuationChart({ data }: ValuationChartProps) {
                 minTickGap={60}
               />
               <YAxis
-                tickFormatter={formatValueAxis}
+                ticks={yTicks}
+                tickFormatter={formatYAxis}
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 11, fill: "oklch(0.40 0.01 260)" }}
@@ -261,7 +270,7 @@ export function ValuationChart({ data }: ValuationChartProps) {
                 domain={yDomain}
               />
               <Tooltip
-                content={<CustomTooltip />}
+                content={<CustomTooltip currency={currency} />}
                 cursor={{
                   stroke: "oklch(0.25 0.005 260)",
                   strokeWidth: 1,
