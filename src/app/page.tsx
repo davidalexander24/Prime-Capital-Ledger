@@ -9,6 +9,7 @@ import { HowItWorks } from "@/components/landing/HowItWorks"
 import { FinalCTA } from "@/components/landing/FinalCTA"
 import { Footer } from "@/components/landing/Footer"
 import Aurora from "@/components/landing/Aurora"
+import { LandingMotion } from "@/components/landing/LandingMotion"
 
 export const metadata: Metadata = {
   title: "Prime Capital Ledger - Portfolio Management for Equity Markets",
@@ -45,14 +46,16 @@ export default async function LandingPage() {
         }}
       />
 
-      <Navbar />
-      <main>
-        <Hero />
-        <FeaturesGrid />
-        <HowItWorks />
-        <FinalCTA />
-      </main>
-      <Footer />
+      <LandingMotion>
+        <Navbar />
+        <main>
+          <Hero />
+          <FeaturesGrid />
+          <HowItWorks />
+          <FinalCTA />
+        </main>
+        <Footer />
+      </LandingMotion>
     </div>
   )
 }

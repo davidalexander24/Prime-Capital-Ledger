@@ -168,38 +168,75 @@ export default function Aurora(props: AuroraProps) {
       },
     })
 
+    const mesh = new Mesh(gl, { geometry, program })
+    ctn.appendChild(gl.canvas)
+
+    let animateId = 0
+    let lastT = 0
+    let lastStopsKey = colorStops.join(",")
+    const render = (t: number) => {
+      lastT = t
+      const { time = t * 0.01, speed = 1.0 } = propsRef.current
+      program.uniforms.uTime.value = time * speed * 0.1
+      program.uniforms.uAmplitude.value = propsRef.current.amplitude ?? 1.0
+      program.uniforms.uBlend.value = propsRef.current.blend ?? blend
+      // Convert the hex stops only when they change, not on every frame.
+      const stops = propsRef.current.colorStops ?? colorStops
+      const stopsKey = stops.join(",")
+      if (stopsKey !== lastStopsKey) {
+        lastStopsKey = stopsKey
+        program.uniforms.uColorStops.value = stops.map((hex) => {
+          const c = new Color(hex)
+          return [c.r, c.g, c.b]
+        })
+      }
+      renderer.render({ scene: mesh })
+    }
+    const loop = (t: number) => {
+      render(t)
+      animateId = requestAnimationFrame(loop)
+    }
+
     function resize() {
       if (!ctn) return
       const width = ctn.offsetWidth
       const height = ctn.offsetHeight
       renderer.setSize(width, height)
       program.uniforms.uResolution.value = [width, height]
+      // Resizing clears the canvas; redraw the still frame when paused.
+      if (animateId === 0) render(lastT)
     }
     window.addEventListener("resize", resize)
 
-    const mesh = new Mesh(gl, { geometry, program })
-    ctn.appendChild(gl.canvas)
-
-    let animateId = 0
-    const update = (t: number) => {
-      animateId = requestAnimationFrame(update)
-      const { time = t * 0.01, speed = 1.0 } = propsRef.current
-      program.uniforms.uTime.value = time * speed * 0.1
-      program.uniforms.uAmplitude.value = propsRef.current.amplitude ?? 1.0
-      program.uniforms.uBlend.value = propsRef.current.blend ?? blend
-      const stops = propsRef.current.colorStops ?? colorStops
-      program.uniforms.uColorStops.value = stops.map((hex) => {
-        const c = new Color(hex)
-        return [c.r, c.g, c.b]
-      })
-      renderer.render({ scene: mesh })
+    // Animate only while the canvas is on screen, the tab is visible and the
+    // user has not asked for reduced motion; otherwise hold a still frame.
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)")
+    let onScreen = true
+    const sync = () => {
+      const shouldRun = onScreen && !document.hidden && !reducedMotion.matches
+      if (shouldRun && animateId === 0) {
+        animateId = requestAnimationFrame(loop)
+      } else if (!shouldRun && animateId !== 0) {
+        cancelAnimationFrame(animateId)
+        animateId = 0
+      }
     }
-    animateId = requestAnimationFrame(update)
+    const observer = new IntersectionObserver(([entry]) => {
+      onScreen = entry.isIntersecting
+      sync()
+    })
+    observer.observe(ctn)
+    document.addEventListener("visibilitychange", sync)
+    reducedMotion.addEventListener("change", sync)
 
     resize()
+    sync()
 
     return () => {
       cancelAnimationFrame(animateId)
+      observer.disconnect()
+      document.removeEventListener("visibilitychange", sync)
+      reducedMotion.removeEventListener("change", sync)
       window.removeEventListener("resize", resize)
       if (ctn && gl.canvas.parentNode === ctn) {
         ctn.removeChild(gl.canvas)

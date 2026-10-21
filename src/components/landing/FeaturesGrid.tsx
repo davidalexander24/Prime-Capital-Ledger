@@ -69,13 +69,12 @@ export function FeaturesGrid() {
             <motion.article
               key={f.title}
               variants={staggerItem}
-              tabIndex={0}
-              className="group relative pt-7 outline-none"
+              className="group relative pt-7"
             >
               {/* Top hairline — extends to right on hover */}
               <span
                 aria-hidden="true"
-                className="absolute left-0 top-0 h-px w-10 bg-foreground transition-[width] duration-500 ease-out group-hover:w-full group-focus-visible:w-full"
+                className="absolute left-0 top-0 h-px w-10 bg-foreground transition-[width] duration-500 ease-out group-hover:w-full"
               />
 
               {/* Title row */}

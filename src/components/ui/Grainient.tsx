@@ -240,8 +240,10 @@ const Grainient = ({
       raf = requestAnimationFrame(loop);
     };
 
+    // With reduced motion on, keep the still frame setSize draws.
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const tryStart = () => {
-      if (isVisible && isPageVisible && raf === 0) raf = requestAnimationFrame(loop);
+      if (isVisible && isPageVisible && !reducedMotion.matches && raf === 0) raf = requestAnimationFrame(loop);
     };
     const tryStop = () => {
       if (raf !== 0) { cancelAnimationFrame(raf); raf = 0; }
@@ -270,6 +272,15 @@ const Grainient = ({
     };
     document.addEventListener('visibilitychange', onVisibility);
 
+    const onMotionPreference = () => {
+      if (reducedMotion.matches) {
+        tryStop();
+      } else {
+        tryStart();
+      }
+    };
+    reducedMotion.addEventListener('change', onMotionPreference);
+
     tryStart();
 
     return () => {
@@ -277,6 +288,7 @@ const Grainient = ({
       ro.disconnect();
       io.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
+      reducedMotion.removeEventListener('change', onMotionPreference);
       ctxMap.delete(container);
       try { container.removeChild(canvas); } catch { /* ignore */ }
     };
