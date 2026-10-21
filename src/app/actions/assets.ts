@@ -2,10 +2,12 @@
 
 import prisma from "@/lib/prisma";
 import { getSessionUserId } from "@/lib/auth";
+import { currencyForTicker, isSupportedTicker, type Currency } from "@/lib/currency";
 
 export interface AssetSearchResult {
   ticker: string;
   companyName: string;
+  currency: Currency;
   source: "db" | "yahoo";
 }
 
@@ -33,6 +35,7 @@ export async function searchAssets(
     const results: AssetSearchResult[] = dbAssets.map((a) => ({
       ticker: a.ticker,
       companyName: a.companyName,
+      currency: currencyForTicker(a.ticker),
       source: "db" as const,
     }));
 
@@ -43,7 +46,9 @@ export async function searchAssets(
     try {
       const YahooFinance = (await import("yahoo-finance2")).default;
       const yf = new YahooFinance();
-      const yahooResults = await yf.search(q) as {
+      // Yahoo's search payload no longer matches the library's schema, so
+      // validation rejects every response. The fields read below are guarded.
+      const yahooResults = await yf.search(q, {}, { validateResult: false }) as {
         quotes?: Array<{
           symbol?: string;
           quoteType?: string;
@@ -58,6 +63,7 @@ export async function searchAssets(
         const symbol: string | undefined = quote?.symbol;
         if (!symbol) continue;
         if (dbTickers.has(symbol)) continue;
+        if (!isSupportedTicker(symbol)) continue;
 
         const qType: string | undefined = quote?.quoteType;
         if (qType !== "EQUITY" && qType !== "ETF") continue;
@@ -66,6 +72,7 @@ export async function searchAssets(
           ticker: symbol,
           companyName:
             quote.shortname || quote.longname || symbol,
+          currency: currencyForTicker(symbol),
           source: "yahoo",
         });
       }
