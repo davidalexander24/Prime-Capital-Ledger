@@ -172,16 +172,30 @@
   --sidebar-ring: var(--brand);
 }
 
-* {
-  border-color: var(--border);
-}
+/*
+ * Element defaults live in the base layer so Tailwind utilities can override
+ * them. Unlayered, the * rule beat every border-color utility in the app.
+ */
+@layer base {
+  * {
+    border-color: var(--border);
+  }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-heading);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 /* Scrollbar */
@@ -207,15 +221,6 @@ body {
 .recharts-text {
   fill: var(--fg-4) !important;
   font-size: 11px !important;
-}
-
-/* Landing-specific */
-h1, h2, h3 {
-  font-family: var(--font-heading);
-}
-
-html {
-  scroll-behavior: smooth;
 }
 
 @keyframes shimmer {
