@@ -42,6 +42,8 @@ interface LogTransactionDialogProps {
   editData?: EditTransactionData | null;
   // Label of the trigger button in uncontrolled mode.
   triggerLabel?: string;
+  // Controlled mode has no trigger; focus returns here on close.
+  returnFocusRef?: React.RefObject<HTMLElement | null>;
 }
 
 function LogTransactionForm({
@@ -338,6 +340,7 @@ export function LogTransactionDialog({
   onOpenChange: controlledOnOpenChange,
   editData,
   triggerLabel = "Log transaction",
+  returnFocusRef,
 }: LogTransactionDialogProps) {
   const isControlled = controlledOpen !== undefined;
 
@@ -351,6 +354,7 @@ export function LogTransactionDialog({
     <AppDialog
       open={open}
       onOpenChange={setOpen}
+      returnFocusRef={returnFocusRef}
       title={editData ? "Edit transaction" : "Log transaction"}
       description={editData ? "Change the details of this trade." : "Record a buy or sell by hand."}
       trigger={

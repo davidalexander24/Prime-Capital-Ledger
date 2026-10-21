@@ -1,30 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Scissors, XCircle } from "lucide-react";
 import { applyStockSplit } from "@/app/actions/portfolio";
 import { AppDialog, AppDialogBody, AppDialogClose, AppDialogFooter } from "@/components/app/app-dialog";
+import { RowMenu, RowMenuItem } from "@/components/app/row-menu";
 import { appButton, fieldInput, fieldLabel, notice } from "@/components/app/styles";
 import { cn } from "@/lib/utils";
 
-export function SplitAction({ ticker }: { ticker: string }) {
+function SplitDialog({
+  ticker,
+  open,
+  onOpenChange,
+  returnFocusRef,
+}: {
+  ticker: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  returnFocusRef: React.RefObject<HTMLElement | null>;
+}) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const [ratio, setRatio] = useState("8");
+  const [ratio, setRatio] = useState("");
   const [date, setDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const parsedRatio = parseFloat(ratio);
+  const canApply = parsedRatio > 0 && parsedRatio !== 1 && !!date && !loading;
+
   async function handleSplit() {
-    if (!ratio || !date) return;
+    if (!canApply) return;
     setLoading(true);
     setError(null);
-    const r = parseFloat(ratio);
     try {
-      const res = await applyStockSplit(ticker, r, date);
+      const res = await applyStockSplit(ticker, parsedRatio, date);
       if (res.success) {
-        setOpen(false);
+        onOpenChange(false);
         router.refresh();
       } else {
         setError(res.error ?? "Failed to apply stock split.");
@@ -40,39 +52,29 @@ export function SplitAction({ ticker }: { ticker: string }) {
     <AppDialog
       size="sm"
       open={open}
-      onOpenChange={(next) => {
-        if (next) setError(null);
-        setOpen(next);
-      }}
+      onOpenChange={onOpenChange}
       locked={loading}
-      trigger={
-        <button
-          type="button"
-          title="Apply stock split"
-          className="ml-2 inline-flex items-center gap-1 rounded bg-layer-2 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-fg-4 transition-colors hover:bg-layer-3 hover:text-fg-2"
-        >
-          <Scissors className="size-3" />
-          Split
-        </button>
-      }
+      returnFocusRef={returnFocusRef}
       title="Apply stock split"
       description={`Adjust historical transactions for ${ticker.replace(".JK", "")}.`}
     >
       <AppDialogBody className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <label htmlFor="split-ratio" className={fieldLabel}>
-            Split ratio (8 for 8:1)
+            Split ratio
           </label>
           <input
             id="split-ratio"
             type="number"
             inputMode="decimal"
-            step="0.001"
+            step="any"
             min="0"
             value={ratio}
             onChange={(e) => setRatio(e.target.value)}
+            placeholder="2"
             className={fieldInput}
           />
+          <p className="text-[12px] text-fg-4">New shares per old share: 2 for a 2-for-1 split, 0.1 for a 1-for-10 reverse split.</p>
         </div>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="split-date" className={fieldLabel}>
@@ -100,16 +102,43 @@ export function SplitAction({ ticker }: { ticker: string }) {
         <AppDialogClose disabled={loading} className={appButton({ tone: "secondary" })}>
           Cancel
         </AppDialogClose>
-        <button
-          type="button"
-          onClick={handleSplit}
-          disabled={loading || !ratio || !date}
-          className={appButton({ tone: "primary" })}
-        >
+        <button type="button" onClick={handleSplit} disabled={!canApply} className={appButton({ tone: "primary" })}>
           {loading ? <Loader2 className="animate-spin" /> : <Scissors />}
           {loading ? "Applying..." : "Apply split"}
         </button>
       </AppDialogFooter>
     </AppDialog>
+  );
+}
+
+// Row menu for a holding. Splits are rare, so the action lives here instead
+// of a chip on every row.
+export function HoldingActions({ ticker, className }: { ticker: string; className?: string }) {
+  const [splitOpen, setSplitOpen] = useState(false);
+  // Remounting the dialog on each open clears the last attempt's values.
+  const [session, setSession] = useState(0);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  return (
+    <>
+      <RowMenu ref={triggerRef} label={`Actions for ${ticker.replace(".JK", "")}`} className={className}>
+        <RowMenuItem
+          icon={<Scissors />}
+          onSelect={() => {
+            setSession((s) => s + 1);
+            setSplitOpen(true);
+          }}
+        >
+          Apply stock split
+        </RowMenuItem>
+      </RowMenu>
+      <SplitDialog
+        key={session}
+        ticker={ticker}
+        open={splitOpen}
+        onOpenChange={setSplitOpen}
+        returnFocusRef={triggerRef}
+      />
+    </>
   );
 }

@@ -21,6 +21,9 @@ interface AppDialogProps {
   // Blocks closing (overlay click, Escape, the close button) while busy.
   locked?: boolean;
   onEscapeKeyDown?: (event: KeyboardEvent) => void;
+  // Where focus goes on close when the dialog has no trigger of its own, for
+  // example one opened from a row menu. Without it focus falls to <body>.
+  returnFocusRef?: React.RefObject<HTMLElement | null>;
   children?: React.ReactNode;
 }
 
@@ -37,6 +40,7 @@ export function AppDialog({
   size = "md",
   locked = false,
   onEscapeKeyDown,
+  returnFocusRef,
   children,
 }: AppDialogProps) {
   return (
@@ -48,6 +52,13 @@ export function AppDialog({
           onEscapeKeyDown={(event) => {
             if (locked) event.preventDefault();
             onEscapeKeyDown?.(event);
+          }}
+          onCloseAutoFocus={(event) => {
+            const target = returnFocusRef?.current;
+            if (target?.isConnected) {
+              event.preventDefault();
+              target.focus();
+            }
           }}
           className={cn(
             "surface-card fixed top-1/2 left-1/2 z-50 flex w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col shadow-2xl outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95",
