@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -8,6 +9,8 @@ import { getTransactions } from "@/app/actions/transactions";
 import { getCachedUsdIdrRate, getUserBaseCurrency } from "@/lib/requestData";
 import { formatMoney } from "@/lib/format";
 import { ArrowLeftRight } from "lucide-react";
+
+export const metadata: Metadata = { title: "Transactions" };
 
 export const dynamic = "force-dynamic";
 

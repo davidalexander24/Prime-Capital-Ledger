@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -6,6 +7,8 @@ import { getPortfolioHoldings } from "@/app/actions/portfolio";
 import { getCachedUsdIdrRate, getUserBaseCurrency } from "@/lib/requestData";
 import { HoldingsTable } from "@/components/dashboard/holdings-table";
 import { PortfolioSummary } from "@/components/dashboard/portfolio-summary";
+
+export const metadata: Metadata = { title: "Portfolio" };
 
 export default async function PortfolioPage() {
   const session = await getServerSession(authOptions);

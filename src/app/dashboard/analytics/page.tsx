@@ -1,9 +1,12 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 import { AnalyticsCharts } from "@/components/dashboard/analytics-charts";
 import { getAnalyticsData } from "@/app/actions/analytics";
+
+export const metadata: Metadata = { title: "Analytics" };
 
 export const dynamic = "force-dynamic";
 

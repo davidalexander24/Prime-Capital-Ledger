@@ -5,7 +5,10 @@ import { authOptions } from "@/lib/auth";
 import { Sidebar } from "@/components/layout/sidebar";
 
 export const metadata: Metadata = {
-  title: "Dashboard - Prime Capital Ledger",
+  title: {
+    default: "Overview - Prime Capital Ledger",
+    template: "%s - Prime Capital Ledger",
+  },
   description:
     "Portfolio management dashboard for equity markets. Track holdings, transactions, and performance analytics.",
 };
