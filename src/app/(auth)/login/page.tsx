@@ -4,14 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { ArrowLeft, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Loader2, XCircle } from "lucide-react";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
+import { PasswordInput } from "@/components/auth/password-input";
+import { authInput, authLabel, authSubmit, authSwitchText } from "@/components/auth/styles";
+import { notice } from "@/components/app/styles";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [pendingLabel, setPendingLabel] = useState<string | null>(null);
   const isLoading = pendingLabel !== null;
@@ -23,17 +25,15 @@ export default function LoginPage() {
 
     try {
       const res = await signIn("credentials", {
-        email,
+        email: email.trim(),
         password,
         redirect: false,
       });
 
       if (res?.error) {
-        if (res.error === "CredentialsSignin") {
-          setError("Invalid email or password");
-        } else {
-          setError(res.error);
-        }
+        // One message for every credentials failure, so the page never says
+        // whether an email has an account.
+        setError("Invalid email or password");
       } else if (res?.ok) {
         // Stay pending until the dashboard replaces this page, so the button
         // never looks idle while the server is still rendering it.
@@ -50,93 +50,58 @@ export default function LoginPage() {
 
   return (
     <div>
-      {/* Back to landing */}
-      <Link href="/" className="auth-back-btn" aria-label="Back to landing page">
-        <ArrowLeft size={18} />
-        <span>Back</span>
-      </Link>
-
-      {/* Heading */}
-      <div style={{ textAlign: "center", marginBottom: 24 }}>
-        <h1 className="auth-heading">Welcome back</h1>
-        <p className="auth-subheading">
-          Sign in to access your investment dashboard
-        </p>
+      <div className="mb-6 text-center">
+        <h1 className="text-2xl font-semibold tracking-tight text-fg-1">Welcome back</h1>
+        <p className="mt-1 text-sm text-fg-4">Sign in to access your investment dashboard</p>
       </div>
 
       <GoogleSignInButton label="Sign in with Google" disabled={isLoading} />
 
-      {/* Form */}
-      <form onSubmit={handleSubmit}>
-        {error && <div className="auth-error-box">{error}</div>}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {error && (
+          <div role="alert" className={notice({ tone: "error" })}>
+            <XCircle className="size-3.5 shrink-0" />
+            {error}
+          </div>
+        )}
 
-        {/* Email */}
-        <div className="auth-field-group" style={{ marginBottom: 16 }}>
-          <label htmlFor="login-email" className="auth-field-label">
-            Email address<span className="auth-required">*</span>
+        <div>
+          <label htmlFor="login-email" className={authLabel}>
+            Email address
           </label>
           <input
             id="login-email"
             type="email"
-            className="auth-input"
-            placeholder="Enter your email"
+            className={authInput}
+            placeholder="you@example.com"
             required
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
 
-        {/* Password */}
-        <div className="auth-field-group" style={{ marginBottom: 8 }}>
-          <label htmlFor="login-password" className="auth-field-label">
-            Password<span className="auth-required">*</span>
+        <div>
+          <label htmlFor="login-password" className={authLabel}>
+            Password
           </label>
-          <div className="auth-field-wrapper" style={{ marginTop: 6 }}>
-            <input
-              id="login-password"
-              type={showPassword ? "text" : "password"}
-              className="auth-input"
-              placeholder="••••••••"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={{ paddingRight: 44 }}
-            />
-            <button
-              type="button"
-              className="auth-password-toggle"
-              onClick={() => setShowPassword(!showPassword)}
-              tabIndex={-1}
-            >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          </div>
+          <PasswordInput id="login-password" autoComplete="current-password" value={password} onChange={setPassword} />
         </div>
 
-        {/* Submit */}
-        <button
-          id="login-submit"
-          type="submit"
-          className="auth-submit-btn"
-          disabled={isLoading}
-          aria-busy={isLoading}
-          style={{ marginTop: 20 }}
-        >
+        <button id="login-submit" type="submit" className={`${authSubmit} mt-2`} disabled={isLoading} aria-busy={isLoading}>
           {isLoading ? (
-            <span className="inline-flex items-center justify-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
+            <>
+              <Loader2 className="animate-spin" />
               {pendingLabel}
-            </span>
+            </>
           ) : (
-            "Sign In"
+            "Sign in"
           )}
         </button>
       </form>
 
-      {/* Switch to register */}
-      <p className="auth-switch-text">
-        Don&apos;t have an account?{" "}
-        <Link href="/register">Sign up</Link>
+      <p className={authSwitchText}>
+        Don&apos;t have an account? <Link href="/register">Sign up</Link>
       </p>
     </div>
   );

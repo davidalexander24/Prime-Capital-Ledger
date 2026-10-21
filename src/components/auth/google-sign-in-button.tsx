@@ -3,6 +3,8 @@
 import { signIn } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { appButton } from "@/components/app/styles";
 
 export function GoogleSignInButton({
   label = "Continue with Google",
@@ -12,7 +14,6 @@ export function GoogleSignInButton({
   disabled?: boolean;
 }) {
   const [pending, setPending] = useState(false);
-  const inactive = pending || disabled;
 
   // Coming back from Google with the Back button restores this page from the
   // bfcache with pending still set, which would leave the button stuck.
@@ -32,50 +33,17 @@ export function GoogleSignInButton({
           setPending(true);
           signIn("google", { callbackUrl: "/dashboard" }).catch(() => setPending(false));
         }}
-        disabled={inactive}
+        disabled={pending || disabled}
         aria-busy={pending}
-        style={{
-          width: "100%",
-          height: 42,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 10,
-          padding: "0 14px",
-          borderRadius: 8,
-          border: "1px solid oklch(0.18 0.005 260)",
-          background: "oklch(0.08 0.005 260)",
-          color: "oklch(0.85 0.005 260)",
-          fontSize: 13,
-          fontWeight: 500,
-          cursor: pending ? "progress" : disabled ? "not-allowed" : "pointer",
-          opacity: inactive ? 0.6 : 1,
-          transition: "background-color 150ms",
-        }}
-        onMouseEnter={(e) => {
-          if (!inactive) e.currentTarget.style.background = "oklch(0.12 0.005 260)";
-        }}
-        onMouseLeave={(e) => {
-          if (!inactive) e.currentTarget.style.background = "oklch(0.08 0.005 260)";
-        }}
+        className={cn(appButton({ tone: "secondary" }), "h-11 w-full gap-2.5 bg-sunken text-[13px] font-medium aria-busy:cursor-progress")}
       >
-        {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleGlyph />}
+        {pending ? <Loader2 className="animate-spin" /> : <GoogleGlyph />}
         {pending ? "Redirecting to Google…" : label}
       </button>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          margin: "16px 0",
-          fontSize: 11,
-          color: "oklch(0.40 0.01 260)",
-          letterSpacing: "0.08em",
-        }}
-      >
-        <div style={{ flex: 1, height: 1, background: "oklch(0.14 0.005 260)" }} />
-        <span>OR</span>
-        <div style={{ flex: 1, height: 1, background: "oklch(0.14 0.005 260)" }} />
+      <div className="my-4 flex items-center gap-3 text-[11px] tracking-[0.08em] text-fg-4" aria-hidden="true">
+        <div className="h-px flex-1 bg-line" />
+        OR
+        <div className="h-px flex-1 bg-line" />
       </div>
     </>
   );

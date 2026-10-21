@@ -4,8 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Loader2, XCircle } from "lucide-react";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
+import { PasswordInput } from "@/components/auth/password-input";
+import { authInput, authLabel, authSubmit, authSwitchText } from "@/components/auth/styles";
+import { notice } from "@/components/app/styles";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -13,9 +16,6 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
   const [pendingLabel, setPendingLabel] = useState<string | null>(null);
   const isLoading = pendingLabel !== null;
@@ -29,19 +29,15 @@ export default function RegisterPage() {
       return;
     }
 
-    if (!agreed) {
-      setError("Please agree to the Terms of Service and Privacy Policy");
-      return;
-    }
-
     setPendingLabel("Creating account...");
+    const cleanEmail = email.trim();
 
     try {
       // custom registration API route
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name: name.trim(), email: cleanEmail, password }),
       });
 
       const data = await res.json();
@@ -54,7 +50,7 @@ export default function RegisterPage() {
 
       setPendingLabel("Signing in...");
       const signInRes = await signIn("credentials", {
-        email,
+        email: cleanEmail,
         password,
         redirect: false,
       });
@@ -75,147 +71,94 @@ export default function RegisterPage() {
 
   return (
     <div>
-      {/* Heading */}
-      <div style={{ textAlign: "center", marginBottom: 24 }}>
-        <h1 className="auth-heading">Create your account</h1>
-        <p className="auth-subheading">
-          Sign up to start managing your portfolio with Prime Capital
-        </p>
+      <div className="mb-6 text-center">
+        <h1 className="text-2xl font-semibold tracking-tight text-fg-1">Create your account</h1>
+        <p className="mt-1 text-sm text-fg-4">Sign up to start managing your portfolio with Prime Capital</p>
       </div>
 
       <GoogleSignInButton label="Sign up with Google" disabled={isLoading} />
 
-      {/* Form */}
-      <form onSubmit={handleSubmit}>
-        {error && <div className="auth-error-box">{error}</div>}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {error && (
+          <div role="alert" className={notice({ tone: "error" })}>
+            <XCircle className="size-3.5 shrink-0" />
+            {error}
+          </div>
+        )}
 
-        {/* Full Name */}
-        <div className="auth-field-group" style={{ marginBottom: 16 }}>
-          <label htmlFor="register-name" className="auth-field-label">
-            Full name<span className="auth-required">*</span>
+        <div>
+          <label htmlFor="register-name" className={authLabel}>
+            Full name
           </label>
           <input
             id="register-name"
             type="text"
-            className="auth-input"
-            placeholder="Enter your name"
+            className={authInput}
+            placeholder="Your name"
             required
+            autoComplete="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
         </div>
 
-        {/* Email */}
-        <div className="auth-field-group" style={{ marginBottom: 16 }}>
-          <label htmlFor="register-email" className="auth-field-label">
-            Email address<span className="auth-required">*</span>
+        <div>
+          <label htmlFor="register-email" className={authLabel}>
+            Email address
           </label>
           <input
             id="register-email"
             type="email"
-            className="auth-input"
-            placeholder="Enter your email"
+            className={authInput}
+            placeholder="you@example.com"
             required
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
 
-        {/* Password + Confirm side by side */}
-        <div className="auth-fields-row" style={{ marginBottom: 16 }}>
-          <div className="auth-field-group">
-            <label htmlFor="register-password" className="auth-field-label">
-              Password<span className="auth-required">*</span>
+        <div className="grid gap-4 sm:grid-cols-2 sm:gap-3">
+          <div>
+            <label htmlFor="register-password" className={authLabel}>
+              Password
             </label>
-            <div className="auth-field-wrapper">
-              <input
-                id="register-password"
-                type={showPassword ? "text" : "password"}
-                className="auth-input"
-                placeholder="••••••••"
-                required
-                minLength={8}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={{ paddingRight: 40 }}
-              />
-              <button
-                type="button"
-                className="auth-password-toggle"
-                onClick={() => setShowPassword(!showPassword)}
-                tabIndex={-1}
-              >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
+            <PasswordInput
+              id="register-password"
+              autoComplete="new-password"
+              minLength={8}
+              value={password}
+              onChange={setPassword}
+            />
           </div>
-          <div className="auth-field-group">
-            <label htmlFor="register-confirm-password" className="auth-field-label">
-              Confirm password<span className="auth-required">*</span>
+          <div>
+            <label htmlFor="register-confirm-password" className={authLabel}>
+              Confirm password
             </label>
-            <div className="auth-field-wrapper">
-              <input
-                id="register-confirm-password"
-                type={showConfirmPassword ? "text" : "password"}
-                className="auth-input"
-                placeholder="••••••••"
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                style={{ paddingRight: 40 }}
-              />
-              <button
-                type="button"
-                className="auth-password-toggle"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                tabIndex={-1}
-              >
-                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
+            <PasswordInput
+              id="register-confirm-password"
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+            />
           </div>
         </div>
+        <p className="-mt-2 text-[12px] text-fg-4">At least 8 characters.</p>
 
-        {/* Terms checkbox */}
-        <div className="auth-checkbox-row">
-          <input
-            id="register-terms"
-            type="checkbox"
-            className="auth-checkbox"
-            checked={agreed}
-            onChange={(e) => setAgreed(e.target.checked)}
-          />
-          <label htmlFor="register-terms" className="auth-checkbox-label">
-            I agree to the{" "}
-            <a href="#" onClick={(e) => e.preventDefault()}>Terms of Service</a> and{" "}
-            <a href="#" onClick={(e) => e.preventDefault()}>Privacy Policy</a>
-          </label>
-        </div>
-
-        {/* Submit */}
-        <button
-          id="register-submit"
-          type="submit"
-          className="auth-submit-btn"
-          disabled={isLoading}
-          aria-busy={isLoading}
-          style={{ marginTop: 20 }}
-        >
+        <button id="register-submit" type="submit" className={`${authSubmit} mt-2`} disabled={isLoading} aria-busy={isLoading}>
           {isLoading ? (
-            <span className="inline-flex items-center justify-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
+            <>
+              <Loader2 className="animate-spin" />
               {pendingLabel}
-            </span>
+            </>
           ) : (
             "Create account"
           )}
         </button>
       </form>
 
-      {/* Switch to login */}
-      <p className="auth-switch-text">
-        Already have an account?{" "}
-        <Link href="/login">Sign in</Link>
+      <p className={authSwitchText}>
+        Already have an account? <Link href="/login">Sign in</Link>
       </p>
     </div>
   );
