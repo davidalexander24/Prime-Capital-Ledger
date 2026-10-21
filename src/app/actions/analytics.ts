@@ -12,13 +12,16 @@ type ActionResponse<T> = {
 
 export interface MonthlyReturn {
   month: string;
-  return: number;
+  // This month's change, in percent.
+  monthly: number;
+  // Running sum of the monthly changes, in percent.
+  cumulative: number;
 }
 
+// Share of portfolio value per ticker, largest first. The chart picks colors.
 export interface SectorAllocation {
   name: string;
   value: number;
-  color: string;
 }
 
 export interface AnalyticsMetric {
@@ -33,17 +36,6 @@ export interface AnalyticsData {
   sectorAllocation: SectorAllocation[];
   metrics: AnalyticsMetric[];
 }
-
-const SECTOR_COLORS = [
-  "oklch(0.70 0.08 230)",  // blue
-  "oklch(0.65 0.15 155)",  // green
-  "oklch(0.70 0.12 80)",   // yellow
-  "oklch(0.60 0.18 25)",   // red
-  "oklch(0.65 0.10 300)",  // purple
-  "oklch(0.70 0.10 180)",  // teal
-  "oklch(0.65 0.08 50)",   // orange
-  "oklch(0.55 0.12 270)",  // indigo
-];
 
 export async function getAnalyticsData(): Promise<ActionResponse<AnalyticsData>> {
   const userId = await getSessionUserId();
@@ -93,7 +85,8 @@ export async function getAnalyticsData(): Promise<ActionResponse<AnalyticsData>>
 
       monthlyReturns.push({
         month: label,
-        return: Math.round(cumulativeReturn * 100) / 100,
+        monthly: Math.round(monthReturn * 100) / 100,
+        cumulative: Math.round(cumulativeReturn * 100) / 100,
       });
     }
 
@@ -118,13 +111,14 @@ export async function getAnalyticsData(): Promise<ActionResponse<AnalyticsData>>
 
     const sectorAllocation: SectorAllocation[] = Array.from(allocationMap.values())
       .sort((a, b) => b.marketValue - a.marketValue)
-      .map((item, index) => ({
+      .map((item) => ({
         name: item.name,
         value: totalPortfolioValue > 0
           ? Math.round((item.marketValue / totalPortfolioValue) * 1000) / 10
           : 0,
-        color: SECTOR_COLORS[index % SECTOR_COLORS.length],
-      }));
+      }))
+      // Holdings that round to 0.0% of the portfolio would only add "0%" rows.
+      .filter((item) => item.value > 0);
 
     // Performance Metrics
     // Sharpe Ratio (annualized, assuming ~252 trading days, risk-free = 0)
@@ -143,15 +137,13 @@ export async function getAnalyticsData(): Promise<ActionResponse<AnalyticsData>>
 
     // Win Rate
     const positiveMonths = monthlyReturns.filter(
-      (m, i) => i > 0 && m.return > monthlyReturns[i - 1].return
+      (m, i) => i > 0 && m.monthly > 0
     ).length;
     const totalMonths = Math.max(monthlyReturns.length - 1, 1);
     const winRate = (positiveMonths / totalMonths) * 100;
 
     // Average monthly return
-    const monthlyReturnValues = monthlyReturns.map(
-      (m, i) => i > 0 ? m.return - monthlyReturns[i - 1].return : m.return
-    );
+    const monthlyReturnValues = monthlyReturns.map((m) => m.monthly);
     const avgMonthlyReturn = monthlyReturnValues.length > 0
       ? monthlyReturnValues.reduce((s, r) => s + r, 0) / monthlyReturnValues.length
       : 0;
