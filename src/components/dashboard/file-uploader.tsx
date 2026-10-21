@@ -1,6 +1,6 @@
 "use client";
 
-import { Upload, File, FileUp } from "lucide-react";
+import { Upload, File, FileUp, Loader2 } from "lucide-react";
 import { useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -9,6 +9,8 @@ import {
   type ParsedRow,
 } from "@/app/actions/import";
 import { ImportPreviewDialog } from "./import-preview-dialog";
+import { appButton } from "@/components/app/styles";
+import { cn } from "@/lib/utils";
 
 export function FileUploader() {
   const router = useRouter();
@@ -175,342 +177,20 @@ export function FileUploader() {
 
   return (
     <>
-      <style jsx>{`
-        .upload-zone {
-          position: relative;
-          overflow: hidden;
-          border-radius: 16px;
-          border: 2px dashed var(--line-strong);
-          background: var(--sunken);
-          padding: 48px 24px;
-          text-align: center;
-          transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-          cursor: pointer;
-        }
-
-        .upload-zone:hover {
-          border-color: color-mix(in oklch, var(--brand) 35%, transparent);
-          background: var(--surface);
-        }
-
-        /* ── Drag-active state ── */
-        .upload-zone.drag-active {
-          border-color: var(--brand);
-          border-style: solid;
-          background: var(--brand-wash);
-          box-shadow:
-            0 0 0 4px color-mix(in oklch, var(--brand) 12%, transparent),
-            inset 0 0 60px color-mix(in oklch, var(--brand) 4%, transparent);
-          transform: scale(1.008);
-        }
-
-        /* Animated shimmer border overlay */
-        .upload-zone.drag-active::before {
-          content: "";
-          position: absolute;
-          inset: -2px;
-          border-radius: 18px;
-          background: conic-gradient(
-            from var(--shimmer-angle, 0deg),
-            transparent 0%,
-            color-mix(in oklch, var(--brand) 40%, transparent) 10%,
-            transparent 20%
-          );
-          animation: shimmer-rotate 2s linear infinite;
-          z-index: 0;
-          pointer-events: none;
-        }
-
-        .upload-zone.drag-active::after {
-          content: "";
-          position: absolute;
-          inset: 2px;
-          border-radius: 14px;
-          background: var(--brand-wash);
-          z-index: 1;
-          pointer-events: none;
-        }
-
-        @keyframes shimmer-rotate {
-          from { --shimmer-angle: 0deg; }
-          to { --shimmer-angle: 360deg; }
-        }
-
-        @property --shimmer-angle {
-          syntax: "<angle>";
-          initial-value: 0deg;
-          inherits: false;
-        }
-
-        .upload-zone-content {
-          position: relative;
-          z-index: 2;
-        }
-
-        /* Icon container */
-        .upload-icon-box {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 64px;
-          height: 64px;
-          border-radius: 20px;
-          background: var(--brand-wash);
-          transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .upload-zone.drag-active .upload-icon-box {
-          background: color-mix(in oklch, var(--brand) 20%, var(--surface));
-          transform: translateY(-6px) scale(1.1);
-          box-shadow: 0 12px 32px color-mix(in oklch, var(--brand) 25%, transparent);
-        }
-
-        .upload-icon {
-          width: 28px;
-          height: 28px;
-          color: var(--brand);
-          transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .upload-zone.drag-active .upload-icon {
-          color: var(--brand-hover);
-          animation: icon-bounce 0.6s ease-in-out infinite alternate;
-        }
-
-        @keyframes icon-bounce {
-          from { transform: translateY(0); }
-          to { transform: translateY(-4px); }
-        }
-
-        /* Floating particles on drag */
-        .drag-particles {
-          position: absolute;
-          inset: 0;
-          z-index: 2;
-          pointer-events: none;
-          opacity: 0;
-          transition: opacity 0.3s ease;
-        }
-
-        .upload-zone.drag-active .drag-particles {
-          opacity: 1;
-        }
-
-        .drag-particle {
-          position: absolute;
-          width: 4px;
-          height: 4px;
-          border-radius: 50%;
-          background: var(--brand);
-        }
-
-        .drag-particle:nth-child(1) { top: 20%; left: 15%; animation: float-particle 2.5s ease-in-out infinite; }
-        .drag-particle:nth-child(2) { top: 30%; right: 20%; animation: float-particle 3s ease-in-out infinite 0.5s; }
-        .drag-particle:nth-child(3) { bottom: 25%; left: 25%; animation: float-particle 2.8s ease-in-out infinite 1s; }
-        .drag-particle:nth-child(4) { bottom: 20%; right: 15%; animation: float-particle 3.2s ease-in-out infinite 0.3s; }
-        .drag-particle:nth-child(5) { top: 45%; left: 10%; animation: float-particle 2.6s ease-in-out infinite 0.8s; width: 3px; height: 3px; opacity: 0.6; }
-        .drag-particle:nth-child(6) { top: 15%; right: 30%; animation: float-particle 3.1s ease-in-out infinite 1.2s; width: 3px; height: 3px; opacity: 0.6; }
-
-        @keyframes float-particle {
-          0%, 100% { transform: translateY(0) scale(1); opacity: 0.4; }
-          50% { transform: translateY(-12px) scale(1.3); opacity: 1; }
-        }
-
-        /* Text transitions */
-        .upload-title {
-          margin-top: 20px;
-          font-size: 15px;
-          font-weight: 600;
-          color: var(--fg-2);
-          transition: all 0.3s ease;
-        }
-
-        .upload-zone.drag-active .upload-title {
-          color: var(--fg-1);
-        }
-
-        .upload-subtitle {
-          margin-top: 6px;
-          font-size: 12px;
-          color: var(--fg-4);
-          transition: all 0.3s ease;
-        }
-
-        .upload-zone.drag-active .upload-subtitle {
-          color: var(--brand);
-        }
-
-        /* Browse button */
-        .browse-btn {
-          display: inline-flex;
-          align-items: center;
-          height: 38px;
-          margin-top: 20px;
-          padding: 0 20px;
-          border-radius: 10px;
-          background: var(--brand);
-          color: var(--canvas);
-          font-size: 13px;
-          font-weight: 600;
-          border: none;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .browse-btn:hover {
-          background: var(--brand-hover);
-          box-shadow: 0 4px 16px color-mix(in oklch, var(--brand) 30%, transparent);
-        }
-
-        .upload-zone.drag-active .browse-btn {
-          opacity: 0;
-          pointer-events: none;
-          transform: translateY(8px);
-        }
-
-        /* File selected state */
-        .file-info-box {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 60px;
-          height: 60px;
-          border-radius: 18px;
-          background: var(--layer-2);
-          border: 1px solid var(--line-strong);
-        }
-
-        .file-icon {
-          width: 26px;
-          height: 26px;
-          color: var(--fg-2);
-        }
-
-        .file-name {
-          margin-top: 16px;
-          font-size: 14px;
-          font-weight: 600;
-          color: var(--fg-1);
-        }
-
-        .file-size {
-          margin-top: 4px;
-          font-size: 11px;
-          color: var(--fg-4);
-        }
-
-        .file-actions {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin-top: 24px;
-        }
-
-        .cancel-btn {
-          display: inline-flex;
-          align-items: center;
-          height: 38px;
-          padding: 0 16px;
-          border-radius: 10px;
-          border: 1px solid var(--line-strong);
-          background: transparent;
-          font-size: 12px;
-          font-weight: 500;
-          color: var(--fg-3);
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .cancel-btn:hover {
-          background: var(--hover);
-        }
-
-        .cancel-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .parse-btn {
-          display: inline-flex;
-          align-items: center;
-          height: 38px;
-          padding: 0 20px;
-          border-radius: 10px;
-          background: var(--brand);
-          color: var(--canvas);
-          font-size: 12px;
-          font-weight: 600;
-          border: none;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .parse-btn:hover:not(:disabled) {
-          background: var(--brand-hover);
-          box-shadow: 0 4px 16px color-mix(in oklch, var(--brand) 30%, transparent);
-        }
-
-        .parse-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-          background: var(--layer-3);
-          color: var(--fg-4);
-        }
-
-        .status-message {
-          margin-top: 16px;
-          font-size: 12px;
-          font-weight: 500;
-        }
-
-        .status-success {
-          color: var(--gain);
-        }
-
-        .status-error {
-          color: var(--loss);
-        }
-
-        /* Supported formats badge */
-        .format-badges {
-          display: flex;
-          justify-content: center;
-          gap: 8px;
-          margin-top: 14px;
-        }
-
-        .format-badge {
-          display: inline-flex;
-          align-items: center;
-          padding: 2px 10px;
-          border-radius: 6px;
-          background: var(--layer-1);
-          font-size: 10px;
-          font-weight: 600;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          color: var(--fg-4);
-        }
-      `}</style>
-
       <div
-        className={`upload-zone ${isDragActive ? "drag-active" : ""}`}
+        className={cn(
+          "relative cursor-pointer rounded-2xl border-2 border-dashed px-6 py-12 text-center transition-colors duration-300",
+          isDragActive
+            ? "border-solid border-brand bg-brand-wash ring-4 ring-brand/10"
+            : "border-line-strong bg-sunken hover:border-brand/40 hover:bg-surface",
+          selectedFile && "cursor-default"
+        )}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={!selectedFile ? handleUploadClick : undefined}
       >
-        {/* Floating particles shown during drag */}
-        <div className="drag-particles">
-          <div className="drag-particle" />
-          <div className="drag-particle" />
-          <div className="drag-particle" />
-          <div className="drag-particle" />
-          <div className="drag-particle" />
-          <div className="drag-particle" />
-        </div>
-
         <input
           type="file"
           ref={fileInputRef}
@@ -519,73 +199,73 @@ export function FileUploader() {
           onChange={handleFileChange}
         />
 
-        <div className="upload-zone-content">
-          {selectedFile ? (
-            <div className="flex flex-col items-center">
-              <div className="file-info-box">
-                <File className="file-icon" strokeWidth={1.75} />
-              </div>
-              <p className="file-name">{selectedFile.name}</p>
-              <p className="file-size">{(selectedFile.size / 1024).toFixed(1)} KB</p>
+        {selectedFile ? (
+          <div className="flex flex-col items-center">
+            <div className="flex size-15 items-center justify-center rounded-2xl border border-line-strong bg-layer-2">
+              <File className="size-6.5 text-fg-2" strokeWidth={1.75} />
+            </div>
+            <p className="mt-4 max-w-full truncate text-[14px] font-semibold text-fg-1">{selectedFile.name}</p>
+            <p className="mt-1 text-[12px] tabular-nums text-fg-4">{(selectedFile.size / 1024).toFixed(1)} KB</p>
 
-              <div className="file-actions">
-                <button
-                  onClick={(e) => { e.stopPropagation(); clearSelection(); }}
-                  disabled={isParsing}
-                  className="cancel-btn"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleParse(); }}
-                  disabled={isParsing}
-                  className="parse-btn"
-                >
-                  {isParsing ? "Parsing..." : "Preview transactions"}
-                </button>
-              </div>
+            <div className="mt-6 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); clearSelection(); }}
+                disabled={isParsing}
+                className={appButton({ tone: "secondary" })}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); handleParse(); }}
+                disabled={isParsing}
+                className={appButton({ tone: "primary" })}
+              >
+                {isParsing && <Loader2 className="animate-spin" />}
+                {isParsing ? "Reading PDF..." : "Preview transactions"}
+              </button>
+            </div>
 
-              {(uploadStatus === "success" || uploadStatus === "error") && (
-                <p className={`status-message ${uploadStatus === "success" ? "status-success" : "status-error"}`}>
-                  {uploadMessage}
-                </p>
+            {uploadStatus === "error" && uploadMessage && (
+              <p role="alert" className="mt-4 text-[12px] font-medium text-loss">{uploadMessage}</p>
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center">
+            <div
+              className={cn(
+                "flex size-16 items-center justify-center rounded-2xl text-brand transition duration-300",
+                isDragActive ? "bg-brand/20 motion-safe:-translate-y-1.5" : "bg-brand-wash"
+              )}
+            >
+              {isDragActive ? (
+                <FileUp className="size-7" strokeWidth={1.75} />
+              ) : (
+                <Upload className="size-7" strokeWidth={1.75} />
               )}
             </div>
-          ) : (
-            <>
-              <div className="upload-icon-box">
-                {isDragActive ? (
-                  <FileUp className="upload-icon" strokeWidth={1.75} />
-                ) : (
-                  <Upload className="upload-icon" strokeWidth={1.75} />
-                )}
-              </div>
-              <p className="upload-title">
-                {isDragActive ? "Drop your file to upload" : "Drag and drop your files here"}
-              </p>
-              <p className="upload-subtitle">
-                {isDragActive
-                  ? "Release to start processing"
-                  : "Supports Ajaib daily transaction PDF"}
-              </p>
-              <div className="format-badges">
-                <span className="format-badge">PDF</span>
-              </div>
-              <button
-                onClick={(e) => { e.stopPropagation(); handleUploadClick(); }}
-                className="browse-btn"
-              >
-                Browse Files
-              </button>
-              {uploadStatus === "success" && uploadMessage && (
-                <p className="status-message status-success">{uploadMessage}</p>
-              )}
-              {uploadStatus === "error" && uploadMessage && (
-                <p className="status-message status-error">{uploadMessage}</p>
-              )}
-            </>
-          )}
-        </div>
+            <p className={cn("mt-5 text-[15px] font-semibold", isDragActive ? "text-fg-1" : "text-fg-2")}>
+              {isDragActive ? "Drop the PDF to upload" : "Drag and drop a PDF here"}
+            </p>
+            <p className={cn("mt-1.5 text-[12px]", isDragActive ? "text-brand" : "text-fg-4")}>
+              {isDragActive ? "Release to start reading it" : "Ajaib daily transaction statement, one file at a time"}
+            </p>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); handleUploadClick(); }}
+              className={cn(appButton({ tone: "primary" }), "mt-5", isDragActive && "invisible")}
+            >
+              Browse files
+            </button>
+            {uploadStatus === "success" && uploadMessage && (
+              <p role="status" className="mt-4 text-[12px] font-medium text-gain">{uploadMessage}</p>
+            )}
+            {uploadStatus === "error" && uploadMessage && (
+              <p role="alert" className="mt-4 text-[12px] font-medium text-loss">{uploadMessage}</p>
+            )}
+          </div>
+        )}
       </div>
 
       <ImportPreviewDialog
