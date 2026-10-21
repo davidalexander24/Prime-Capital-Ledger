@@ -3,19 +3,21 @@
 import { signOut } from "next-auth/react";
 import { LogOut } from "lucide-react";
 import { useState } from "react";
+import { appButton } from "@/components/app/styles";
 
 export function LogoutButton() {
   const [pending, setPending] = useState(false);
   return (
     <button
+      type="button"
       onClick={() => {
         setPending(true);
         signOut({ callbackUrl: "/login" });
       }}
       disabled={pending}
-      className="flex h-9 items-center gap-2 rounded-lg border border-line-strong bg-hover px-3 text-[12px] font-medium text-fg-2 transition-colors hover:bg-layer-2 disabled:opacity-60"
+      className={appButton({ tone: "secondary" })}
     >
-      <LogOut className="h-3.5 w-3.5" strokeWidth={2} />
+      <LogOut strokeWidth={2} />
       {pending ? "Signing out…" : "Log out"}
     </button>
   );
