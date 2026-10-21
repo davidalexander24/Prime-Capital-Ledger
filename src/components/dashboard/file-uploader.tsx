@@ -180,8 +180,8 @@ export function FileUploader() {
           position: relative;
           overflow: hidden;
           border-radius: 16px;
-          border: 2px dashed oklch(0.18 0.005 260);
-          background: oklch(0.04 0.005 260);
+          border: 2px dashed var(--line-strong);
+          background: var(--sunken);
           padding: 48px 24px;
           text-align: center;
           transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
@@ -189,18 +189,18 @@ export function FileUploader() {
         }
 
         .upload-zone:hover {
-          border-color: oklch(0.28 0.02 230);
-          background: oklch(0.055 0.005 260);
+          border-color: color-mix(in oklch, var(--brand) 35%, transparent);
+          background: var(--surface);
         }
 
         /* ── Drag-active state ── */
         .upload-zone.drag-active {
-          border-color: oklch(0.60 0.12 230);
+          border-color: var(--brand);
           border-style: solid;
-          background: oklch(0.08 0.03 230);
+          background: var(--brand-wash);
           box-shadow:
-            0 0 0 4px oklch(0.60 0.12 230 / 0.12),
-            inset 0 0 60px oklch(0.60 0.12 230 / 0.04);
+            0 0 0 4px color-mix(in oklch, var(--brand) 12%, transparent),
+            inset 0 0 60px color-mix(in oklch, var(--brand) 4%, transparent);
           transform: scale(1.008);
         }
 
@@ -213,7 +213,7 @@ export function FileUploader() {
           background: conic-gradient(
             from var(--shimmer-angle, 0deg),
             transparent 0%,
-            oklch(0.60 0.12 230 / 0.4) 10%,
+            color-mix(in oklch, var(--brand) 40%, transparent) 10%,
             transparent 20%
           );
           animation: shimmer-rotate 2s linear infinite;
@@ -226,7 +226,7 @@ export function FileUploader() {
           position: absolute;
           inset: 2px;
           border-radius: 14px;
-          background: oklch(0.08 0.03 230);
+          background: var(--brand-wash);
           z-index: 1;
           pointer-events: none;
         }
@@ -255,25 +255,25 @@ export function FileUploader() {
           width: 64px;
           height: 64px;
           border-radius: 20px;
-          background: oklch(0.10 0.02 230);
+          background: var(--brand-wash);
           transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .upload-zone.drag-active .upload-icon-box {
-          background: oklch(0.15 0.06 230);
+          background: color-mix(in oklch, var(--brand) 20%, var(--surface));
           transform: translateY(-6px) scale(1.1);
-          box-shadow: 0 12px 32px oklch(0.55 0.12 230 / 0.25);
+          box-shadow: 0 12px 32px color-mix(in oklch, var(--brand) 25%, transparent);
         }
 
         .upload-icon {
           width: 28px;
           height: 28px;
-          color: oklch(0.60 0.08 230);
+          color: var(--brand);
           transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .upload-zone.drag-active .upload-icon {
-          color: oklch(0.80 0.12 230);
+          color: var(--brand-hover);
           animation: icon-bounce 0.6s ease-in-out infinite alternate;
         }
 
@@ -301,7 +301,7 @@ export function FileUploader() {
           width: 4px;
           height: 4px;
           border-radius: 50%;
-          background: oklch(0.65 0.12 230);
+          background: var(--brand);
         }
 
         .drag-particle:nth-child(1) { top: 20%; left: 15%; animation: float-particle 2.5s ease-in-out infinite; }
@@ -321,23 +321,23 @@ export function FileUploader() {
           margin-top: 20px;
           font-size: 15px;
           font-weight: 600;
-          color: oklch(0.80 0.005 260);
+          color: var(--fg-2);
           transition: all 0.3s ease;
         }
 
         .upload-zone.drag-active .upload-title {
-          color: oklch(0.90 0.02 230);
+          color: var(--fg-1);
         }
 
         .upload-subtitle {
           margin-top: 6px;
           font-size: 12px;
-          color: oklch(0.40 0.01 260);
+          color: var(--fg-4);
           transition: all 0.3s ease;
         }
 
         .upload-zone.drag-active .upload-subtitle {
-          color: oklch(0.55 0.04 230);
+          color: var(--brand);
         }
 
         /* Browse button */
@@ -348,8 +348,8 @@ export function FileUploader() {
           margin-top: 20px;
           padding: 0 20px;
           border-radius: 10px;
-          background: oklch(0.60 0.10 230);
-          color: white;
+          background: var(--brand);
+          color: var(--canvas);
           font-size: 13px;
           font-weight: 600;
           border: none;
@@ -358,8 +358,8 @@ export function FileUploader() {
         }
 
         .browse-btn:hover {
-          background: oklch(0.55 0.10 230);
-          box-shadow: 0 4px 16px oklch(0.55 0.10 230 / 0.3);
+          background: var(--brand-hover);
+          box-shadow: 0 4px 16px color-mix(in oklch, var(--brand) 30%, transparent);
         }
 
         .upload-zone.drag-active .browse-btn {
@@ -376,27 +376,27 @@ export function FileUploader() {
           width: 60px;
           height: 60px;
           border-radius: 18px;
-          background: oklch(0.15 0.01 230);
-          border: 1px solid oklch(0.25 0.01 230);
+          background: var(--layer-2);
+          border: 1px solid var(--line-strong);
         }
 
         .file-icon {
           width: 26px;
           height: 26px;
-          color: oklch(0.80 0.01 230);
+          color: var(--fg-2);
         }
 
         .file-name {
           margin-top: 16px;
           font-size: 14px;
           font-weight: 600;
-          color: oklch(0.90 0.005 260);
+          color: var(--fg-1);
         }
 
         .file-size {
           margin-top: 4px;
           font-size: 11px;
-          color: oklch(0.45 0.01 260);
+          color: var(--fg-4);
         }
 
         .file-actions {
@@ -412,17 +412,17 @@ export function FileUploader() {
           height: 38px;
           padding: 0 16px;
           border-radius: 10px;
-          border: 1px solid oklch(0.20 0.005 260);
+          border: 1px solid var(--line-strong);
           background: transparent;
           font-size: 12px;
           font-weight: 500;
-          color: oklch(0.60 0.005 260);
+          color: var(--fg-3);
           cursor: pointer;
           transition: all 0.2s ease;
         }
 
         .cancel-btn:hover {
-          background: oklch(0.10 0.005 260);
+          background: var(--hover);
         }
 
         .cancel-btn:disabled {
@@ -436,8 +436,8 @@ export function FileUploader() {
           height: 38px;
           padding: 0 20px;
           border-radius: 10px;
-          background: oklch(0.60 0.10 230);
-          color: white;
+          background: var(--brand);
+          color: var(--canvas);
           font-size: 12px;
           font-weight: 600;
           border: none;
@@ -446,15 +446,15 @@ export function FileUploader() {
         }
 
         .parse-btn:hover:not(:disabled) {
-          background: oklch(0.55 0.10 230);
-          box-shadow: 0 4px 16px oklch(0.55 0.10 230 / 0.3);
+          background: var(--brand-hover);
+          box-shadow: 0 4px 16px color-mix(in oklch, var(--brand) 30%, transparent);
         }
 
         .parse-btn:disabled {
           opacity: 0.5;
           cursor: not-allowed;
-          background: oklch(0.30 0.005 260);
-          color: oklch(0.70 0.005 260);
+          background: var(--layer-3);
+          color: var(--fg-4);
         }
 
         .status-message {
@@ -464,11 +464,11 @@ export function FileUploader() {
         }
 
         .status-success {
-          color: oklch(0.65 0.15 155);
+          color: var(--gain);
         }
 
         .status-error {
-          color: oklch(0.65 0.18 25);
+          color: var(--loss);
         }
 
         /* Supported formats badge */
@@ -484,12 +484,12 @@ export function FileUploader() {
           align-items: center;
           padding: 2px 10px;
           border-radius: 6px;
-          background: oklch(0.08 0.005 260);
+          background: var(--layer-1);
           font-size: 10px;
           font-weight: 600;
           letter-spacing: 0.06em;
           text-transform: uppercase;
-          color: oklch(0.45 0.01 260);
+          color: var(--fg-4);
         }
       `}</style>
 

@@ -58,12 +58,12 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile top header — hamburger + logo, only below lg */}
-      <header className="fixed left-0 right-0 top-0 z-40 flex h-14 items-center justify-between border-b border-[oklch(0.14_0.005_260)] bg-[oklch(0.04_0.005_260)]/95 px-4 backdrop-blur-xl lg:hidden">
+      <header className="fixed left-0 right-0 top-0 z-40 flex h-14 items-center justify-between border-b border-line bg-panel/95 px-4 backdrop-blur-xl lg:hidden">
         <button
           type="button"
           aria-label="Open navigation menu"
           onClick={() => setOpen(true)}
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-[oklch(0.65_0.005_260)] transition-colors hover:bg-[oklch(0.08_0.005_260)] hover:text-[oklch(0.85_0.005_260)]"
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-fg-3 transition-colors hover:bg-hover hover:text-fg-2"
         >
           <Menu className="h-5 w-5" strokeWidth={1.75} />
         </button>
@@ -89,11 +89,11 @@ export function Sidebar() {
 
       {/* Sidebar — fixed drawer on mobile, static on desktop */}
       <aside
-        className={`fixed left-0 top-0 z-50 flex h-screen w-65 flex-col border-r border-[oklch(0.14_0.005_260)] bg-[oklch(0.04_0.005_260)] transition-transform duration-200 ease-out lg:w-55 lg:translate-x-0 ${
+        className={`fixed left-0 top-0 z-50 flex h-screen w-65 flex-col border-r border-line bg-panel transition-transform duration-200 ease-out lg:w-55 lg:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex h-16 items-center justify-between border-b border-[oklch(0.14_0.005_260)] px-4 lg:justify-center lg:px-0">
+        <div className="flex h-16 items-center justify-between border-b border-line px-4 lg:justify-center lg:px-0">
           <Link
             href="/dashboard"
             className="flex items-center"
@@ -105,14 +105,14 @@ export function Sidebar() {
             type="button"
             aria-label="Close navigation menu"
             onClick={() => setOpen(false)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-[oklch(0.65_0.005_260)] transition-colors hover:bg-[oklch(0.08_0.005_260)] hover:text-[oklch(0.85_0.005_260)] lg:hidden"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-fg-3 transition-colors hover:bg-hover hover:text-fg-2 lg:hidden"
           >
             <X className="h-5 w-5" strokeWidth={1.75} />
           </button>
         </div>
 
         <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4">
-          <span className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-[oklch(0.40_0.01_260)]">
+          <span className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-fg-4">
             Menu
           </span>
           {navItems.map((item) => {
@@ -124,15 +124,15 @@ export function Sidebar() {
                 onClick={() => setOpen(false)}
                 className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-150 ${
                   isActive
-                    ? "bg-[oklch(0.12_0.01_230)] text-[oklch(0.70_0.08_230)]"
-                    : "text-[oklch(0.50_0.01_260)] hover:bg-[oklch(0.08_0.005_260)] hover:text-[oklch(0.75_0.005_260)]"
+                    ? "bg-brand-wash text-brand"
+                    : "text-fg-4 hover:bg-hover hover:text-fg-2"
                 }`}
               >
                 <item.icon
                   className={`h-4 w-4 transition-colors duration-150 ${
                     isActive
-                      ? "text-[oklch(0.70_0.08_230)]"
-                      : "text-[oklch(0.40_0.01_260)] group-hover:text-[oklch(0.60_0.005_260)]"
+                      ? "text-brand"
+                      : "text-fg-4 group-hover:text-fg-3"
                   }`}
                   strokeWidth={isActive ? 2.25 : 1.75}
                 />
@@ -142,16 +142,16 @@ export function Sidebar() {
           })}
         </nav>
 
-        <div className="border-t border-[oklch(0.14_0.005_260)] px-4 py-4">
+        <div className="border-t border-line px-4 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[oklch(0.14_0.005_260)] text-[11px] font-semibold text-[oklch(0.60_0.005_260)]">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-layer-3 text-[11px] font-semibold text-fg-3">
               {initials}
             </div>
             <div className="flex min-w-0 flex-col">
-              <span className="truncate text-[12px] font-medium text-[oklch(0.80_0.005_260)]">
+              <span className="truncate text-[12px] font-medium text-fg-2">
                 {displayName}
               </span>
-              <span className="text-[10px] text-[oklch(0.40_0.01_260)]">
+              <span className="text-[10px] text-fg-4">
                 Personal
               </span>
             </div>

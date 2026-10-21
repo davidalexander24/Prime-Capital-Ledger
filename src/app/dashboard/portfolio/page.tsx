@@ -39,10 +39,10 @@ export default async function PortfolioPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight text-[oklch(0.93_0.005_260)]">
+        <h1 className="text-xl font-semibold tracking-tight text-fg-1">
           Portfolio
         </h1>
-        <p className="mt-1 text-[13px] text-[oklch(0.45_0.01_260)]">
+        <p className="mt-1 text-[13px] text-fg-4">
           Current holdings and position breakdown.
         </p>
       </div>

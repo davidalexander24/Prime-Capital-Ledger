@@ -28,7 +28,7 @@ function StockLogoInner({
   if (errorCount >= sources.length) {
     return (
       <div
-        className={`flex shrink-0 items-center justify-center rounded-lg border border-[oklch(0.12_0.005_260)] bg-transparent text-[oklch(0.50_0.01_260)] font-semibold tracking-wide ${className}`}
+        className={`flex shrink-0 items-center justify-center rounded-lg border border-line-soft bg-transparent text-fg-4 font-semibold tracking-wide ${className}`}
         style={{ width: size, height: size, fontSize: size * 0.4 }}
       >
         {cleanTicker.slice(0, 2)}

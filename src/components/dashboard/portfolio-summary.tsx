@@ -13,36 +13,36 @@ export function PortfolioSummary({ totalMarketValue, totalCost, baseCurrency, ra
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <div className="rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)] p-5">
-        <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-[oklch(0.45_0.01_260)]">
+      <div className="rounded-xl border border-line bg-surface p-5">
+        <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-fg-4">
           Total Market Value
         </span>
-        <p className="mt-2 text-xl font-semibold tabular-nums text-[oklch(0.93_0.005_260)]">
+        <p className="mt-2 text-xl font-semibold tabular-nums text-fg-1">
           {formatMoney(totalMarketValue, baseCurrency)}
         </p>
         {baseCurrency === "IDR" && (
-          <p className="mt-1 text-[10px] italic text-[oklch(0.45_0.01_260)]">
+          <p className="mt-1 text-[10px] italic text-fg-4">
             Converted at 1 USD = {formatMoney(rate, "IDR")}
           </p>
         )}
       </div>
-      <div className="rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)] p-5">
-        <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-[oklch(0.45_0.01_260)]">
+      <div className="rounded-xl border border-line bg-surface p-5">
+        <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-fg-4">
           Total Cost Basis
         </span>
-        <p className="mt-2 text-xl font-semibold tabular-nums text-[oklch(0.93_0.005_260)]">
+        <p className="mt-2 text-xl font-semibold tabular-nums text-fg-1">
           {formatMoney(totalCost, baseCurrency)}
         </p>
       </div>
-      <div className="rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)] p-5">
-        <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-[oklch(0.45_0.01_260)]">
+      <div className="rounded-xl border border-line bg-surface p-5">
+        <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-fg-4">
           Unrealized P&L
         </span>
         <div className="mt-2 flex items-baseline gap-2">
-          <p className={`text-xl font-semibold tabular-nums ${totalPnl >= 0 ? "text-[oklch(0.65_0.15_155)]" : "text-[oklch(0.65_0.15_25)]"}`}>
+          <p className={`text-xl font-semibold tabular-nums ${totalPnl >= 0 ? "text-gain" : "text-loss"}`}>
             {formatMoney(totalPnl, baseCurrency, { signed: true })}
           </p>
-          <span className={`text-sm font-medium ${totalPnl >= 0 ? "text-[oklch(0.65_0.15_155)]" : "text-[oklch(0.65_0.15_25)]"}`}>
+          <span className={`text-sm font-medium ${totalPnl >= 0 ? "text-gain" : "text-loss"}`}>
             ({totalPnlPct >= 0 ? "+" : ""}{totalPnlPct.toFixed(2)}%)
           </span>
         </div>

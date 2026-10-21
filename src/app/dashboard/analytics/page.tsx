@@ -31,8 +31,8 @@ export default async function AnalyticsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight text-[oklch(0.93_0.005_260)]">Analytics</h1>
-        <p className="mt-1 text-[13px] text-[oklch(0.45_0.01_260)]">Performance metrics and portfolio analytics.</p>
+        <h1 className="text-xl font-semibold tracking-tight text-fg-1">Analytics</h1>
+        <p className="mt-1 text-[13px] text-fg-4">Performance metrics and portfolio analytics.</p>
       </div>
 
       <AnalyticsCharts 

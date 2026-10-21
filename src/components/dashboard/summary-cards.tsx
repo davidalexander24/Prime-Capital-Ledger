@@ -54,17 +54,17 @@ export function SummaryCards({ data }: SummaryCardsProps) {
       {cards.map((card) => (
         <div
           key={card.label}
-          className="group relative overflow-hidden rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)] p-5 transition-colors duration-200 hover:border-[oklch(0.20_0.005_260)]"
+          className="group relative overflow-hidden rounded-xl border border-line bg-surface p-5 transition-colors duration-200 hover:border-line-strong"
         >
           <div className="flex items-start justify-between">
-            <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-[oklch(0.45_0.01_260)]">
+            <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-fg-4">
               {card.label}
             </span>
             <card.icon
               className={`h-4 w-4 ${
                 card.accent
-                  ? "text-[oklch(0.65_0.15_155)]"
-                  : "text-[oklch(0.35_0.01_260)]"
+                  ? "text-gain"
+                  : "text-fg-5"
               }`}
               strokeWidth={1.75}
             />
@@ -74,26 +74,26 @@ export function SummaryCards({ data }: SummaryCardsProps) {
               <span
                 className={`text-sm font-medium ${
                   card.accent
-                    ? "text-[oklch(0.65_0.15_155)]"
-                    : "text-[oklch(0.60_0.18_25)]"
+                    ? "text-gain"
+                    : "text-loss"
                 }`}
               >
                 {card.prefix}
               </span>
             )}
-            <span className="text-xl font-semibold tracking-tight tabular-nums text-[oklch(0.93_0.005_260)]">
+            <span className="text-xl font-semibold tracking-tight tabular-nums text-fg-1">
               {card.value}
             </span>
           </div>
-          <p className="mt-1.5 text-[11px] text-[oklch(0.40_0.01_260)]">
+          <p className="mt-1.5 text-[11px] text-fg-4">
             {card.detail}
           </p>
           {card.extra && (
-            <p className="mt-0.5 text-[10px] italic text-[oklch(0.45_0.01_260)]">
+            <p className="mt-0.5 text-[10px] italic text-fg-4">
               {card.extra}
             </p>
           )}
-          <div className="absolute -bottom-8 -right-8 h-24 w-24 rounded-full bg-[oklch(0.08_0.005_260)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+          <div className="absolute -bottom-8 -right-8 h-24 w-24 rounded-full bg-hover opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
         </div>
       ))}
     </div>

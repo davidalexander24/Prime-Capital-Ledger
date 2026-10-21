@@ -41,6 +41,83 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  /* App palette: bg-surface, text-fg-3, border-line, text-gain, ... */
+  --color-canvas: var(--canvas);
+  --color-panel: var(--panel);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-sunken: var(--sunken);
+  --color-hover: var(--hover);
+  --color-layer-1: var(--layer-1);
+  --color-layer-2: var(--layer-2);
+  --color-layer-3: var(--layer-3);
+  --color-line-soft: var(--line-soft);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-field: var(--field);
+  --color-fg-1: var(--fg-1);
+  --color-fg-2: var(--fg-2);
+  --color-fg-3: var(--fg-3);
+  --color-fg-4: var(--fg-4);
+  --color-fg-5: var(--fg-5);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-wash: var(--brand-wash);
+  --color-gain: var(--gain);
+  --color-gain-wash: var(--gain-wash);
+  --color-gain-solid: var(--gain-solid);
+  --color-gain-solid-hover: var(--gain-solid-hover);
+  --color-loss: var(--loss);
+  --color-loss-wash: var(--loss-wash);
+  --color-loss-solid: var(--loss-solid);
+  --color-loss-solid-hover: var(--loss-solid-hover);
+  --color-cost: var(--cost);
+}
+
+/*
+ * App palette. Every dashboard color comes from these, so the theme is
+ * tuned here rather than in components.
+ *   canvas   page background        sunken   inputs and wells
+ *   panel    sidebar, mobile header  hover    hovered rows and buttons
+ *   surface  cards, dialogs          layer-*  chips, tracks, icon boxes
+ *   raised   menus, tooltips         line-*   dividers, borders; field = input border
+ *   fg-1..5  text, strongest to faintest
+ */
+:root {
+  --canvas: oklch(0.03 0.005 260);
+  --panel: oklch(0.04 0.005 260);
+  --surface: oklch(0.05 0.005 260);
+  --raised: oklch(0.06 0.005 260);
+  --sunken: oklch(0.03 0.005 260);
+  --hover: oklch(0.08 0.005 260);
+  --layer-1: oklch(0.10 0.005 260);
+  --layer-2: oklch(0.12 0.005 260);
+  --layer-3: oklch(0.14 0.005 260);
+
+  --line-soft: oklch(0.11 0.005 260);
+  --line: oklch(0.14 0.005 260);
+  --line-strong: oklch(0.18 0.005 260);
+  --field: oklch(0.14 0.005 260);
+
+  --fg-1: oklch(0.92 0.005 260);
+  --fg-2: oklch(0.82 0.005 260);
+  --fg-3: oklch(0.62 0.005 260);
+  --fg-4: oklch(0.45 0.01 260);
+  --fg-5: oklch(0.35 0.01 260);
+
+  --brand: oklch(0.70 0.08 230);
+  --brand-hover: oklch(0.75 0.09 230);
+  --brand-wash: oklch(0.12 0.01 230);
+  --gain: oklch(0.65 0.15 155);
+  --gain-wash: oklch(0.15 0.045 155);
+  --gain-solid: oklch(0.40 0.12 155);
+  --gain-solid-hover: oklch(0.45 0.13 155);
+  --loss: oklch(0.65 0.15 25);
+  --loss-wash: oklch(0.15 0.045 25);
+  --loss-solid: oklch(0.40 0.12 25);
+  --loss-solid-hover: oklch(0.45 0.13 25);
+  --cost: oklch(0.30 0.005 260);
 }
 
 :root {
@@ -99,19 +176,19 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.20 0.005 260);
+  background: var(--line-strong);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.28 0.005 260);
+  background: var(--fg-5);
 }
 
 /* Recharts overrides */
 .recharts-cartesian-grid line {
-  stroke: oklch(0.14 0.005 260) !important;
+  stroke: var(--line-soft) !important;
 }
 .recharts-text {
-  fill: oklch(0.45 0.01 260) !important;
+  fill: var(--fg-4) !important;
   font-size: 11px !important;
 }
 

@@ -83,25 +83,25 @@ export function TransactionTable({ data }: TransactionTableProps) {
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)]">
-      <div className="flex items-center justify-between gap-3 border-b border-[oklch(0.12_0.005_260)] px-4 py-4 sm:px-6">
+    <div className="overflow-hidden rounded-xl border border-line bg-surface">
+      <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-4 sm:px-6">
         <div className="min-w-0">
-          <h2 className="text-sm font-semibold text-[oklch(0.88_0.005_260)]">
+          <h2 className="text-sm font-semibold text-fg-2">
             Transaction History
           </h2>
-          <p className="mt-0.5 text-[11px] text-[oklch(0.40_0.01_260)]">
+          <p className="mt-0.5 text-[11px] text-fg-4">
             Recent buy and sell ledger entries
           </p>
         </div>
-        <span className="shrink-0 rounded-md bg-[oklch(0.10_0.005_260)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[oklch(0.45_0.01_260)]">
+        <span className="shrink-0 rounded-md bg-layer-1 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-fg-4">
           {data.length} entries
         </span>
       </div>
 
       {/* Mobile card list — visible only below md */}
-      <ul className="divide-y divide-[oklch(0.10_0.005_260)] md:hidden">
+      <ul className="divide-y divide-line-soft md:hidden">
         {data.length === 0 && (
-          <li className="px-4 py-10 text-center text-[12px] text-[oklch(0.45_0.01_260)]">
+          <li className="px-4 py-10 text-center text-[12px] text-fg-4">
             No transactions yet.
           </li>
         )}
@@ -114,10 +114,10 @@ export function TransactionTable({ data }: TransactionTableProps) {
               <div className="flex min-w-0 items-center gap-2.5">
                 <StockLogo ticker={tx.ticker} size={22} />
                 <div className="flex min-w-0 flex-col">
-                  <span className="truncate text-[13px] font-semibold text-[oklch(0.90_0.005_260)]">
+                  <span className="truncate text-[13px] font-semibold text-fg-1">
                     {tx.ticker.replace(".JK", "")}
                   </span>
-                  <span className="truncate text-[10px] text-[oklch(0.40_0.01_260)]">
+                  <span className="truncate text-[10px] text-fg-4">
                     {tx.assetName}
                   </span>
                 </div>
@@ -126,8 +126,8 @@ export function TransactionTable({ data }: TransactionTableProps) {
                 <div
                   className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${
                     tx.type === "BUY"
-                      ? "bg-[oklch(0.15_0.04_155)] text-[oklch(0.70_0.15_155)]"
-                      : "bg-[oklch(0.15_0.04_25)] text-[oklch(0.70_0.15_25)]"
+                      ? "bg-gain-wash text-gain"
+                      : "bg-loss-wash text-loss"
                   }`}
                 >
                   {tx.type === "BUY" ? (
@@ -142,7 +142,7 @@ export function TransactionTable({ data }: TransactionTableProps) {
                     <button
                       type="button"
                       aria-label="Row actions"
-                      className="flex h-7 w-7 items-center justify-center rounded-md text-[oklch(0.55_0.01_260)] transition-colors hover:bg-[oklch(0.10_0.005_260)] hover:text-[oklch(0.85_0.005_260)] data-[state=open]:bg-[oklch(0.10_0.005_260)] data-[state=open]:text-[oklch(0.85_0.005_260)]"
+                      className="flex h-7 w-7 items-center justify-center rounded-md text-fg-3 transition-colors hover:bg-layer-1 hover:text-fg-2 data-[state=open]:bg-layer-1 data-[state=open]:text-fg-2"
                     >
                       <MoreHorizontal className="h-3.5 w-3.5" />
                     </button>
@@ -152,18 +152,18 @@ export function TransactionTable({ data }: TransactionTableProps) {
                       align="end"
                       sideOffset={4}
                       collisionPadding={8}
-                      className="z-50 w-36 overflow-hidden rounded-lg border border-[oklch(0.18_0.005_260)] bg-[oklch(0.06_0.005_260)] shadow-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95"
+                      className="z-50 w-36 overflow-hidden rounded-lg border border-line-strong bg-raised shadow-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95"
                     >
                       <DropdownMenu.Item
                         onSelect={() => handleEdit(tx)}
-                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-[12px] font-medium text-[oklch(0.80_0.005_260)] outline-none transition-colors data-highlighted:bg-[oklch(0.10_0.005_260)]"
+                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-[12px] font-medium text-fg-2 outline-none transition-colors data-highlighted:bg-layer-1"
                       >
                         <Pencil className="h-3.5 w-3.5" />
                         Edit
                       </DropdownMenu.Item>
                       <DropdownMenu.Item
                         onSelect={() => handleDelete(tx)}
-                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-[12px] font-medium text-[oklch(0.70_0.15_25)] outline-none transition-colors data-highlighted:bg-[oklch(0.15_0.04_25)]"
+                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-[12px] font-medium text-loss outline-none transition-colors data-highlighted:bg-loss-wash"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                         Delete
@@ -175,14 +175,14 @@ export function TransactionTable({ data }: TransactionTableProps) {
             </div>
             <div className="flex items-end justify-between gap-3 pl-8.5">
               <div className="flex flex-col">
-                <span className="text-[10px] uppercase tracking-[0.06em] text-[oklch(0.40_0.01_260)]">
+                <span className="text-[10px] uppercase tracking-[0.06em] text-fg-4">
                   {formatDate(tx.executedAt)}
                 </span>
-                <span className="text-[11px] tabular-nums text-[oklch(0.60_0.005_260)]">
+                <span className="text-[11px] tabular-nums text-fg-3">
                   {formatQuantity(tx.quantity)} × {formatMoney(tx.pricePerShare, tx.currency)}
                 </span>
               </div>
-              <span className="shrink-0 text-[12px] font-semibold tabular-nums text-[oklch(0.90_0.005_260)]">
+              <span className="shrink-0 text-[12px] font-semibold tabular-nums text-fg-1">
                 {formatMoney(tx.netValue, tx.currency)}
               </span>
             </div>
@@ -194,23 +194,23 @@ export function TransactionTable({ data }: TransactionTableProps) {
       <div className="hidden md:block">
       <Table>
         <TableHeader>
-          <TableRow className="border-b border-[oklch(0.12_0.005_260)] hover:bg-transparent">
-            <TableHead className="h-10 pl-6 text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
+          <TableRow className="border-b border-line-soft hover:bg-transparent">
+            <TableHead className="h-10 pl-6 text-[10px] font-semibold uppercase tracking-widest text-fg-4">
               Date
             </TableHead>
-            <TableHead className="h-10 text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
+            <TableHead className="h-10 text-[10px] font-semibold uppercase tracking-widest text-fg-4">
               Asset
             </TableHead>
-            <TableHead className="h-10 text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
+            <TableHead className="h-10 text-[10px] font-semibold uppercase tracking-widest text-fg-4">
               Type
             </TableHead>
-            <TableHead className="h-10 text-right text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
+            <TableHead className="h-10 text-right text-[10px] font-semibold uppercase tracking-widest text-fg-4">
               Shares
             </TableHead>
-            <TableHead className="h-10 text-right text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
+            <TableHead className="h-10 text-right text-[10px] font-semibold uppercase tracking-widest text-fg-4">
               Price
             </TableHead>
-            <TableHead className="h-10 text-right text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
+            <TableHead className="h-10 text-right text-[10px] font-semibold uppercase tracking-widest text-fg-4">
               Net Value
             </TableHead>
             <TableHead className="h-10 w-10 pr-6" />
@@ -220,10 +220,10 @@ export function TransactionTable({ data }: TransactionTableProps) {
           {data.map((tx) => (
             <TableRow
               key={tx.id}
-              className="group border-b border-[oklch(0.10_0.005_260)] transition-colors hover:bg-[oklch(0.07_0.005_260)]"
+              className="group border-b border-line-soft transition-colors hover:bg-hover"
             >
               <TableCell className="pl-6">
-                <span className="text-[12px] font-medium text-[oklch(0.80_0.005_260)]">
+                <span className="text-[12px] font-medium text-fg-2">
                   {formatDate(tx.executedAt)}
                 </span>
               </TableCell>
@@ -232,10 +232,10 @@ export function TransactionTable({ data }: TransactionTableProps) {
                   {/* Smaller 24px Logo */}
                   <StockLogo ticker={tx.ticker} size={24} />
                   <div className="flex flex-col">
-                    <span className="text-[12px] font-semibold text-[oklch(0.88_0.005_260)]">
+                    <span className="text-[12px] font-semibold text-fg-2">
                       {tx.ticker.replace(".JK", "")}
                     </span>
-                    <span className="text-[10px] text-[oklch(0.40_0.01_260)]">
+                    <span className="text-[10px] text-fg-4">
                       {tx.assetName}
                     </span>
                   </div>
@@ -245,8 +245,8 @@ export function TransactionTable({ data }: TransactionTableProps) {
                 <div
                   className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold ${
                     tx.type === "BUY"
-                      ? "bg-[oklch(0.15_0.04_155)] text-[oklch(0.70_0.15_155)]"
-                      : "bg-[oklch(0.15_0.04_25)] text-[oklch(0.70_0.15_25)]"
+                      ? "bg-gain-wash text-gain"
+                      : "bg-loss-wash text-loss"
                   }`}
                 >
                   {tx.type === "BUY" ? (
@@ -258,17 +258,17 @@ export function TransactionTable({ data }: TransactionTableProps) {
                 </div>
               </TableCell>
               <TableCell className="text-right">
-                <span className="text-[12px] font-medium tabular-nums text-[oklch(0.80_0.005_260)]">
+                <span className="text-[12px] font-medium tabular-nums text-fg-2">
                   {formatQuantity(tx.quantity)}
                 </span>
               </TableCell>
               <TableCell className="text-right">
-                <span className="text-[12px] font-medium tabular-nums text-[oklch(0.80_0.005_260)]">
+                <span className="text-[12px] font-medium tabular-nums text-fg-2">
                   {formatMoney(tx.pricePerShare, tx.currency)}
                 </span>
               </TableCell>
               <TableCell className="text-right">
-                <span className="text-[12px] font-semibold tabular-nums text-[oklch(0.88_0.005_260)]">
+                <span className="text-[12px] font-semibold tabular-nums text-fg-2">
                   {formatMoney(tx.netValue, tx.currency)}
                 </span>
               </TableCell>
@@ -278,7 +278,7 @@ export function TransactionTable({ data }: TransactionTableProps) {
                     <button
                       type="button"
                       aria-label="Row actions"
-                      className="flex h-7 w-7 items-center justify-center rounded-md text-[oklch(0.45_0.01_260)] opacity-0 transition-all hover:bg-[oklch(0.10_0.005_260)] hover:text-[oklch(0.80_0.005_260)] focus:opacity-100 group-hover:opacity-100 data-[state=open]:bg-[oklch(0.10_0.005_260)] data-[state=open]:text-[oklch(0.80_0.005_260)] data-[state=open]:opacity-100"
+                      className="flex h-7 w-7 items-center justify-center rounded-md text-fg-4 opacity-0 transition-all hover:bg-layer-1 hover:text-fg-2 focus:opacity-100 group-hover:opacity-100 data-[state=open]:bg-layer-1 data-[state=open]:text-fg-2 data-[state=open]:opacity-100"
                     >
                       <MoreHorizontal className="h-3.5 w-3.5" />
                     </button>
@@ -288,18 +288,18 @@ export function TransactionTable({ data }: TransactionTableProps) {
                       align="end"
                       sideOffset={4}
                       collisionPadding={8}
-                      className="z-50 w-36 overflow-hidden rounded-lg border border-[oklch(0.18_0.005_260)] bg-[oklch(0.06_0.005_260)] shadow-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95"
+                      className="z-50 w-36 overflow-hidden rounded-lg border border-line-strong bg-raised shadow-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95"
                     >
                       <DropdownMenu.Item
                         onSelect={() => handleEdit(tx)}
-                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-[12px] font-medium text-[oklch(0.80_0.005_260)] outline-none transition-colors data-highlighted:bg-[oklch(0.10_0.005_260)]"
+                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-[12px] font-medium text-fg-2 outline-none transition-colors data-highlighted:bg-layer-1"
                       >
                         <Pencil className="h-3.5 w-3.5" />
                         Edit
                       </DropdownMenu.Item>
                       <DropdownMenu.Item
                         onSelect={() => handleDelete(tx)}
-                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-[12px] font-medium text-[oklch(0.70_0.15_25)] outline-none transition-colors data-highlighted:bg-[oklch(0.15_0.04_25)]"
+                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-[12px] font-medium text-loss outline-none transition-colors data-highlighted:bg-loss-wash"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                         Delete
@@ -335,22 +335,22 @@ export function TransactionTable({ data }: TransactionTableProps) {
       >
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)] shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95">
-            <div className="flex items-start gap-3 border-b border-[oklch(0.12_0.005_260)] px-6 py-4">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[oklch(0.15_0.04_25)]">
-                <AlertTriangle className="h-4 w-4 text-[oklch(0.70_0.15_25)]" />
+          <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-line bg-surface shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95">
+            <div className="flex items-start gap-3 border-b border-line-soft px-6 py-4">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-loss-wash">
+                <AlertTriangle className="h-4 w-4 text-loss" />
               </div>
               <div>
-                <Dialog.Title className="text-sm font-semibold text-[oklch(0.90_0.005_260)]">
+                <Dialog.Title className="text-sm font-semibold text-fg-1">
                   Delete transaction?
                 </Dialog.Title>
-                <Dialog.Description className="mt-1 text-[12px] leading-relaxed text-[oklch(0.50_0.01_260)]">
+                <Dialog.Description className="mt-1 text-[12px] leading-relaxed text-fg-4">
                   This will permanently remove the{" "}
-                  <span className="font-semibold text-[oklch(0.75_0.005_260)]">
+                  <span className="font-semibold text-fg-2">
                     {deleteTarget?.type}
                   </span>{" "}
                   of{" "}
-                  <span className="font-semibold text-[oklch(0.75_0.005_260)]">
+                  <span className="font-semibold text-fg-2">
                     {deleteTarget ? formatQuantity(deleteTarget.quantity) : ""} × {deleteTarget?.ticker.replace(".JK", "")}
                   </span>
                   . This action can&apos;t be undone.
@@ -359,7 +359,7 @@ export function TransactionTable({ data }: TransactionTableProps) {
             </div>
 
             {deleteError && (
-              <div className="mx-6 mt-4 rounded-lg bg-[oklch(0.15_0.05_25)] px-3 py-2 text-[11px] text-[oklch(0.70_0.12_25)]">
+              <div className="mx-6 mt-4 rounded-lg bg-loss-wash px-3 py-2 text-[11px] text-loss">
                 {deleteError}
               </div>
             )}
@@ -367,7 +367,7 @@ export function TransactionTable({ data }: TransactionTableProps) {
             <div className="flex items-center justify-end gap-2 px-6 py-4">
               <Dialog.Close
                 disabled={deleting}
-                className="flex h-9 items-center rounded-lg border border-[oklch(0.14_0.005_260)] px-4 text-[12px] font-medium text-[oklch(0.60_0.005_260)] transition-colors hover:bg-[oklch(0.08_0.005_260)] disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-9 items-center rounded-lg border border-line px-4 text-[12px] font-medium text-fg-3 transition-colors hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Cancel
               </Dialog.Close>
@@ -375,7 +375,7 @@ export function TransactionTable({ data }: TransactionTableProps) {
                 type="button"
                 onClick={confirmDelete}
                 disabled={deleting}
-                className="flex h-9 items-center gap-2 rounded-lg bg-[oklch(0.40_0.12_25)] px-5 text-[12px] font-semibold text-[oklch(0.95_0.01_25)] transition-colors hover:bg-[oklch(0.45_0.13_25)] disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex h-9 items-center gap-2 rounded-lg bg-loss-solid px-5 text-[12px] font-semibold text-fg-1 transition-colors hover:bg-loss-solid-hover disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {deleting ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />

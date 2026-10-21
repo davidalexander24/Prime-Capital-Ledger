@@ -1,5 +1,5 @@
-const bar = "animate-pulse rounded bg-[oklch(0.12_0.005_260)]";
-const card = "rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)] p-5";
+const bar = "animate-pulse rounded bg-layer-2";
+const card = "rounded-xl border border-line bg-surface p-5";
 
 export default function DashboardLoading() {
   return (

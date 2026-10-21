@@ -100,14 +100,14 @@ export default async function DashboardPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-[oklch(0.93_0.005_260)]">
+          <h1 className="text-xl font-semibold tracking-tight text-fg-1">
             Dashboard
           </h1>
-          <p className="mt-1 text-[13px] text-[oklch(0.45_0.01_260)]">
+          <p className="mt-1 text-[13px] text-fg-4">
             Welcome back, {session.user.name || "Investor"}. Overview of your portfolio performance.
           </p>
         </div>
-        <span className="text-[11px] text-[oklch(0.35_0.01_260)]">
+        <span className="text-[11px] text-fg-5">
           Last updated: {formatDate(new Date(), "Asia/Jakarta")}
         </span>
       </div>

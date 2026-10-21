@@ -39,10 +39,10 @@ export default async function TransactionsPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-[oklch(0.93_0.005_260)]">
+          <h1 className="text-xl font-semibold tracking-tight text-fg-1">
             Transactions
           </h1>
-          <p className="mt-1 text-[13px] text-[oklch(0.45_0.01_260)]">
+          <p className="mt-1 text-[13px] text-fg-4">
             Complete history of all buy and sell ledger entries.
           </p>
         </div>
@@ -52,37 +52,37 @@ export default async function TransactionsPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="flex items-center gap-4 rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)] p-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[oklch(0.12_0.01_230)]">
-            <ArrowLeftRight className="h-5 w-5 text-[oklch(0.70_0.08_230)]" strokeWidth={1.75} />
+        <div className="flex items-center gap-4 rounded-xl border border-line bg-surface p-5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-wash">
+            <ArrowLeftRight className="h-5 w-5 text-brand" strokeWidth={1.75} />
           </div>
           <div>
-            <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-[oklch(0.45_0.01_260)]">
+            <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-fg-4">
               Total Transactions
             </span>
-            <p className="mt-0.5 text-lg font-semibold text-[oklch(0.93_0.005_260)]">
+            <p className="mt-0.5 text-lg font-semibold text-fg-1">
               {transactions.length}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-4 rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)] p-5">
+        <div className="flex items-center gap-4 rounded-xl border border-line bg-surface p-5">
           <div className="flex flex-col">
-            <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-[oklch(0.45_0.01_260)]">
+            <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-fg-4">
               Buy / Sell
             </span>
             <div className="mt-1 flex items-center gap-3">
-              <span className="text-lg font-semibold text-[oklch(0.65_0.15_155)]">{buyCount} Buy</span>
-              <span className="text-[oklch(0.25_0.005_260)]">/</span>
-              <span className="text-lg font-semibold text-[oklch(0.65_0.15_25)]">{sellCount} Sell</span>
+              <span className="text-lg font-semibold text-gain">{buyCount} Buy</span>
+              <span className="text-fg-5">/</span>
+              <span className="text-lg font-semibold text-loss">{sellCount} Sell</span>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-4 rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)] p-5">
+        <div className="flex items-center gap-4 rounded-xl border border-line bg-surface p-5">
           <div>
-            <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-[oklch(0.45_0.01_260)]">
+            <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-fg-4">
               Total Volume
             </span>
-            <p className="mt-0.5 text-lg font-semibold tabular-nums text-[oklch(0.93_0.005_260)]">
+            <p className="mt-0.5 text-lg font-semibold tabular-nums text-fg-1">
               {formatMoney(totalVolume, baseCurrency)}
             </p>
           </div>
