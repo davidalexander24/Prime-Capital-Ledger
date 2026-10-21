@@ -89,7 +89,7 @@ export default async function TransactionsPage() {
         </div>
       </div>
 
-      <TransactionTable data={transactions} />
+      <TransactionTable data={transactions} emptyAction={<LogTransactionDialog triggerLabel="Log your first trade" />} />
     </div>
   );
 }

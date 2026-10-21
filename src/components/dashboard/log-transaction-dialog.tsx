@@ -2,17 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import * as Dialog from "@radix-ui/react-dialog";
 import {
   ArrowDownLeft,
   ArrowUpRight,
   Hash,
   DollarSign,
   Banknote,
-  X,
   CheckCircle2,
   XCircle,
   Loader2,
+  Plus,
 } from "lucide-react";
 import {
   createManualTransaction,
@@ -21,6 +20,9 @@ import {
 } from "@/app/actions/logTransaction";
 import { currencyForTicker } from "@/lib/currency";
 import { formatMoney, toDateInputValue } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import { AppDialog, AppDialogBody, AppDialogClose, AppDialogFooter } from "@/components/app/app-dialog";
+import { appButton, fieldInput, fieldLabel, notice } from "@/components/app/styles";
 import { TickerSearch } from "./ticker-search";
 
 export interface EditTransactionData {
@@ -38,6 +40,8 @@ interface LogTransactionDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   editData?: EditTransactionData | null;
+  // Label of the trigger button in uncontrolled mode.
+  triggerLabel?: string;
 }
 
 function LogTransactionForm({
@@ -132,266 +136,199 @@ function LogTransactionForm({
   const canSubmit =
     !!selectedAsset && parsedAmount > 0 && parsedPrice > 0 && status !== "loading";
 
+  const segment = (active: boolean) =>
+    cn(
+      "flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold transition-colors",
+      active ? "bg-layer-3 text-fg-1" : "text-fg-4 hover:bg-hover hover:text-fg-2"
+    );
+
   return (
     <>
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-line-soft px-6 py-4">
-        <div>
-          <Dialog.Title className="text-sm font-semibold text-fg-1">
-            {isEditMode ? "Edit Transaction" : "Log Transaction"}
-          </Dialog.Title>
-          <Dialog.Description className="mt-0.5 text-[11px] text-fg-4">
-            {isEditMode
-              ? "Modify the details of this transaction."
-              : "Manually record a buy or sell order."}
-          </Dialog.Description>
-        </div>
-        <Dialog.Close className="flex h-7 w-7 items-center justify-center rounded-md text-fg-4 transition-colors hover:bg-layer-1 hover:text-fg-3">
-          <X className="h-4 w-4" />
-        </Dialog.Close>
-      </div>
-
-      {/* Body */}
-      <div className="flex flex-col gap-5 px-6 py-5">
-        {/* Transaction Type */}
+      <AppDialogBody scroll={false} className="flex flex-col gap-5">
         <div className="flex flex-col gap-1.5">
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-fg-4">
-            Transaction Type
-          </span>
+          <span className={fieldLabel}>Transaction type</span>
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
+              aria-pressed={type === "BUY"}
               onClick={() => setType("BUY")}
-              className={`flex h-9 items-center justify-center gap-2 rounded-lg border text-[12px] font-semibold transition-all ${
-                type === "BUY"
-                  ? "border-gain/60 bg-gain-wash text-gain"
-                  : "border-line text-fg-4 hover:bg-hover"
-              }`}
+              className={cn(
+                "flex h-9 items-center justify-center gap-2 rounded-lg border text-[12px] font-semibold transition-colors",
+                type === "BUY" ? "border-gain/60 bg-gain-wash text-gain" : "border-line text-fg-4 hover:bg-hover hover:text-fg-2"
+              )}
             >
-              <ArrowDownLeft className="h-3.5 w-3.5" strokeWidth={2} />
+              <ArrowDownLeft className="size-3.5" strokeWidth={2} />
               Buy
             </button>
             <button
               type="button"
+              aria-pressed={type === "SELL"}
               onClick={() => setType("SELL")}
-              className={`flex h-9 items-center justify-center gap-2 rounded-lg border text-[12px] font-semibold transition-all ${
-                type === "SELL"
-                  ? "border-loss/60 bg-loss-wash text-loss"
-                  : "border-line text-fg-4 hover:bg-hover"
-              }`}
+              className={cn(
+                "flex h-9 items-center justify-center gap-2 rounded-lg border text-[12px] font-semibold transition-colors",
+                type === "SELL" ? "border-loss/60 bg-loss-wash text-loss" : "border-line text-fg-4 hover:bg-hover hover:text-fg-2"
+              )}
             >
-              <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={2} />
+              <ArrowUpRight className="size-3.5" strokeWidth={2} />
               Sell
             </button>
           </div>
         </div>
 
-        {/* Asset Search */}
         <TickerSearch value={selectedAsset} onChange={setSelectedAsset} />
 
-        {/* Amount */}
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-fg-4">
+            <label htmlFor="amount-input" className={fieldLabel}>
               Amount
-            </span>
+            </label>
             <div className="flex overflow-hidden rounded-md border border-line">
-              <button
-                type="button"
-                onClick={() => setInputMode("shares")}
-                className={`flex items-center gap-1 px-2 py-0.5 text-[9px] font-semibold transition-colors ${
-                  inputMode === "shares"
-                    ? "bg-layer-3 text-fg-2"
-                    : "text-fg-5 hover:bg-hover"
-                }`}
-              >
-                <Hash className="h-2.5 w-2.5" />
+              <button type="button" aria-pressed={inputMode === "shares"} onClick={() => setInputMode("shares")} className={segment(inputMode === "shares")}>
+                <Hash className="size-3" />
                 Shares
               </button>
-              <button
-                type="button"
-                onClick={() => setInputMode("dollars")}
-                className={`flex items-center gap-1 px-2 py-0.5 text-[9px] font-semibold transition-colors ${
-                  inputMode === "dollars"
-                    ? "bg-layer-3 text-fg-2"
-                    : "text-fg-5 hover:bg-hover"
-                }`}
-              >
-                {currency === "IDR" ? (
-                  <Banknote className="h-2.5 w-2.5" />
-                ) : (
-                  <DollarSign className="h-2.5 w-2.5" />
-                )}
+              <button type="button" aria-pressed={inputMode === "dollars"} onClick={() => setInputMode("dollars")} className={segment(inputMode === "dollars")}>
+                {currency === "IDR" ? <Banknote className="size-3" /> : <DollarSign className="size-3" />}
                 {currency === "IDR" ? "Rupiah" : "Dollars"}
               </button>
             </div>
           </div>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-medium text-fg-5">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-medium text-fg-5">
               {inputMode === "shares" ? "#" : moneySymbol}
             </span>
             <input
               id="amount-input"
               type="number"
+              inputMode="decimal"
               step="any"
               min="0"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
-              className={`h-9 w-full rounded-lg border border-line bg-sunken ${inputMode === "shares" ? "pl-7" : moneyInputPadding} pr-3 text-[13px] font-medium text-fg-1 placeholder:text-fg-5 outline-none transition-colors focus:border-brand`}
+              className={cn(fieldInput, inputMode === "shares" ? "pl-7" : moneyInputPadding)}
             />
           </div>
         </div>
 
-        {/* Price + Fee */}
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-fg-4">
-              Price / Share
-            </span>
+            <label htmlFor="price-input" className={fieldLabel}>
+              Price / share
+            </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-medium text-fg-5">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-medium text-fg-5">
                 {moneySymbol}
               </span>
               <input
                 id="price-input"
                 type="number"
+                inputMode="decimal"
                 step="any"
                 min="0"
                 value={pricePerShare}
                 onChange={(e) => setPricePerShare(e.target.value)}
                 placeholder="0.00"
-                className={`h-9 w-full rounded-lg border border-line bg-sunken ${moneyInputPadding} pr-3 text-[13px] font-medium text-fg-1 placeholder:text-fg-5 outline-none transition-colors focus:border-brand`}
+                className={cn(fieldInput, moneyInputPadding)}
               />
             </div>
           </div>
           <div className="flex flex-col gap-1.5">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-fg-4">
+            <label htmlFor="fee-input" className={fieldLabel}>
               Fee (optional)
-            </span>
+            </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-medium text-fg-5">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-medium text-fg-5">
                 {moneySymbol}
               </span>
               <input
                 id="fee-input"
                 type="number"
+                inputMode="decimal"
                 step="any"
                 min="0"
                 value={fee}
                 onChange={(e) => setFee(e.target.value)}
                 placeholder="0.00"
-                className={`h-9 w-full rounded-lg border border-line bg-sunken ${moneyInputPadding} pr-3 text-[13px] font-medium text-fg-1 placeholder:text-fg-5 outline-none transition-colors focus:border-brand`}
+                className={cn(fieldInput, moneyInputPadding)}
               />
             </div>
           </div>
         </div>
 
-        {/* Date */}
         <div className="flex flex-col gap-1.5">
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-fg-4">
-            Transaction Date
-          </span>
-          <div className="relative">
-            <input
-              id="date-input"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="h-9 w-full rounded-lg border border-line bg-sunken px-3 text-[13px] font-medium text-fg-1 outline-none transition-colors focus:border-brand [color-scheme:dark]"
-            />
-          </div>
+          <label htmlFor="date-input" className={fieldLabel}>
+            Transaction date
+          </label>
+          <input
+            id="date-input"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className={cn(fieldInput, "[color-scheme:dark]")}
+          />
         </div>
 
-        {/* Order summary (visible when values are filled) */}
         {parsedAmount > 0 && parsedPrice > 0 && (
           <div className="rounded-lg border border-line-soft bg-sunken px-4 py-3">
-            <p className="mb-2 text-[9px] font-semibold uppercase tracking-widest text-fg-4">
-              Order Summary
-            </p>
-            <div className="flex flex-col gap-1.5 text-[11px]">
+            <p className={cn(fieldLabel, "mb-2")}>Order summary</p>
+            <div className="flex flex-col gap-1.5 text-[12px] tabular-nums">
               {inputMode === "dollars" && (
                 <div className="flex justify-between">
-                  <span className="text-fg-4">
-                    Derived Shares
-                  </span>
-                  <span className="font-medium text-fg-2">
-                    ≈ {derivedShares.toFixed(6)}
-                  </span>
+                  <span className="text-fg-4">Derived shares</span>
+                  <span className="font-medium text-fg-2">≈ {derivedShares.toFixed(6)}</span>
                 </div>
               )}
               <div className="flex justify-between">
                 <span className="text-fg-4">Subtotal</span>
-                <span className="font-medium text-fg-2">
-                  {formatMoney(subtotal, currency)}
-                </span>
+                <span className="font-medium text-fg-2">{formatMoney(subtotal, currency)}</span>
               </div>
               {parsedFee > 0 && (
                 <div className="flex justify-between">
                   <span className="text-fg-4">Fee</span>
-                  <span className="font-medium text-fg-2">
-                    {formatMoney(parsedFee, currency)}
-                  </span>
+                  <span className="font-medium text-fg-2">{formatMoney(parsedFee, currency)}</span>
                 </div>
               )}
               <div className="flex justify-between border-t border-line-soft pt-1.5">
-                <span className="font-semibold text-fg-4">
-                  Net Total
-                </span>
-                <span className="font-semibold text-fg-1">
-                  {formatMoney(netTotal, currency)}
-                </span>
+                <span className="font-semibold text-fg-3">Net total</span>
+                <span className="font-semibold text-fg-1">{formatMoney(netTotal, currency)}</span>
               </div>
             </div>
           </div>
         )}
 
-        {/* Status */}
         {status === "success" && (
-          <div className="flex items-center gap-2 rounded-lg bg-gain-wash px-3 py-2 text-[11px] text-gain">
-            <CheckCircle2 className="h-3.5 w-3.5" />
+          <div role="status" className={notice({ tone: "success" })}>
+            <CheckCircle2 className="size-3.5 shrink-0" />
             {statusMsg}
           </div>
         )}
         {status === "error" && (
-          <div className="flex items-center gap-2 rounded-lg bg-loss-wash px-3 py-2 text-[11px] text-loss">
-            <XCircle className="h-3.5 w-3.5" />
+          <div role="alert" className={notice({ tone: "error" })}>
+            <XCircle className="size-3.5 shrink-0" />
             {statusMsg}
           </div>
         )}
-      </div>
+      </AppDialogBody>
 
-      {/* Footer */}
-      <div className="flex items-center justify-end gap-2 border-t border-line-soft px-6 py-4">
-        <Dialog.Close className="flex h-9 items-center rounded-lg border border-line px-4 text-[12px] font-medium text-fg-3 transition-colors hover:bg-hover">
-          Cancel
-        </Dialog.Close>
+      <AppDialogFooter>
+        <AppDialogClose className={appButton({ tone: "secondary" })}>Cancel</AppDialogClose>
         <button
           type="button"
           onClick={handleSubmit}
           disabled={!canSubmit}
-          className={`flex h-9 items-center gap-2 rounded-lg px-5 text-[12px] font-semibold transition-all ${
-            canSubmit
-              ? type === "BUY"
-                ? "bg-gain-solid text-fg-1 hover:bg-gain-solid-hover"
-                : "bg-loss-solid text-fg-1 hover:bg-loss-solid-hover"
-              : "cursor-not-allowed bg-layer-2 text-fg-5"
-          }`}
+          className={appButton({ tone: type === "BUY" ? "buy" : "sell" })}
         >
           {status === "loading" ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            <Loader2 className="animate-spin" />
           ) : type === "BUY" ? (
-            <ArrowDownLeft className="h-3.5 w-3.5" strokeWidth={2} />
+            <ArrowDownLeft strokeWidth={2} />
           ) : (
-            <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={2} />
+            <ArrowUpRight strokeWidth={2} />
           )}
-          {isEditMode
-            ? "Save Changes"
-            : type === "BUY"
-            ? "Log Buy"
-            : "Log Sell"}
+          {isEditMode ? "Save changes" : type === "BUY" ? "Log buy" : "Log sell"}
         </button>
-      </div>
+      </AppDialogFooter>
     </>
   );
 }
@@ -400,6 +337,7 @@ export function LogTransactionDialog({
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
   editData,
+  triggerLabel = "Log transaction",
 }: LogTransactionDialogProps) {
   const isControlled = controlledOpen !== undefined;
 
@@ -410,36 +348,31 @@ export function LogTransactionDialog({
     : setInternalOpen;
 
   return (
-    <Dialog.Root open={open} onOpenChange={setOpen}>
-      {/* Only show trigger in non-controlled mode (new transaction from header) */}
-      {!isControlled && (
-        <Dialog.Trigger asChild>
-          <button className="flex h-9 items-center gap-2 rounded-lg bg-brand px-4 text-[12px] font-semibold text-canvas transition-colors hover:bg-brand-hover">
-            <ArrowDownLeft className="h-3.5 w-3.5" strokeWidth={2} />
-            Log Transaction
+    <AppDialog
+      open={open}
+      onOpenChange={setOpen}
+      title={editData ? "Edit transaction" : "Log transaction"}
+      description={editData ? "Change the details of this trade." : "Record a buy or sell by hand."}
+      trigger={
+        // Only the header button opens it in uncontrolled mode; the table
+        // opens it controlled for edits.
+        isControlled ? undefined : (
+          <button type="button" className={appButton({ tone: "primary" })}>
+            <Plus strokeWidth={2.25} />
+            {triggerLabel}
           </button>
-        </Dialog.Trigger>
-      )}
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0" />
-        <Dialog.Content
-          onEscapeKeyDown={(event) => {
-            // Radix sees Escape before the focused field does. While the
-            // ticker list is open, let Escape close the list, not the dialog.
-            const target = event.target;
-            if (target instanceof HTMLElement && target.getAttribute("aria-expanded") === "true") {
-              event.preventDefault();
-            }
-          }}
-          className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 surface-card shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95 data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]"
-        >
-          <LogTransactionForm
-            key={editData?.id ?? "new"}
-            editData={editData}
-            onClose={() => setOpen(false)}
-          />
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+        )
+      }
+      onEscapeKeyDown={(event) => {
+        // Radix sees Escape before the focused field does. While the ticker
+        // list is open, let Escape close the list, not the dialog.
+        const target = event.target;
+        if (target instanceof HTMLElement && target.getAttribute("aria-expanded") === "true") {
+          event.preventDefault();
+        }
+      }}
+    >
+      <LogTransactionForm key={editData?.id ?? "new"} editData={editData} onClose={() => setOpen(false)} />
+    </AppDialog>
   );
 }

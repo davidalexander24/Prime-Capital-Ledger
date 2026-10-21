@@ -123,7 +123,12 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <TransactionTable data={transactions} />
+      <TransactionTable
+        data={transactions}
+        title="Recent transactions"
+        subtitle="Your latest buy and sell entries"
+        viewAllHref="/dashboard/transactions"
+      />
     </div>
   );
 }

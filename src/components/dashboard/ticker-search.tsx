@@ -4,6 +4,8 @@ import { useState, useEffect, useRef, useCallback, useId } from "react";
 import { Search, X, Database, Globe, Loader2 } from "lucide-react";
 import { searchAssets, type AssetSearchResult } from "@/app/actions/assets";
 import { currencyForTicker } from "@/lib/currency";
+import { cn } from "@/lib/utils";
+import { fieldInput, fieldLabel } from "@/components/app/styles";
 
 interface TickerSearchProps {
   value: { ticker: string; companyName: string } | null;
@@ -103,10 +105,10 @@ export function TickerSearch({ value, onChange, disabled }: TickerSearchProps) {
   if (value) {
     return (
       <div className="flex flex-col gap-1.5">
-        <span className="text-[10px] font-semibold uppercase tracking-widest text-fg-4">
+        <span className={fieldLabel}>
           Asset
         </span>
-        <div className="flex h-9 items-center gap-2 rounded-lg border border-line bg-sunken px-3">
+        <div className="flex h-9 items-center gap-2 rounded-lg border border-field bg-sunken px-3">
           <span className="text-[13px] font-semibold text-fg-1">
             {value.ticker}
           </span>
@@ -135,7 +137,7 @@ export function TickerSearch({ value, onChange, disabled }: TickerSearchProps) {
     <div ref={containerRef} className="relative flex flex-col gap-1.5">
       <label
         htmlFor="ticker-search"
-        className="text-[10px] font-semibold uppercase tracking-widest text-fg-4"
+        className={fieldLabel}
       >
         Search Asset
       </label>
@@ -165,7 +167,7 @@ export function TickerSearch({ value, onChange, disabled }: TickerSearchProps) {
           placeholder="Search ticker or company name…"
           disabled={disabled}
           autoComplete="off"
-          className="h-9 w-full rounded-lg border border-line bg-sunken pl-8 pr-3 text-[13px] font-medium text-fg-1 placeholder:text-fg-5 outline-none transition-colors focus:border-brand focus:ring-1 focus:ring-brand/30"
+          className={cn(fieldInput, "pl-8")}
         />
         <div className="absolute left-2.5 top-1/2 -translate-y-1/2 text-fg-5">
           {isLoading ? (
@@ -207,18 +209,18 @@ export function TickerSearch({ value, onChange, disabled }: TickerSearchProps) {
                         {r.ticker}
                       </span>
                       {r.source === "db" ? (
-                        <span className="flex items-center gap-1 rounded bg-gain-wash px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-[0.06em] text-gain">
+                        <span className="flex items-center gap-1 rounded bg-gain-wash px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.06em] text-gain">
                           <Database className="h-2.5 w-2.5" />
                           Portfolio
                         </span>
                       ) : (
-                        <span className="flex items-center gap-1 rounded bg-brand-wash px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-[0.06em] text-brand">
+                        <span className="flex items-center gap-1 rounded bg-brand-wash px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.06em] text-brand">
                           <Globe className="h-2.5 w-2.5" />
                           Yahoo
                         </span>
                       )}
                     </div>
-                    <span className="text-[10px] text-fg-4">
+                    <span className="text-[11px] text-fg-4">
                       {r.companyName}
                     </span>
                   </div>

@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import * as Dialog from "@radix-ui/react-dialog";
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { DropdownMenu } from "radix-ui";
 import {
   Table,
   TableBody,
@@ -13,13 +13,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  ArrowDownLeft,
-  ArrowUpRight,
+  ArrowRight,
   MoreHorizontal,
   Pencil,
   Trash2,
   Loader2,
   AlertTriangle,
+  ReceiptText,
+  XCircle,
 } from "lucide-react";
 import type { TransactionRecord } from "@/lib/types";
 import {
@@ -28,10 +29,20 @@ import {
 } from "./log-transaction-dialog";
 import { deleteTransaction } from "@/app/actions/logTransaction";
 import { StockLogo } from "@/components/ui/stock-logo";
+import { AppDialog, AppDialogBody, AppDialogClose, AppDialogFooter } from "@/components/app/app-dialog";
+import { appButton, notice } from "@/components/app/styles";
+import { TypeBadge } from "@/components/app/type-badge";
 import { formatDate, formatMoney, formatQuantity } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 interface TransactionTableProps {
   data: TransactionRecord[];
+  title?: string;
+  subtitle?: string;
+  // Dashboard preview: link to the full ledger instead of an entry count.
+  viewAllHref?: string;
+  // Shown under the empty-state message, e.g. a "Log transaction" button.
+  emptyAction?: React.ReactNode;
 }
 
 function toEditData(tx: TransactionRecord): EditTransactionData {
@@ -47,7 +58,65 @@ function toEditData(tx: TransactionRecord): EditTransactionData {
   };
 }
 
-export function TransactionTable({ data }: TransactionTableProps) {
+const headCell = "h-10 text-[11px] font-semibold uppercase tracking-[0.08em] text-fg-4";
+
+function RowActions({
+  className,
+  onEdit,
+  onDelete,
+}: {
+  className?: string;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger asChild>
+        <button
+          type="button"
+          aria-label="Row actions"
+          className={cn(
+            "flex size-7 items-center justify-center rounded-md text-fg-4 transition-colors hover:bg-layer-1 hover:text-fg-1 data-[state=open]:bg-layer-1 data-[state=open]:text-fg-1",
+            className
+          )}
+        >
+          <MoreHorizontal className="size-4" />
+        </button>
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content
+          align="end"
+          sideOffset={4}
+          collisionPadding={8}
+          className="z-50 w-40 overflow-hidden rounded-lg border border-line-strong bg-raised p-1 shadow-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95"
+        >
+          <DropdownMenu.Item
+            onSelect={onEdit}
+            className="flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-[12px] font-medium text-fg-2 outline-none transition-colors data-highlighted:bg-hover data-highlighted:text-fg-1"
+          >
+            <Pencil className="size-3.5" />
+            Edit
+          </DropdownMenu.Item>
+          <DropdownMenu.Item
+            onSelect={onDelete}
+            className="flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-[12px] font-medium text-loss outline-none transition-colors data-highlighted:bg-loss-wash"
+          >
+            <Trash2 className="size-3.5" />
+            Delete
+          </DropdownMenu.Item>
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
+  );
+}
+
+export function TransactionTable({
+  data,
+  title = "Transaction history",
+  subtitle = "Buy and sell ledger entries",
+  viewAllHref,
+  emptyAction,
+}: TransactionTableProps) {
   const router = useRouter();
   const [editTarget, setEditTarget] = useState<EditTransactionData | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<TransactionRecord | null>(null);
@@ -86,235 +155,126 @@ export function TransactionTable({ data }: TransactionTableProps) {
     <div className="overflow-hidden surface-card">
       <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-4 sm:px-6">
         <div className="min-w-0">
-          <h2 className="text-sm font-semibold text-fg-2">
-            Transaction History
-          </h2>
-          <p className="mt-0.5 text-[11px] text-fg-4">
-            Recent buy and sell ledger entries
-          </p>
+          <h2 className="text-sm font-semibold text-fg-1">{title}</h2>
+          <p className="mt-0.5 text-[12px] text-fg-4">{subtitle}</p>
         </div>
-        <span className="shrink-0 rounded-md bg-layer-1 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-fg-4">
-          {data.length} entries
-        </span>
+        {viewAllHref ? (
+          <Link
+            href={viewAllHref}
+            className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-[12px] font-medium text-brand transition-colors hover:bg-brand-wash hover:text-brand-hover"
+          >
+            View all
+            <ArrowRight className="size-3.5" />
+          </Link>
+        ) : (
+          <span className="shrink-0 rounded-md bg-layer-1 px-2.5 py-1 text-[11px] font-semibold tabular-nums text-fg-3">
+            {data.length} {data.length === 1 ? "entry" : "entries"}
+          </span>
+        )}
       </div>
 
-      {/* Mobile card list — visible only below md */}
-      <ul className="divide-y divide-line-soft md:hidden">
-        {data.length === 0 && (
-          <li className="px-4 py-10 text-center text-[12px] text-fg-4">
-            No transactions yet.
-          </li>
-        )}
-        {data.map((tx) => (
-          <li
-            key={tx.id}
-            className="flex flex-col gap-2 px-4 py-3"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex min-w-0 items-center gap-2.5">
-                <StockLogo ticker={tx.ticker} size={22} />
-                <div className="flex min-w-0 flex-col">
-                  <span className="truncate text-[13px] font-semibold text-fg-1">
-                    {tx.ticker.replace(".JK", "")}
-                  </span>
-                  <span className="truncate text-[10px] text-fg-4">
-                    {tx.assetName}
-                  </span>
-                </div>
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <div
-                  className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${
-                    tx.type === "BUY"
-                      ? "bg-gain-wash text-gain"
-                      : "bg-loss-wash text-loss"
-                  }`}
-                >
-                  {tx.type === "BUY" ? (
-                    <ArrowDownLeft className="h-3 w-3" strokeWidth={2.5} />
-                  ) : (
-                    <ArrowUpRight className="h-3 w-3" strokeWidth={2.5} />
-                  )}
-                  {tx.type}
-                </div>
-                <DropdownMenu.Root>
-                  <DropdownMenu.Trigger asChild>
-                    <button
-                      type="button"
-                      aria-label="Row actions"
-                      className="flex h-7 w-7 items-center justify-center rounded-md text-fg-3 transition-colors hover:bg-layer-1 hover:text-fg-2 data-[state=open]:bg-layer-1 data-[state=open]:text-fg-2"
-                    >
-                      <MoreHorizontal className="h-3.5 w-3.5" />
-                    </button>
-                  </DropdownMenu.Trigger>
-                  <DropdownMenu.Portal>
-                    <DropdownMenu.Content
-                      align="end"
-                      sideOffset={4}
-                      collisionPadding={8}
-                      className="z-50 w-36 overflow-hidden rounded-lg border border-line-strong bg-raised shadow-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95"
-                    >
-                      <DropdownMenu.Item
-                        onSelect={() => handleEdit(tx)}
-                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-[12px] font-medium text-fg-2 outline-none transition-colors data-highlighted:bg-layer-1"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                        Edit
-                      </DropdownMenu.Item>
-                      <DropdownMenu.Item
-                        onSelect={() => handleDelete(tx)}
-                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-[12px] font-medium text-loss outline-none transition-colors data-highlighted:bg-loss-wash"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        Delete
-                      </DropdownMenu.Item>
-                    </DropdownMenu.Content>
-                  </DropdownMenu.Portal>
-                </DropdownMenu.Root>
-              </div>
-            </div>
-            <div className="flex items-end justify-between gap-3 pl-8.5">
-              <div className="flex flex-col">
-                <span className="text-[10px] uppercase tracking-[0.06em] text-fg-4">
-                  {formatDate(tx.executedAt)}
-                </span>
-                <span className="text-[11px] tabular-nums text-fg-3">
-                  {formatQuantity(tx.quantity)} × {formatMoney(tx.pricePerShare, tx.currency)}
-                </span>
-              </div>
-              <span className="shrink-0 text-[12px] font-semibold tabular-nums text-fg-1">
-                {formatMoney(tx.netValue, tx.currency)}
-              </span>
-            </div>
-          </li>
-        ))}
-      </ul>
-
-      {/* Desktop table — visible md and up */}
-      <div className="hidden md:block">
-      <Table>
-        <TableHeader>
-          <TableRow className="border-b border-line-soft hover:bg-transparent">
-            <TableHead className="h-10 pl-6 text-[10px] font-semibold uppercase tracking-widest text-fg-4">
-              Date
-            </TableHead>
-            <TableHead className="h-10 text-[10px] font-semibold uppercase tracking-widest text-fg-4">
-              Asset
-            </TableHead>
-            <TableHead className="h-10 text-[10px] font-semibold uppercase tracking-widest text-fg-4">
-              Type
-            </TableHead>
-            <TableHead className="h-10 text-right text-[10px] font-semibold uppercase tracking-widest text-fg-4">
-              Shares
-            </TableHead>
-            <TableHead className="h-10 text-right text-[10px] font-semibold uppercase tracking-widest text-fg-4">
-              Price
-            </TableHead>
-            <TableHead className="h-10 text-right text-[10px] font-semibold uppercase tracking-widest text-fg-4">
-              Net Value
-            </TableHead>
-            <TableHead className="h-10 w-10 pr-6" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.map((tx) => (
-            <TableRow
-              key={tx.id}
-              className="group border-b border-line-soft transition-colors hover:bg-hover"
-            >
-              <TableCell className="pl-6">
-                <span className="text-[12px] font-medium text-fg-2">
-                  {formatDate(tx.executedAt)}
-                </span>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-3">
-                  {/* Smaller 24px Logo */}
-                  <StockLogo ticker={tx.ticker} size={24} />
-                  <div className="flex flex-col">
-                    <span className="text-[12px] font-semibold text-fg-2">
-                      {tx.ticker.replace(".JK", "")}
-                    </span>
-                    <span className="text-[10px] text-fg-4">
-                      {tx.assetName}
-                    </span>
+      {data.length === 0 ? (
+        <div className="flex flex-col items-center gap-3 px-6 py-12 text-center">
+          <div className="flex size-10 items-center justify-center rounded-lg bg-layer-1 text-fg-4">
+            <ReceiptText className="size-5" strokeWidth={1.75} />
+          </div>
+          <div>
+            <p className="text-[13px] font-medium text-fg-2">No transactions yet</p>
+            <p className="mt-1 text-[12px] text-fg-4">Import a broker statement or log a trade to start the ledger.</p>
+          </div>
+          {emptyAction}
+        </div>
+      ) : (
+        <>
+          {/* Mobile card list, below md */}
+          <ul className="divide-y divide-line-soft md:hidden">
+            {data.map((tx) => (
+              <li key={tx.id} className="flex flex-col gap-2 px-4 py-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <StockLogo ticker={tx.ticker} size={22} />
+                    <div className="flex min-w-0 flex-col">
+                      <span className="truncate text-[13px] font-semibold text-fg-1">
+                        {tx.ticker.replace(".JK", "")}
+                      </span>
+                      <span className="truncate text-[11px] text-fg-4">{tx.assetName}</span>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <TypeBadge type={tx.type} />
+                    <RowActions onEdit={() => handleEdit(tx)} onDelete={() => handleDelete(tx)} />
                   </div>
                 </div>
-              </TableCell>
-              <TableCell>
-                <div
-                  className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold ${
-                    tx.type === "BUY"
-                      ? "bg-gain-wash text-gain"
-                      : "bg-loss-wash text-loss"
-                  }`}
-                >
-                  {tx.type === "BUY" ? (
-                    <ArrowDownLeft className="h-3 w-3" strokeWidth={2.5} />
-                  ) : (
-                    <ArrowUpRight className="h-3 w-3" strokeWidth={2.5} />
-                  )}
-                  {tx.type}
+                <div className="flex items-end justify-between gap-3 pl-8.5">
+                  <div className="flex flex-col">
+                    <span className="text-[11px] text-fg-4">{formatDate(tx.executedAt)}</span>
+                    <span className="text-[12px] tabular-nums text-fg-3">
+                      {formatQuantity(tx.quantity)} × {formatMoney(tx.pricePerShare, tx.currency)}
+                    </span>
+                  </div>
+                  <span className="shrink-0 text-[13px] font-semibold tabular-nums text-fg-1">
+                    {formatMoney(tx.netValue, tx.currency)}
+                  </span>
                 </div>
-              </TableCell>
-              <TableCell className="text-right">
-                <span className="text-[12px] font-medium tabular-nums text-fg-2">
-                  {formatQuantity(tx.quantity)}
-                </span>
-              </TableCell>
-              <TableCell className="text-right">
-                <span className="text-[12px] font-medium tabular-nums text-fg-2">
-                  {formatMoney(tx.pricePerShare, tx.currency)}
-                </span>
-              </TableCell>
-              <TableCell className="text-right">
-                <span className="text-[12px] font-semibold tabular-nums text-fg-2">
-                  {formatMoney(tx.netValue, tx.currency)}
-                </span>
-              </TableCell>
-              <TableCell className="pr-6 text-right">
-                <DropdownMenu.Root>
-                  <DropdownMenu.Trigger asChild>
-                    <button
-                      type="button"
-                      aria-label="Row actions"
-                      className="flex h-7 w-7 items-center justify-center rounded-md text-fg-4 opacity-0 transition-all hover:bg-layer-1 hover:text-fg-2 focus:opacity-100 group-hover:opacity-100 data-[state=open]:bg-layer-1 data-[state=open]:text-fg-2 data-[state=open]:opacity-100"
-                    >
-                      <MoreHorizontal className="h-3.5 w-3.5" />
-                    </button>
-                  </DropdownMenu.Trigger>
-                  <DropdownMenu.Portal>
-                    <DropdownMenu.Content
-                      align="end"
-                      sideOffset={4}
-                      collisionPadding={8}
-                      className="z-50 w-36 overflow-hidden rounded-lg border border-line-strong bg-raised shadow-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95"
-                    >
-                      <DropdownMenu.Item
-                        onSelect={() => handleEdit(tx)}
-                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-[12px] font-medium text-fg-2 outline-none transition-colors data-highlighted:bg-layer-1"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                        Edit
-                      </DropdownMenu.Item>
-                      <DropdownMenu.Item
-                        onSelect={() => handleDelete(tx)}
-                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-[12px] font-medium text-loss outline-none transition-colors data-highlighted:bg-loss-wash"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        Delete
-                      </DropdownMenu.Item>
-                    </DropdownMenu.Content>
-                  </DropdownMenu.Portal>
-                </DropdownMenu.Root>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      </div>
+              </li>
+            ))}
+          </ul>
 
-      {/* Edit dialog (controlled) */}
+          {/* Desktop table, md and up */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-b border-line-soft hover:bg-transparent">
+                  <TableHead className={cn(headCell, "pl-6")}>Date</TableHead>
+                  <TableHead className={headCell}>Asset</TableHead>
+                  <TableHead className={headCell}>Type</TableHead>
+                  <TableHead className={cn(headCell, "text-right")}>Shares</TableHead>
+                  <TableHead className={cn(headCell, "text-right")}>Price</TableHead>
+                  <TableHead className={cn(headCell, "text-right")}>Net value</TableHead>
+                  <TableHead className="h-10 w-12 pr-6" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.map((tx) => (
+                  <TableRow key={tx.id} className="group border-b border-line-soft transition-colors hover:bg-hover">
+                    <TableCell className="pl-6 text-[12px] font-medium text-fg-2">{formatDate(tx.executedAt)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <StockLogo ticker={tx.ticker} size={24} />
+                        <div className="flex flex-col">
+                          <span className="text-[13px] font-semibold text-fg-1">{tx.ticker.replace(".JK", "")}</span>
+                          <span className="text-[11px] text-fg-4">{tx.assetName}</span>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <TypeBadge type={tx.type} />
+                    </TableCell>
+                    <TableCell className="text-right text-[12px] font-medium tabular-nums text-fg-2">
+                      {formatQuantity(tx.quantity)}
+                    </TableCell>
+                    <TableCell className="text-right text-[12px] font-medium tabular-nums text-fg-2">
+                      {formatMoney(tx.pricePerShare, tx.currency)}
+                    </TableCell>
+                    <TableCell className="text-right text-[13px] font-semibold tabular-nums text-fg-1">
+                      {formatMoney(tx.netValue, tx.currency)}
+                    </TableCell>
+                    <TableCell className="pr-6 text-right">
+                      {/* Hidden until hover only where there is a mouse; touch screens keep it visible. */}
+                      <RowActions
+                        className="ml-auto pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
+                        onEdit={() => handleEdit(tx)}
+                        onDelete={() => handleDelete(tx)}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </>
+      )}
+
       <LogTransactionDialog
         open={!!editTarget}
         onOpenChange={(o) => {
@@ -323,71 +283,52 @@ export function TransactionTable({ data }: TransactionTableProps) {
         editData={editTarget}
       />
 
-      {/* Delete confirmation dialog */}
-      <Dialog.Root
+      <AppDialog
+        size="sm"
         open={!!deleteTarget}
         onOpenChange={(o) => {
-          if (!o && !deleting) {
+          if (!o) {
             setDeleteTarget(null);
             setDeleteError(null);
           }
         }}
+        locked={deleting}
+        icon={
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-loss-wash text-loss">
+            <AlertTriangle className="size-4" />
+          </div>
+        }
+        title="Delete transaction?"
+        description={
+          deleteTarget ? (
+            <>
+              This removes the <span className="font-semibold text-fg-2">{deleteTarget.type}</span> of{" "}
+              <span className="font-semibold text-fg-2">
+                {formatQuantity(deleteTarget.quantity)} × {deleteTarget.ticker.replace(".JK", "")}
+              </span>{" "}
+              on {formatDate(deleteTarget.executedAt)}. This can&apos;t be undone.
+            </>
+          ) : null
+        }
       >
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 surface-card shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95">
-            <div className="flex items-start gap-3 border-b border-line-soft px-6 py-4">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-loss-wash">
-                <AlertTriangle className="h-4 w-4 text-loss" />
-              </div>
-              <div>
-                <Dialog.Title className="text-sm font-semibold text-fg-1">
-                  Delete transaction?
-                </Dialog.Title>
-                <Dialog.Description className="mt-1 text-[12px] leading-relaxed text-fg-4">
-                  This will permanently remove the{" "}
-                  <span className="font-semibold text-fg-2">
-                    {deleteTarget?.type}
-                  </span>{" "}
-                  of{" "}
-                  <span className="font-semibold text-fg-2">
-                    {deleteTarget ? formatQuantity(deleteTarget.quantity) : ""} × {deleteTarget?.ticker.replace(".JK", "")}
-                  </span>
-                  . This action can&apos;t be undone.
-                </Dialog.Description>
-              </div>
+        {deleteError && (
+          <AppDialogBody>
+            <div role="alert" className={notice({ tone: "error" })}>
+              <XCircle className="size-3.5 shrink-0" />
+              {deleteError}
             </div>
-
-            {deleteError && (
-              <div className="mx-6 mt-4 rounded-lg bg-loss-wash px-3 py-2 text-[11px] text-loss">
-                {deleteError}
-              </div>
-            )}
-
-            <div className="flex items-center justify-end gap-2 px-6 py-4">
-              <Dialog.Close
-                disabled={deleting}
-                className="flex h-9 items-center rounded-lg border border-line px-4 text-[12px] font-medium text-fg-3 transition-colors hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Cancel
-              </Dialog.Close>
-              <button
-                type="button"
-                onClick={confirmDelete}
-                disabled={deleting}
-                className="flex h-9 items-center gap-2 rounded-lg bg-loss-solid px-5 text-[12px] font-semibold text-fg-1 transition-colors hover:bg-loss-solid-hover disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {deleting ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Trash2 className="h-3.5 w-3.5" />
-                )}
-                Delete
-              </button>
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+          </AppDialogBody>
+        )}
+        <AppDialogFooter>
+          <AppDialogClose disabled={deleting} className={appButton({ tone: "secondary" })}>
+            Cancel
+          </AppDialogClose>
+          <button type="button" onClick={confirmDelete} disabled={deleting} className={appButton({ tone: "sell" })}>
+            {deleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
+            Delete
+          </button>
+        </AppDialogFooter>
+      </AppDialog>
     </div>
   );
 }
