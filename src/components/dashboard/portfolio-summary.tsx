@@ -13,7 +13,7 @@ export function PortfolioSummary({ totalMarketValue, totalCost, baseCurrency, ra
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <div className="rounded-xl border border-line bg-surface p-5">
+      <div className="surface-card p-5">
         <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-fg-4">
           Total Market Value
         </span>
@@ -26,7 +26,7 @@ export function PortfolioSummary({ totalMarketValue, totalCost, baseCurrency, ra
           </p>
         )}
       </div>
-      <div className="rounded-xl border border-line bg-surface p-5">
+      <div className="surface-card p-5">
         <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-fg-4">
           Total Cost Basis
         </span>
@@ -34,7 +34,7 @@ export function PortfolioSummary({ totalMarketValue, totalCost, baseCurrency, ra
           {formatMoney(totalCost, baseCurrency)}
         </p>
       </div>
-      <div className="rounded-xl border border-line bg-surface p-5">
+      <div className="surface-card p-5">
         <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-fg-4">
           Unrealized P&L
         </span>

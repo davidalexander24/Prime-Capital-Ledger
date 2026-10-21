@@ -84,75 +84,92 @@
  *   raised   menus, tooltips         line-*   dividers, borders; field = input border
  *   fg-1..5  text, strongest to faintest
  */
+/*
+ * Ink-black canvas with a faint blue cast. Depth comes from hairlines and a
+ * light top edge on cards rather than lighter grey fills; text is only as
+ * bright as legibility needs (fg-4 labels 5.3:1, fg-5 icons 3.2:1).
+ */
 :root {
-  --canvas: oklch(0.03 0.005 260);
-  --panel: oklch(0.04 0.005 260);
-  --surface: oklch(0.05 0.005 260);
-  --raised: oklch(0.06 0.005 260);
-  --sunken: oklch(0.03 0.005 260);
-  --hover: oklch(0.08 0.005 260);
-  --layer-1: oklch(0.10 0.005 260);
-  --layer-2: oklch(0.12 0.005 260);
-  --layer-3: oklch(0.14 0.005 260);
+  --canvas: oklch(0.035 0.008 262);
+  --panel: oklch(0.045 0.008 262);
+  --surface: oklch(0.06 0.008 262);
+  --raised: oklch(0.085 0.008 262);
+  --sunken: oklch(0.03 0.008 262);
+  --hover: oklch(0.095 0.008 262);
+  --layer-1: oklch(0.11 0.008 262);
+  --layer-2: oklch(0.13 0.008 262);
+  --layer-3: oklch(0.16 0.008 262);
 
-  --line-soft: oklch(0.11 0.005 260);
-  --line: oklch(0.14 0.005 260);
-  --line-strong: oklch(0.18 0.005 260);
-  --field: oklch(0.14 0.005 260);
+  --line-soft: oklch(0.17 0.008 262);
+  --line: oklch(0.21 0.008 262);
+  --line-strong: oklch(0.27 0.008 262);
+  --field: oklch(0.34 0.008 262);
+  --edge: oklch(1 0 0 / 0.045);
 
-  --fg-1: oklch(0.92 0.005 260);
-  --fg-2: oklch(0.82 0.005 260);
-  --fg-3: oklch(0.62 0.005 260);
-  --fg-4: oklch(0.45 0.01 260);
-  --fg-5: oklch(0.35 0.01 260);
+  --fg-1: oklch(0.95 0.005 262);
+  --fg-2: oklch(0.85 0.006 262);
+  --fg-3: oklch(0.72 0.008 262);
+  --fg-4: oklch(0.6 0.01 262);
+  --fg-5: oklch(0.48 0.01 262);
 
-  --brand: oklch(0.70 0.08 230);
-  --brand-hover: oklch(0.75 0.09 230);
-  --brand-wash: oklch(0.12 0.01 230);
-  --gain: oklch(0.65 0.15 155);
-  --gain-wash: oklch(0.15 0.045 155);
-  --gain-solid: oklch(0.40 0.12 155);
-  --gain-solid-hover: oklch(0.45 0.13 155);
-  --loss: oklch(0.65 0.15 25);
-  --loss-wash: oklch(0.15 0.045 25);
-  --loss-solid: oklch(0.40 0.12 25);
-  --loss-solid-hover: oklch(0.45 0.13 25);
-  --cost: oklch(0.30 0.005 260);
+  --brand: oklch(0.72 0.085 230);
+  --brand-hover: oklch(0.78 0.09 230);
+  --brand-wash: oklch(0.16 0.035 230);
+  --gain: oklch(0.72 0.15 155);
+  --gain-wash: oklch(0.18 0.05 155);
+  --gain-solid: oklch(0.45 0.12 155);
+  --gain-solid-hover: oklch(0.5 0.13 155);
+  --loss: oklch(0.68 0.16 25);
+  --loss-wash: oklch(0.18 0.05 25);
+  --loss-solid: oklch(0.45 0.13 25);
+  --loss-solid-hover: oklch(0.5 0.14 25);
+  --cost: oklch(0.5 0.01 262);
 }
 
+/* Cards and dialogs: hairline border plus a faint top edge for depth. */
+@utility surface-card {
+  border-radius: var(--radius-xl);
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--line);
+  background-color: var(--surface);
+  box-shadow: inset 0 1px 0 0 var(--edge);
+}
+
+/* shadcn/ui names (landing page, ui/ primitives) mapped onto the palette. */
 :root {
   --radius: 0.625rem;
-  --background: oklch(0.03 0.005 260);
-  --foreground: oklch(0.93 0.005 260);
-  --card: oklch(0.07 0.005 260);
-  --card-foreground: oklch(0.93 0.005 260);
-  --popover: oklch(0.07 0.005 260);
-  --popover-foreground: oklch(0.93 0.005 260);
-  --primary: oklch(0.70 0.08 230);
-  --primary-foreground: oklch(0.03 0.005 260);
-  --secondary: oklch(0.14 0.005 260);
-  --secondary-foreground: oklch(0.85 0.005 260);
-  --muted: oklch(0.14 0.005 260);
-  --muted-foreground: oklch(0.55 0.01 260);
-  --accent: oklch(0.14 0.005 260);
-  --accent-foreground: oklch(0.85 0.005 260);
-  --destructive: oklch(0.60 0.18 25);
-  --border: oklch(0.16 0.005 260);
-  --input: oklch(0.16 0.005 260);
-  --ring: oklch(0.70 0.08 230);
-  --chart-1: oklch(0.70 0.08 230);
+  --background: var(--canvas);
+  --foreground: var(--fg-1);
+  --card: var(--surface);
+  --card-foreground: var(--fg-1);
+  --popover: var(--raised);
+  --popover-foreground: var(--fg-1);
+  --primary: var(--brand);
+  --primary-foreground: var(--canvas);
+  --secondary: var(--layer-2);
+  --secondary-foreground: var(--fg-2);
+  --muted: var(--layer-2);
+  --muted-foreground: var(--fg-4);
+  --accent: var(--layer-2);
+  --accent-foreground: var(--fg-2);
+  --destructive: var(--loss);
+  --border: var(--line);
+  --input: var(--field);
+  --ring: var(--brand);
+  --chart-1: var(--brand);
   --chart-2: oklch(0.65 0.12 160);
   --chart-3: oklch(0.60 0.18 25);
   --chart-4: oklch(0.70 0.12 80);
   --chart-5: oklch(0.65 0.10 300);
-  --sidebar: oklch(0.05 0.005 260);
-  --sidebar-foreground: oklch(0.93 0.005 260);
-  --sidebar-primary: oklch(0.70 0.08 230);
-  --sidebar-primary-foreground: oklch(0.03 0.005 260);
-  --sidebar-accent: oklch(0.12 0.005 260);
-  --sidebar-accent-foreground: oklch(0.85 0.005 260);
-  --sidebar-border: oklch(0.16 0.005 260);
-  --sidebar-ring: oklch(0.70 0.08 230);
+  --sidebar: var(--panel);
+  --sidebar-foreground: var(--fg-1);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: var(--canvas);
+  --sidebar-accent: var(--layer-2);
+  --sidebar-accent-foreground: var(--fg-2);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--brand);
 }
 
 * {
@@ -215,8 +232,8 @@ html {
   animation: shimmer 6s linear infinite;
 }
 
-/* Grain overlay — applied to body via a fixed pseudo-element */
-body::after {
+/* Grain overlay for the landing page only; it softens text over data. */
+.grain::after {
   content: "";
   position: fixed;
   inset: 0;

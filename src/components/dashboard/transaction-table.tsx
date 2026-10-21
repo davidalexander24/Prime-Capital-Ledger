@@ -83,7 +83,7 @@ export function TransactionTable({ data }: TransactionTableProps) {
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-line bg-surface">
+    <div className="overflow-hidden surface-card">
       <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-4 sm:px-6">
         <div className="min-w-0">
           <h2 className="text-sm font-semibold text-fg-2">
@@ -335,7 +335,7 @@ export function TransactionTable({ data }: TransactionTableProps) {
       >
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-line bg-surface shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95">
+          <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 surface-card shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95">
             <div className="flex items-start gap-3 border-b border-line-soft px-6 py-4">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-loss-wash">
                 <AlertTriangle className="h-4 w-4 text-loss" />

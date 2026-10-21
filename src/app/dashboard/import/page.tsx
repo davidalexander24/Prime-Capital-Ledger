@@ -62,7 +62,7 @@ export default async function ImportPage() {
         <h2 className="mb-4 text-sm font-semibold text-fg-2">Import Sources</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {importSources.map((s) => (
-            <div key={s.id} className={`rounded-xl border border-line bg-surface p-5 transition-colors hover:border-line-strong ${s.comingSoon ? "opacity-50" : "cursor-pointer"}`}>
+            <div key={s.id} className={`surface-card p-5 transition-colors hover:border-line-strong ${s.comingSoon ? "opacity-50" : "cursor-pointer"}`}>
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-layer-2">
                 <s.icon className="h-4 w-4 text-fg-4" strokeWidth={1.75} />
               </div>
@@ -74,7 +74,7 @@ export default async function ImportPage() {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-line bg-surface">
+      <div className="overflow-hidden surface-card">
         <div className="border-b border-line-soft px-6 py-4">
           <h2 className="text-sm font-semibold text-fg-2">Import History</h2>
         </div>

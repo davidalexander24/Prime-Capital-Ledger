@@ -54,7 +54,7 @@ export function SummaryCards({ data }: SummaryCardsProps) {
       {cards.map((card) => (
         <div
           key={card.label}
-          className="group relative overflow-hidden rounded-xl border border-line bg-surface p-5 transition-colors duration-200 hover:border-line-strong"
+          className="group relative overflow-hidden surface-card p-5 transition-colors duration-200 hover:border-line-strong"
         >
           <div className="flex items-start justify-between">
             <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-fg-4">

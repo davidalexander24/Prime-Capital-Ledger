@@ -1,5 +1,5 @@
 const bar = "animate-pulse rounded bg-layer-2";
-const card = "rounded-xl border border-line bg-surface p-5";
+const card = "surface-card p-5";
 
 export default function DashboardLoading() {
   return (

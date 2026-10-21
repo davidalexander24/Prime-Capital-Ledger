@@ -193,7 +193,7 @@ export function ValuationChart({ data, currency }: ValuationChartProps) {
   const currentLabel = PERIODS.find((p) => p.id === period)?.longLabel ?? "";
 
   return (
-    <div className="overflow-hidden rounded-xl border border-line bg-surface">
+    <div className="overflow-hidden surface-card">
       <div className="flex flex-col gap-3 border-b border-line-soft px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-6">
         <div className="min-w-0">
           <h2 className="text-sm font-semibold text-fg-2">

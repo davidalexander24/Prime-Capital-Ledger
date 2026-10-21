@@ -23,7 +23,7 @@ export function AnalyticsCharts({ monthlyReturns, sectorAllocation, metrics }: A
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         {metrics.map((m) => (
-          <div key={m.label} className="rounded-xl border border-line bg-surface p-5">
+          <div key={m.label} className="surface-card p-5">
             <div className="flex items-start justify-between">
               <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-fg-4">{m.label}</span>
               {m.icon === "Target" && <Target className="h-3.5 w-3.5 text-fg-5" strokeWidth={1.75} />}
@@ -39,7 +39,7 @@ export function AnalyticsCharts({ monthlyReturns, sectorAllocation, metrics }: A
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        <div className="overflow-hidden rounded-xl border border-line bg-surface lg:col-span-3">
+        <div className="overflow-hidden surface-card lg:col-span-3">
           <div className="border-b border-line-soft px-6 py-4">
             <h2 className="text-sm font-semibold text-fg-2">Monthly Returns</h2>
             <p className="mt-0.5 text-[11px] text-fg-4">Cumulative return by month</p>
@@ -69,7 +69,7 @@ export function AnalyticsCharts({ monthlyReturns, sectorAllocation, metrics }: A
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-line bg-surface lg:col-span-2">
+        <div className="overflow-hidden surface-card lg:col-span-2">
           <div className="border-b border-line-soft px-6 py-4">
             <h2 className="text-sm font-semibold text-fg-2">Asset Allocation</h2>
             <p className="mt-0.5 text-[11px] text-fg-4">Portfolio distribution by asset</p>

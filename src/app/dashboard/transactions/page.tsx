@@ -52,7 +52,7 @@ export default async function TransactionsPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="flex items-center gap-4 rounded-xl border border-line bg-surface p-5">
+        <div className="flex items-center gap-4 surface-card p-5">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-wash">
             <ArrowLeftRight className="h-5 w-5 text-brand" strokeWidth={1.75} />
           </div>
@@ -65,7 +65,7 @@ export default async function TransactionsPage() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-4 rounded-xl border border-line bg-surface p-5">
+        <div className="flex items-center gap-4 surface-card p-5">
           <div className="flex flex-col">
             <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-fg-4">
               Buy / Sell
@@ -77,7 +77,7 @@ export default async function TransactionsPage() {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-4 rounded-xl border border-line bg-surface p-5">
+        <div className="flex items-center gap-4 surface-card p-5">
           <div>
             <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-fg-4">
               Total Volume

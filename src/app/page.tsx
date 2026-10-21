@@ -21,7 +21,7 @@ export default async function LandingPage() {
   if (session) redirect("/dashboard")
 
   return (
-    <div className="relative isolate">
+    <div className="grain relative isolate">
       {/* Aurora WebGL background — anchored to viewport top, behind hero */}
       <div
         className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-[110vh] opacity-80"

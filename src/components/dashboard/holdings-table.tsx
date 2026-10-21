@@ -6,7 +6,7 @@ import { formatMoney, formatQuantity } from "@/lib/format";
 
 export function HoldingsTable({ holdings }: { holdings: HoldingRow[] }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-line bg-surface">
+    <div className="overflow-hidden surface-card">
       <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-4 sm:px-6">
         <div className="flex items-center gap-2">
           <Briefcase className="h-4 w-4 text-fg-4" strokeWidth={1.75} />

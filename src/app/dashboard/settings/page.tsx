@@ -88,7 +88,7 @@ export default async function SettingsPage() {
 
       <div className="flex flex-col gap-5">
         {settingSections.map((section) => (
-          <div key={section.title} className="overflow-hidden rounded-xl border border-line bg-surface">
+          <div key={section.title} className="overflow-hidden surface-card">
             <div className="flex items-center gap-2 border-b border-line-soft px-6 py-4">
               <section.icon className="h-4 w-4 text-fg-4" strokeWidth={1.75} />
               <h2 className="text-sm font-semibold text-fg-2">{section.title}</h2>
@@ -118,7 +118,7 @@ export default async function SettingsPage() {
         ))}
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-line bg-surface">
+      <div className="overflow-hidden surface-card">
         <div className="flex items-center gap-2 border-b border-line-soft px-6 py-4">
           <LogOut className="h-4 w-4 text-fg-4" strokeWidth={1.75} />
           <h2 className="text-sm font-semibold text-fg-2">Session</h2>

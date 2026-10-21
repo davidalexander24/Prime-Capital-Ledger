@@ -9,7 +9,7 @@ interface TopTradedProps {
 
 export function TopTraded({ data }: TopTradedProps) {
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-xl border border-line bg-surface">
+    <div className="flex h-full flex-col overflow-hidden surface-card">
       <div className="border-b border-line-soft px-6 py-4">
         <h2 className="text-sm font-semibold text-fg-2">
           Daily Movers
