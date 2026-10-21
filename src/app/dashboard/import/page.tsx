@@ -68,7 +68,7 @@ export default async function ImportPage() {
               </div>
               <h3 className="mt-3 text-[13px] font-semibold text-fg-1">{s.name}</h3>
               <p className="mt-1 text-[11px] text-fg-4">{s.desc}</p>
-              <span className="mt-3 inline-block rounded bg-layer-1 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-fg-4">{s.comingSoon ? "Coming Soon" : s.formats}</span>
+              <span className="mt-3 inline-block rounded bg-layer-1 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-fg-4">{s.comingSoon ? "Coming Soon" : s.formats}</span>
             </div>
           ))}
         </div>
@@ -90,7 +90,7 @@ export default async function ImportPage() {
                   <FileText className="h-4 w-4 shrink-0 text-fg-5" strokeWidth={1.75} />
                   <div className="min-w-0">
                     <span className="block truncate text-[12px] font-medium text-fg-2">{item.filename}</span>
-                    <span className="text-[10px] text-fg-4">{item.source}</span>
+                    <span className="text-[11px] text-fg-4">{item.source}</span>
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-1 pl-7 sm:pl-0">

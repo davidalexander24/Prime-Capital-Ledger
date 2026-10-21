@@ -217,11 +217,11 @@ export function ValuationChart({ data, currency }: ValuationChartProps) {
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 sm:pt-1">
           <div className="flex items-center gap-1.5">
             <span className="h-1.5 w-6 rounded-full bg-brand" />
-            <span className="text-[10px] text-fg-4">Market Value</span>
+            <span className="text-[11px] text-fg-3">Market value</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="h-1.5 w-6 rounded-full bg-cost" />
-            <span className="text-[10px] text-fg-4">Cost Basis</span>
+            <span className="text-[11px] text-fg-3">Cost basis</span>
           </div>
         </div>
       </div>

@@ -112,7 +112,7 @@ export function Sidebar() {
         </div>
 
         <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4">
-          <span className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-fg-4">
+          <span className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-fg-4">
             Menu
           </span>
           {navItems.map((item) => {
@@ -151,7 +151,7 @@ export function Sidebar() {
               <span className="truncate text-[12px] font-medium text-fg-2">
                 {displayName}
               </span>
-              <span className="text-[10px] text-fg-4">
+              <span className="text-[11px] text-fg-4">
                 Personal
               </span>
             </div>

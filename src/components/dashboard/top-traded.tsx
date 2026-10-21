@@ -72,7 +72,7 @@ export function TopTraded({ data }: TopTradedProps) {
                       {asset.changePercent.toFixed(2)}%
                     </div>
                   </div>
-                  <span className="text-[10px] tabular-nums text-fg-5">
+                  <span className="text-[11px] tabular-nums text-fg-4">
                     Holding {formatQuantity(asset.totalVolume)}{" "}
                     {asset.totalVolume === 1 ? "share" : "shares"}
                   </span>

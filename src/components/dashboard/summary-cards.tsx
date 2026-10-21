@@ -89,7 +89,7 @@ export function SummaryCards({ data }: SummaryCardsProps) {
             {card.detail}
           </p>
           {card.extra && (
-            <p className="mt-0.5 text-[10px] italic text-fg-4">
+            <p className="mt-0.5 text-[11px] text-fg-4">
               {card.extra}
             </p>
           )}

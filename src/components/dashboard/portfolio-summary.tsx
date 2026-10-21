@@ -21,7 +21,7 @@ export function PortfolioSummary({ totalMarketValue, totalCost, baseCurrency, ra
           {formatMoney(totalMarketValue, baseCurrency)}
         </p>
         {baseCurrency === "IDR" && (
-          <p className="mt-1 text-[10px] italic text-fg-4">
+          <p className="mt-1 text-[11px] text-fg-4">
             Converted at 1 USD = {formatMoney(rate, "IDR")}
           </p>
         )}

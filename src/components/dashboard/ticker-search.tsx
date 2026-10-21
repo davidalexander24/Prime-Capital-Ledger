@@ -209,12 +209,12 @@ export function TickerSearch({ value, onChange, disabled }: TickerSearchProps) {
                         {r.ticker}
                       </span>
                       {r.source === "db" ? (
-                        <span className="flex items-center gap-1 rounded bg-gain-wash px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.06em] text-gain">
+                        <span className="flex items-center gap-1 rounded bg-gain-wash px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-gain">
                           <Database className="h-2.5 w-2.5" />
                           Portfolio
                         </span>
                       ) : (
-                        <span className="flex items-center gap-1 rounded bg-brand-wash px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.06em] text-brand">
+                        <span className="flex items-center gap-1 rounded bg-brand-wash px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-brand">
                           <Globe className="h-2.5 w-2.5" />
                           Yahoo
                         </span>

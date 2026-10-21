@@ -7,7 +7,7 @@ export function TypeBadge({ type, className }: { type: string; className?: strin
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-[0.04em]",
+        "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold tracking-[0.04em]",
         isBuy ? "bg-gain-wash text-gain" : "bg-loss-wash text-loss",
         className
       )}
