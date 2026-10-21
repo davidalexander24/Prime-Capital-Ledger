@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { currencyForTicker } from "@/lib/currency";
 
 async function extractPdfText(buffer: Buffer): Promise<string> {
   const { extractText, getDocumentProxy } = await import("unpdf");
@@ -304,6 +305,9 @@ export async function commitParsedTransactions(
         const ticker = r.ticker.toUpperCase();
         const placeholder = `${ticker} Inc`;
         const incomingName = r.companyName?.trim() || placeholder;
+        // Rows come back from the browser, so the currency is derived here
+        // rather than taken from r.currency.
+        const currency = currencyForTicker(ticker);
 
         const existingAsset = await tx.asset.findUnique({ where: { ticker } });
         const shouldUpdateName =
@@ -314,11 +318,13 @@ export async function commitParsedTransactions(
 
         const asset = await tx.asset.upsert({
           where: { ticker },
-          update: shouldUpdateName ? { companyName: incomingName } : {},
+          update: shouldUpdateName
+            ? { companyName: incomingName, currency }
+            : { currency },
           create: {
             ticker,
             companyName: incomingName,
-            currency: r.currency,
+            currency,
           },
         });
 

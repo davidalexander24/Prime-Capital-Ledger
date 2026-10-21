@@ -3,6 +3,8 @@
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { currencyForTicker, isSupportedTicker } from "@/lib/currency";
+import { formatMoney, formatQuantity } from "@/lib/format";
 
 type ActionResponse = {
   success: boolean;
@@ -14,16 +16,18 @@ export interface LogTransactionInput {
   companyName: string;
   type: "BUY" | "SELL";
   inputMode: "shares" | "dollars";
-  amount: number; // shares count or dollar amount
+  amount: number; // share count, or money amount in the asset's currency
   pricePerShare: number;
   fee: number;
   date: string;
-  currency: string;
 }
 
 function validateInput(input: LogTransactionInput): string | null {
   if (!input.ticker || input.ticker.trim().length === 0) {
     return "Ticker symbol is required.";
+  }
+  if (!isSupportedTicker(input.ticker)) {
+    return "Only US and IDX (.JK) listings are supported.";
   }
   if (input.type !== "BUY" && input.type !== "SELL") {
     return "Invalid transaction type.";
@@ -39,9 +43,6 @@ function validateInput(input: LogTransactionInput): string | null {
   }
   if (input.fee != null && (!Number.isFinite(input.fee) || input.fee < 0)) {
     return "Fee must be a non-negative number.";
-  }
-  if (input.currency !== "USD" && input.currency !== "IDR") {
-    return "Unsupported currency.";
   }
   if (Number.isNaN(new Date(input.date).getTime())) {
     return "Invalid transaction date.";
@@ -73,17 +74,19 @@ export async function createManualTransaction(
     const ticker = input.ticker.trim().toUpperCase();
     const companyName =
       input.companyName.trim() || `${ticker} Inc`;
+    const currency = currencyForTicker(ticker);
     const transactionDate = new Date(input.date);
 
     await prisma.$transaction(async (tx) => {
-      // Upsert the Asset record
+      // Upsert the Asset record. Assets are shared by every user, so the
+      // currency is rewritten too: a row created with the wrong one heals here.
       const asset = await tx.asset.upsert({
         where: { ticker },
-        update: {},
+        update: { currency },
         create: {
           ticker,
           companyName,
-          currency: input.currency || "USD",
+          currency,
         },
       });
 
@@ -103,12 +106,12 @@ export async function createManualTransaction(
 
     const displayQty =
       input.inputMode === "dollars"
-        ? `${quantity.toFixed(6)} shares ($${input.amount.toFixed(2)})`
-        : `${quantity} shares`;
+        ? `${formatQuantity(quantity)} shares (${formatMoney(input.amount, currency)})`
+        : `${formatQuantity(quantity)} shares`;
 
     return {
       success: true,
-      message: `Successfully logged ${input.type} of ${displayQty} of ${ticker} at $${input.pricePerShare.toFixed(2)}/share.`,
+      message: `Successfully logged ${input.type} of ${displayQty} of ${ticker} at ${formatMoney(input.pricePerShare, currency)}/share.`,
     };
   } catch (error: unknown) {
     console.error("Error creating manual transaction:", error);
@@ -150,16 +153,17 @@ export async function updateTransaction(
 
     const ticker = input.ticker.trim().toUpperCase();
     const companyName = input.companyName.trim() || `${ticker} Inc`;
+    const currency = currencyForTicker(ticker);
     const transactionDate = new Date(input.date);
 
     await prisma.$transaction(async (tx) => {
       const asset = await tx.asset.upsert({
         where: { ticker },
-        update: {},
+        update: { currency },
         create: {
           ticker,
           companyName,
-          currency: input.currency || "USD",
+          currency,
         },
       });
 

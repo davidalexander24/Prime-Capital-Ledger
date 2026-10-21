@@ -28,48 +28,10 @@ import {
 } from "./log-transaction-dialog";
 import { deleteTransaction } from "@/app/actions/logTransaction";
 import { StockLogo } from "@/components/ui/stock-logo";
+import { formatDate, formatMoney, formatQuantity } from "@/lib/format";
 
 interface TransactionTableProps {
   data: TransactionRecord[];
-}
-
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-}
-
-function formatTime(dateStr: string): string {
-  const d = new Date(dateStr);
-  return d.toLocaleTimeString("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "UTC",
-  });
-}
-
-function formatIDR(value: number): string {
-  const rounded = Math.round(Math.abs(value));
-  return `Rp${rounded.toLocaleString("id-ID")}`;
-}
-
-function formatUSD(value: number): string {
-  const abs = Math.abs(value);
-  const formatted = abs.toLocaleString("id-ID", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-  return `$${formatted}`;
-}
-
-function formatCurrency(value: number, currency?: string, withSign = false): string {
-  const sign = value < 0 ? "-" : "";
-  const formatted = currency === "USD" ? formatUSD(Math.abs(value)) : formatIDR(Math.abs(value));
-  return withSign ? `${sign}${formatted}` : formatted;
 }
 
 function toEditData(tx: TransactionRecord): EditTransactionData {
@@ -82,7 +44,6 @@ function toEditData(tx: TransactionRecord): EditTransactionData {
     pricePerShare: tx.pricePerShare,
     totalFees: tx.totalFees,
     executedAt: tx.executedAt,
-    currency: tx.currency,
   };
 }
 
@@ -215,14 +176,14 @@ export function TransactionTable({ data }: TransactionTableProps) {
             <div className="flex items-end justify-between gap-3 pl-8.5">
               <div className="flex flex-col">
                 <span className="text-[10px] uppercase tracking-[0.06em] text-[oklch(0.40_0.01_260)]">
-                  {formatDate(tx.executedAt)} · {formatTime(tx.executedAt)}
+                  {formatDate(tx.executedAt)}
                 </span>
-                <span className="text-[11px] text-[oklch(0.60_0.005_260)]">
-                  {tx.quantity} × {formatCurrency(tx.pricePerShare, tx.currency)}
+                <span className="text-[11px] tabular-nums text-[oklch(0.60_0.005_260)]">
+                  {formatQuantity(tx.quantity)} × {formatMoney(tx.pricePerShare, tx.currency)}
                 </span>
               </div>
               <span className="shrink-0 text-[12px] font-semibold tabular-nums text-[oklch(0.90_0.005_260)]">
-                {formatCurrency(tx.netValue, tx.currency, true)}
+                {formatMoney(tx.netValue, tx.currency)}
               </span>
             </div>
           </li>
@@ -244,7 +205,7 @@ export function TransactionTable({ data }: TransactionTableProps) {
               Type
             </TableHead>
             <TableHead className="h-10 text-right text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
-              Qty (Lots)
+              Shares
             </TableHead>
             <TableHead className="h-10 text-right text-[10px] font-semibold uppercase tracking-widest text-[oklch(0.40_0.01_260)]">
               Price
@@ -262,14 +223,9 @@ export function TransactionTable({ data }: TransactionTableProps) {
               className="group border-b border-[oklch(0.10_0.005_260)] transition-colors hover:bg-[oklch(0.07_0.005_260)]"
             >
               <TableCell className="pl-6">
-                <div className="flex flex-col">
-                  <span className="text-[12px] font-medium text-[oklch(0.80_0.005_260)]">
-                    {formatDate(tx.executedAt)}
-                  </span>
-                  <span className="text-[10px] text-[oklch(0.38_0.01_260)]">
-                    {formatTime(tx.executedAt)}
-                  </span>
-                </div>
+                <span className="text-[12px] font-medium text-[oklch(0.80_0.005_260)]">
+                  {formatDate(tx.executedAt)}
+                </span>
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-3">
@@ -302,18 +258,18 @@ export function TransactionTable({ data }: TransactionTableProps) {
                 </div>
               </TableCell>
               <TableCell className="text-right">
-                <span className="text-[12px] font-medium text-[oklch(0.80_0.005_260)]">
-                  {tx.quantity}
+                <span className="text-[12px] font-medium tabular-nums text-[oklch(0.80_0.005_260)]">
+                  {formatQuantity(tx.quantity)}
                 </span>
               </TableCell>
               <TableCell className="text-right">
-                <span className="text-[12px] font-medium text-[oklch(0.80_0.005_260)]">
-                  {formatCurrency(tx.pricePerShare, tx.currency)}
+                <span className="text-[12px] font-medium tabular-nums text-[oklch(0.80_0.005_260)]">
+                  {formatMoney(tx.pricePerShare, tx.currency)}
                 </span>
               </TableCell>
               <TableCell className="text-right">
-                <span className="text-[12px] font-semibold text-[oklch(0.88_0.005_260)]">
-                  {formatCurrency(tx.netValue, tx.currency, true)}
+                <span className="text-[12px] font-semibold tabular-nums text-[oklch(0.88_0.005_260)]">
+                  {formatMoney(tx.netValue, tx.currency)}
                 </span>
               </TableCell>
               <TableCell className="pr-6 text-right">
@@ -395,7 +351,7 @@ export function TransactionTable({ data }: TransactionTableProps) {
                   </span>{" "}
                   of{" "}
                   <span className="font-semibold text-[oklch(0.75_0.005_260)]">
-                    {deleteTarget?.quantity} × {deleteTarget?.ticker.replace(".JK", "")}
+                    {deleteTarget ? formatQuantity(deleteTarget.quantity) : ""} × {deleteTarget?.ticker.replace(".JK", "")}
                   </span>
                   . This action can&apos;t be undone.
                 </Dialog.Description>

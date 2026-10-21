@@ -8,6 +8,7 @@ import {
   ArrowUpRight,
   Hash,
   DollarSign,
+  Banknote,
   X,
   CheckCircle2,
   XCircle,
@@ -18,6 +19,8 @@ import {
   updateTransaction,
   type LogTransactionInput,
 } from "@/app/actions/logTransaction";
+import { currencyForTicker } from "@/lib/currency";
+import { formatMoney, toDateInputValue } from "@/lib/format";
 import { TickerSearch } from "./ticker-search";
 
 export interface EditTransactionData {
@@ -29,7 +32,6 @@ export interface EditTransactionData {
   pricePerShare: number;
   totalFees: number;
   executedAt: string;
-  currency: string;
 }
 
 interface LogTransactionDialogProps {
@@ -70,7 +72,7 @@ function LogTransactionForm({
   const [date, setDate] = useState(() =>
     editData
       ? new Date(editData.executedAt).toISOString().slice(0, 10)
-      : new Date().toISOString().slice(0, 10)
+      : toDateInputValue(new Date())
   );
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [statusMsg, setStatusMsg] = useState("");
@@ -87,6 +89,11 @@ function LogTransactionForm({
   const netTotal =
     type === "BUY" ? subtotal + parsedFee : subtotal - parsedFee;
 
+  // Display only; the server derives the asset's currency from the ticker.
+  const currency = selectedAsset ? currencyForTicker(selectedAsset.ticker) : "USD";
+  const moneySymbol = currency === "IDR" ? "Rp" : "$";
+  const moneyInputPadding = currency === "IDR" ? "pl-9" : "pl-7";
+
   async function handleSubmit() {
     if (!selectedAsset || parsedAmount <= 0 || parsedPrice <= 0) return;
 
@@ -100,7 +107,6 @@ function LogTransactionForm({
       pricePerShare: parsedPrice,
       fee: parsedFee,
       date,
-      currency: editData?.currency || "USD",
     };
 
     try {
@@ -211,14 +217,18 @@ function LogTransactionForm({
                     : "text-[oklch(0.35_0.01_260)] hover:bg-[oklch(0.08_0.005_260)]"
                 }`}
               >
-                <DollarSign className="h-2.5 w-2.5" />
-                Dollars
+                {currency === "IDR" ? (
+                  <Banknote className="h-2.5 w-2.5" />
+                ) : (
+                  <DollarSign className="h-2.5 w-2.5" />
+                )}
+                {currency === "IDR" ? "Rupiah" : "Dollars"}
               </button>
             </div>
           </div>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-medium text-[oklch(0.30_0.01_260)]">
-              {inputMode === "shares" ? "#" : "$"}
+              {inputMode === "shares" ? "#" : moneySymbol}
             </span>
             <input
               id="amount-input"
@@ -228,7 +238,7 @@ function LogTransactionForm({
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
-              className="h-9 w-full rounded-lg border border-[oklch(0.14_0.005_260)] bg-[oklch(0.03_0.005_260)] pl-7 pr-3 text-[13px] font-medium text-[oklch(0.90_0.005_260)] placeholder:text-[oklch(0.25_0.01_260)] outline-none transition-colors focus:border-[oklch(0.70_0.08_230)]"
+              className={`h-9 w-full rounded-lg border border-[oklch(0.14_0.005_260)] bg-[oklch(0.03_0.005_260)] ${inputMode === "shares" ? "pl-7" : moneyInputPadding} pr-3 text-[13px] font-medium text-[oklch(0.90_0.005_260)] placeholder:text-[oklch(0.25_0.01_260)] outline-none transition-colors focus:border-[oklch(0.70_0.08_230)]`}
             />
           </div>
         </div>
@@ -241,7 +251,7 @@ function LogTransactionForm({
             </span>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-medium text-[oklch(0.30_0.01_260)]">
-                $
+                {moneySymbol}
               </span>
               <input
                 id="price-input"
@@ -251,7 +261,7 @@ function LogTransactionForm({
                 value={pricePerShare}
                 onChange={(e) => setPricePerShare(e.target.value)}
                 placeholder="0.00"
-                className="h-9 w-full rounded-lg border border-[oklch(0.14_0.005_260)] bg-[oklch(0.03_0.005_260)] pl-7 pr-3 text-[13px] font-medium text-[oklch(0.90_0.005_260)] placeholder:text-[oklch(0.25_0.01_260)] outline-none transition-colors focus:border-[oklch(0.70_0.08_230)]"
+                className={`h-9 w-full rounded-lg border border-[oklch(0.14_0.005_260)] bg-[oklch(0.03_0.005_260)] ${moneyInputPadding} pr-3 text-[13px] font-medium text-[oklch(0.90_0.005_260)] placeholder:text-[oklch(0.25_0.01_260)] outline-none transition-colors focus:border-[oklch(0.70_0.08_230)]`}
               />
             </div>
           </div>
@@ -261,7 +271,7 @@ function LogTransactionForm({
             </span>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-medium text-[oklch(0.30_0.01_260)]">
-                $
+                {moneySymbol}
               </span>
               <input
                 id="fee-input"
@@ -271,7 +281,7 @@ function LogTransactionForm({
                 value={fee}
                 onChange={(e) => setFee(e.target.value)}
                 placeholder="0.00"
-                className="h-9 w-full rounded-lg border border-[oklch(0.14_0.005_260)] bg-[oklch(0.03_0.005_260)] pl-7 pr-3 text-[13px] font-medium text-[oklch(0.90_0.005_260)] placeholder:text-[oklch(0.25_0.01_260)] outline-none transition-colors focus:border-[oklch(0.70_0.08_230)]"
+                className={`h-9 w-full rounded-lg border border-[oklch(0.14_0.005_260)] bg-[oklch(0.03_0.005_260)] ${moneyInputPadding} pr-3 text-[13px] font-medium text-[oklch(0.90_0.005_260)] placeholder:text-[oklch(0.25_0.01_260)] outline-none transition-colors focus:border-[oklch(0.70_0.08_230)]`}
               />
             </div>
           </div>
@@ -313,14 +323,14 @@ function LogTransactionForm({
               <div className="flex justify-between">
                 <span className="text-[oklch(0.45_0.01_260)]">Subtotal</span>
                 <span className="font-medium text-[oklch(0.75_0.005_260)]">
-                  ${subtotal.toFixed(2)}
+                  {formatMoney(subtotal, currency)}
                 </span>
               </div>
               {parsedFee > 0 && (
                 <div className="flex justify-between">
                   <span className="text-[oklch(0.45_0.01_260)]">Fee</span>
                   <span className="font-medium text-[oklch(0.75_0.005_260)]">
-                    ${parsedFee.toFixed(2)}
+                    {formatMoney(parsedFee, currency)}
                   </span>
                 </div>
               )}
@@ -329,7 +339,7 @@ function LogTransactionForm({
                   Net Total
                 </span>
                 <span className="font-semibold text-[oklch(0.90_0.005_260)]">
-                  ${netTotal.toFixed(2)}
+                  {formatMoney(netTotal, currency)}
                 </span>
               </div>
             </div>
@@ -412,7 +422,17 @@ export function LogTransactionDialog({
       )}
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)] shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95 data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]">
+        <Dialog.Content
+          onEscapeKeyDown={(event) => {
+            // Radix sees Escape before the focused field does. While the
+            // ticker list is open, let Escape close the list, not the dialog.
+            const target = event.target;
+            if (target instanceof HTMLElement && target.getAttribute("aria-expanded") === "true") {
+              event.preventDefault();
+            }
+          }}
+          className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-[oklch(0.14_0.005_260)] bg-[oklch(0.05_0.005_260)] shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95 data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]"
+        >
           <LogTransactionForm
             key={editData?.id ?? "new"}
             editData={editData}
