@@ -10,6 +10,10 @@ Professional portfolio management and financial analytics platform for global eq
 
 ## **Live Site:** [primecapitaledger.site](https://primecapitaledger.site)
 
+[![Prime Capital Ledger demo](docs/demo.gif)](docs/demo.mp4)
+
+*Valuation chart, importing a broker statement PDF with preview, updated holdings, and analytics. [▶ Watch full video (MP4)](docs/demo.mp4)*
+
 ![Dashboard](docs/screenshots/dashboard.png)
 
 ---
